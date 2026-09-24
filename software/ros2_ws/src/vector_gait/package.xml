@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>vector_gait</name>
+  <version>0.1.0</version>
+  <description>Leg kinematics and gait generator for the V.E.C.T.O.R. hexapod</description>
+  <maintainer email="avladescu2000@gmail.com">Andrei Vladescu</maintainer>
+  <license>TBD</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>visualization_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>yaml_cpp_vendor</depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

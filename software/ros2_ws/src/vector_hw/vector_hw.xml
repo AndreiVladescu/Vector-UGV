@@ -1,0 +1,6 @@
+<library path="vector_hw">
+  <class name="vector_hw/VectorSystem" type="vector_hw::VectorSystem"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>Six V.E.C.T.O.R. leg nodes on a SocketCAN interface</description>
+  </class>
+</library>

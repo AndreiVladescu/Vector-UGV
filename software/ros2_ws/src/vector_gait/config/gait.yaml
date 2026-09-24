@@ -1,0 +1,19 @@
+gait_node:
+  ros__parameters:
+    gait: tripod        # tripod, ripple or wave (switch only while standing)
+    period: 1.0         # s per full cycle
+    step_height: 0.035  # m
+    max_stride: 0.06    # m
+    rate: 200.0         # Hz
+    cmd_timeout: 0.5    # s without cmd_vel before stopping
+    # body offset from the walking frame, m and rad; ramped, can be set live
+    body_x: 0.0
+    body_y: 0.0
+    body_z: 0.0
+    body_roll: 0.0
+    body_pitch: 0.0
+    body_yaw: 0.0
+    # IMU leveling: feed body tilt back into roll/pitch (needs /imu)
+    level: false
+    level_gain: 2.0     # 1/s
+    level_max: 0.3      # rad

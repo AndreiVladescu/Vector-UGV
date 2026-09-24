@@ -1,0 +1,192 @@
+<?xml version="1.0"?>
+<robot name="vector" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="hardware" default="mock"/>
+  <!-- controller config, needed by the Gazebo plugin -->
+  <xacro:arg name="controllers" default=""/>
+  <!-- CAN interface for the real leg nodes (or fake_legs.py on vcan0) -->
+  <xacro:arg name="can_interface" default="can0"/>
+
+  <xacro:property name="g" value="${xacro.load_yaml('$(find vector_description)/config/legs.yaml')}"/>
+  <xacro:property name="lc" value="${g['coxa']}"/>
+  <xacro:property name="lf" value="${g['femur']}"/>
+  <xacro:property name="lt" value="${g['tibia']}"/>
+  <xacro:property name="lim" value="${g['limits']}"/>
+  <xacro:property name="mass" value="${g['mass']}"/>
+  <xacro:property name="gazebo" value="${'$(arg hardware)' == 'gazebo'}"/>
+
+  <!-- standing pose from the neutral stance, same IK as libvector (knee up) -->
+  <xacro:property name="sr" value="${g['stand']['reach'] - lc}"/>
+  <xacro:property name="sz" value="${-g['stand']['height']}"/>
+  <xacro:property name="sd" value="${hypot(sr, sz)}"/>
+  <xacro:property name="stand_femur" value="${atan2(sz, sr) + acos((lf*lf + sd*sd - lt*lt) / (2*lf*sd))}"/>
+  <xacro:property name="stand_tibia" value="${acos((lf*lf + lt*lt - sd*sd) / (2*lf*lt)) - pi}"/>
+
+  <material name="body"><color rgba="0.25 0.25 0.28 1"/></material>
+  <material name="leg"><color rgba="0.85 0.45 0.1 1"/></material>
+  <material name="foot"><color rgba="0.1 0.1 0.1 1"/></material>
+
+  <xacro:property name="bl" value="${g['body']['length']}"/>
+  <xacro:property name="bw" value="${g['body']['width']}"/>
+  <xacro:property name="bt" value="${g['body']['thickness']}"/>
+  <xacro:property name="bm" value="${mass['body']}"/>
+
+  <!-- Gazebo wants a root link without inertia -->
+  <link name="base_link">
+    <visual>
+      <geometry><box size="${bl} ${bw} ${bt}"/></geometry>
+      <material name="body"/>
+    </visual>
+    <collision>
+      <geometry><box size="${bl} ${bw} ${bt}"/></geometry>
+    </collision>
+  </link>
+  <link name="body_mass">
+    <inertial>
+      <mass value="${bm}"/>
+      <inertia ixx="${bm*(bw*bw + bt*bt)/12}" iyy="${bm*(bl*bl + bt*bt)/12}" izz="${bm*(bl*bl + bw*bw)/12}"
+               ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+  <joint name="body_mass_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="body_mass"/>
+  </joint>
+
+  <!-- segment along +x of its own frame, mass spread along it -->
+  <xacro:macro name="segment" params="name length radius m">
+    <link name="${name}">
+      <visual>
+        <origin xyz="${length/2} 0 0" rpy="0 ${pi/2} 0"/>
+        <geometry><cylinder length="${length}" radius="${radius}"/></geometry>
+        <material name="leg"/>
+      </visual>
+      <inertial>
+        <origin xyz="${length/2} 0 0"/>
+        <mass value="${m}"/>
+        <inertia ixx="${m*radius*radius/2}" iyy="${m*(3*radius*radius + length*length)/12}"
+                 izz="${m*(3*radius*radius + length*length)/12}" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+  </xacro:macro>
+
+  <xacro:macro name="leg" params="name">
+    <xacro:property name="m" value="${g['mounts'][name]}"/>
+
+    <xacro:segment name="${name}_coxa_link" length="${lc}" radius="0.012" m="${mass['coxa_link']}"/>
+    <xacro:segment name="${name}_femur_link" length="${lf}" radius="0.010" m="${mass['femur_link']}"/>
+    <xacro:segment name="${name}_tibia_link" length="${lt}" radius="0.008" m="${mass['tibia_link']}"/>
+    <link name="${name}_foot">
+      <visual>
+        <geometry><sphere radius="0.010"/></geometry>
+        <material name="foot"/>
+      </visual>
+      <collision>
+        <geometry><sphere radius="0.010"/></geometry>
+      </collision>
+      <inertial>
+        <mass value="0.005"/>
+        <inertia ixx="2e-7" iyy="2e-7" izz="2e-7" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+    <gazebo reference="${name}_foot">
+      <mu1>${g['foot_friction']}</mu1>
+      <mu2>${g['foot_friction']}</mu2>
+    </gazebo>
+
+    <joint name="${name}_coxa" type="revolute">
+      <parent link="base_link"/>
+      <child link="${name}_coxa_link"/>
+      <origin xyz="${m['x']} ${m['y']} 0" rpy="0 0 ${m['yaw']}"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="${lim['coxa'][0]}" upper="${lim['coxa'][1]}" effort="${lim['effort']}" velocity="${lim['velocity']}"/>
+    </joint>
+    <!-- axis -y so a positive angle lifts the segment -->
+    <joint name="${name}_femur" type="revolute">
+      <parent link="${name}_coxa_link"/>
+      <child link="${name}_femur_link"/>
+      <origin xyz="${lc} 0 0"/>
+      <axis xyz="0 -1 0"/>
+      <limit lower="${lim['femur'][0]}" upper="${lim['femur'][1]}" effort="${lim['effort']}" velocity="${lim['velocity']}"/>
+    </joint>
+    <joint name="${name}_tibia" type="revolute">
+      <parent link="${name}_femur_link"/>
+      <child link="${name}_tibia_link"/>
+      <origin xyz="${lf} 0 0"/>
+      <axis xyz="0 -1 0"/>
+      <limit lower="${lim['tibia'][0]}" upper="${lim['tibia'][1]}" effort="${lim['effort']}" velocity="${lim['velocity']}"/>
+    </joint>
+    <joint name="${name}_foot_joint" type="fixed">
+      <parent link="${name}_tibia_link"/>
+      <child link="${name}_foot"/>
+      <origin xyz="${lt} 0 0"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:leg name="L1"/>
+  <xacro:leg name="L2"/>
+  <xacro:leg name="L3"/>
+  <xacro:leg name="R1"/>
+  <xacro:leg name="R2"/>
+  <xacro:leg name="R3"/>
+
+  <xacro:macro name="joint_if" params="name initial">
+    <joint name="${name}">
+      <command_interface name="position"/>
+      <state_interface name="position"><param name="initial_value">${initial}</param></state_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="leg_if" params="name">
+    <xacro:joint_if name="${name}_coxa" initial="0.0"/>
+    <xacro:joint_if name="${name}_femur" initial="${stand_femur}"/>
+    <xacro:joint_if name="${name}_tibia" initial="${stand_tibia}"/>
+  </xacro:macro>
+
+  <ros2_control name="vector" type="system">
+    <hardware>
+      <xacro:if value="${'$(arg hardware)' == 'mock'}">
+        <plugin>mock_components/GenericSystem</plugin>
+      </xacro:if>
+      <xacro:if value="${gazebo}">
+        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      </xacro:if>
+      <xacro:if value="${'$(arg hardware)' == 'can'}">
+        <plugin>vector_hw/VectorSystem</plugin>
+        <param name="can_interface">$(arg can_interface)</param>
+        <param name="timeout_ms">100</param>
+      </xacro:if>
+    </hardware>
+    <xacro:leg_if name="L1"/>
+    <xacro:leg_if name="L2"/>
+    <xacro:leg_if name="L3"/>
+    <xacro:leg_if name="R1"/>
+    <xacro:leg_if name="R2"/>
+    <xacro:leg_if name="R3"/>
+  </ros2_control>
+
+  <xacro:if value="${gazebo}">
+    <!-- IMU in the body centre, like the ICM-42688 on the carrier -->
+    <gazebo reference="base_link">
+      <sensor name="imu" type="imu">
+        <always_on>true</always_on>
+        <update_rate>200</update_rate>
+        <topic>imu</topic>
+        <gz_frame_id>base_link</gz_frame_id>
+      </sensor>
+    </gazebo>
+    <gazebo>
+      <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>$(arg controllers)</parameters>
+      </plugin>
+      <!-- ground truth pose, bridged to ROS as odom -> base_link -->
+      <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">
+        <odom_frame>odom</odom_frame>
+        <robot_base_frame>base_link</robot_base_frame>
+        <odom_publish_frequency>50</odom_publish_frequency>
+        <dimensions>3</dimensions>
+      </plugin>
+    </gazebo>
+  </xacro:if>
+</robot>

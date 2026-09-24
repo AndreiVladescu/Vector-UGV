@@ -87,7 +87,7 @@ In Sentinel Stance the legs are off, so the compass is at its cleanest exactly w
 
 ## Bus and flashing
 
-Classic CAN at 1 Mbit/s. 200 Hz commands and state for six legs plus the power board is about 15% bus load. The message layout is in `protocol/vector.dbc`: `ID = (function << 4) | node`, nodes 1–6 are legs L1–R3, 7 is the power board.
+Classic CAN at 1 Mbit/s. SYNC, commands and state for six legs at 200 Hz plus status at 50 Hz measure about 32% bus load on vcan. The message layout is in `protocol/vector.dbc`: `ID = (function << 4) | node`, nodes 1–6 are legs L1–R3, 7 is the power board.
 
 CAN was picked over RS-485 for its hardware CRC, retransmit and arbitration. A babbling node goes bus-off on its own, and SocketCAN tooling is good. The CH32V003 was dropped because it has no CAN, only 16 KB / 2 KB of memory, and no practical way to flash it from Linux.
 
