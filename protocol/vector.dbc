@@ -1,0 +1,143 @@
+VERSION "0.1"
+
+NS_ :
+
+BS_:
+
+BU_: CM5 LEG_L1 LEG_L2 LEG_L3 LEG_R1 LEG_R2 LEG_R3 POWER
+
+BO_ 0 SYNC: 4 CM5
+ SG_ counter : 0|16@1+ (1,0) [0|65535] "" LEG_L1,LEG_L2,LEG_L3,LEG_R1,LEG_R2,LEG_R3,POWER
+ SG_ mode : 16|4@1+ (1,0) [0|15] "" LEG_L1,LEG_L2,LEG_L3,LEG_R1,LEG_R2,LEG_R3,POWER
+ SG_ estop : 20|1@1+ (1,0) [0|1] "" LEG_L1,LEG_L2,LEG_L3,LEG_R1,LEG_R2,LEG_R3,POWER
+
+BO_ 17 LEG_L1_CMD: 8 CM5
+ SG_ coxa_target : 0|16@1- (0.01,0) [-180|180] "deg" LEG_L1
+ SG_ femur_target : 16|16@1- (0.01,0) [-180|180] "deg" LEG_L1
+ SG_ tibia_target : 32|16@1- (0.01,0) [-180|180] "deg" LEG_L1
+ SG_ servo_enable : 48|1@1+ (1,0) [0|1] "" LEG_L1
+ SG_ counter : 56|8@1+ (1,0) [0|255] "" LEG_L1
+
+BO_ 33 LEG_L1_STATE: 8 LEG_L1
+ SG_ coxa_pos : 0|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ femur_pos : 16|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ tibia_pos : 32|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ leg_current : 48|16@1+ (1,0) [0|65535] "mA" CM5
+
+BO_ 49 LEG_L1_STATUS: 8 LEG_L1
+ SG_ tof_distance : 0|16@1+ (1,0) [0|65535] "mm" CM5
+ SG_ vbat : 16|16@1+ (1,0) [0|65535] "mV" CM5
+ SG_ servo_rail : 32|16@1+ (1,0) [0|65535] "mV" CM5
+ SG_ temperature : 48|8@1- (1,0) [-128|127] "degC" CM5
+ SG_ faults : 56|8@1+ (1,0) [0|255] "" CM5
+
+BO_ 18 LEG_L2_CMD: 8 CM5
+ SG_ coxa_target : 0|16@1- (0.01,0) [-180|180] "deg" LEG_L2
+ SG_ femur_target : 16|16@1- (0.01,0) [-180|180] "deg" LEG_L2
+ SG_ tibia_target : 32|16@1- (0.01,0) [-180|180] "deg" LEG_L2
+ SG_ servo_enable : 48|1@1+ (1,0) [0|1] "" LEG_L2
+ SG_ counter : 56|8@1+ (1,0) [0|255] "" LEG_L2
+
+BO_ 34 LEG_L2_STATE: 8 LEG_L2
+ SG_ coxa_pos : 0|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ femur_pos : 16|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ tibia_pos : 32|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ leg_current : 48|16@1+ (1,0) [0|65535] "mA" CM5
+
+BO_ 50 LEG_L2_STATUS: 8 LEG_L2
+ SG_ tof_distance : 0|16@1+ (1,0) [0|65535] "mm" CM5
+ SG_ vbat : 16|16@1+ (1,0) [0|65535] "mV" CM5
+ SG_ servo_rail : 32|16@1+ (1,0) [0|65535] "mV" CM5
+ SG_ temperature : 48|8@1- (1,0) [-128|127] "degC" CM5
+ SG_ faults : 56|8@1+ (1,0) [0|255] "" CM5
+
+BO_ 19 LEG_L3_CMD: 8 CM5
+ SG_ coxa_target : 0|16@1- (0.01,0) [-180|180] "deg" LEG_L3
+ SG_ femur_target : 16|16@1- (0.01,0) [-180|180] "deg" LEG_L3
+ SG_ tibia_target : 32|16@1- (0.01,0) [-180|180] "deg" LEG_L3
+ SG_ servo_enable : 48|1@1+ (1,0) [0|1] "" LEG_L3
+ SG_ counter : 56|8@1+ (1,0) [0|255] "" LEG_L3
+
+BO_ 35 LEG_L3_STATE: 8 LEG_L3
+ SG_ coxa_pos : 0|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ femur_pos : 16|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ tibia_pos : 32|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ leg_current : 48|16@1+ (1,0) [0|65535] "mA" CM5
+
+BO_ 51 LEG_L3_STATUS: 8 LEG_L3
+ SG_ tof_distance : 0|16@1+ (1,0) [0|65535] "mm" CM5
+ SG_ vbat : 16|16@1+ (1,0) [0|65535] "mV" CM5
+ SG_ servo_rail : 32|16@1+ (1,0) [0|65535] "mV" CM5
+ SG_ temperature : 48|8@1- (1,0) [-128|127] "degC" CM5
+ SG_ faults : 56|8@1+ (1,0) [0|255] "" CM5
+
+BO_ 20 LEG_R1_CMD: 8 CM5
+ SG_ coxa_target : 0|16@1- (0.01,0) [-180|180] "deg" LEG_R1
+ SG_ femur_target : 16|16@1- (0.01,0) [-180|180] "deg" LEG_R1
+ SG_ tibia_target : 32|16@1- (0.01,0) [-180|180] "deg" LEG_R1
+ SG_ servo_enable : 48|1@1+ (1,0) [0|1] "" LEG_R1
+ SG_ counter : 56|8@1+ (1,0) [0|255] "" LEG_R1
+
+BO_ 36 LEG_R1_STATE: 8 LEG_R1
+ SG_ coxa_pos : 0|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ femur_pos : 16|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ tibia_pos : 32|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ leg_current : 48|16@1+ (1,0) [0|65535] "mA" CM5
+
+BO_ 52 LEG_R1_STATUS: 8 LEG_R1
+ SG_ tof_distance : 0|16@1+ (1,0) [0|65535] "mm" CM5
+ SG_ vbat : 16|16@1+ (1,0) [0|65535] "mV" CM5
+ SG_ servo_rail : 32|16@1+ (1,0) [0|65535] "mV" CM5
+ SG_ temperature : 48|8@1- (1,0) [-128|127] "degC" CM5
+ SG_ faults : 56|8@1+ (1,0) [0|255] "" CM5
+
+BO_ 21 LEG_R2_CMD: 8 CM5
+ SG_ coxa_target : 0|16@1- (0.01,0) [-180|180] "deg" LEG_R2
+ SG_ femur_target : 16|16@1- (0.01,0) [-180|180] "deg" LEG_R2
+ SG_ tibia_target : 32|16@1- (0.01,0) [-180|180] "deg" LEG_R2
+ SG_ servo_enable : 48|1@1+ (1,0) [0|1] "" LEG_R2
+ SG_ counter : 56|8@1+ (1,0) [0|255] "" LEG_R2
+
+BO_ 37 LEG_R2_STATE: 8 LEG_R2
+ SG_ coxa_pos : 0|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ femur_pos : 16|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ tibia_pos : 32|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ leg_current : 48|16@1+ (1,0) [0|65535] "mA" CM5
+
+BO_ 53 LEG_R2_STATUS: 8 LEG_R2
+ SG_ tof_distance : 0|16@1+ (1,0) [0|65535] "mm" CM5
+ SG_ vbat : 16|16@1+ (1,0) [0|65535] "mV" CM5
+ SG_ servo_rail : 32|16@1+ (1,0) [0|65535] "mV" CM5
+ SG_ temperature : 48|8@1- (1,0) [-128|127] "degC" CM5
+ SG_ faults : 56|8@1+ (1,0) [0|255] "" CM5
+
+BO_ 22 LEG_R3_CMD: 8 CM5
+ SG_ coxa_target : 0|16@1- (0.01,0) [-180|180] "deg" LEG_R3
+ SG_ femur_target : 16|16@1- (0.01,0) [-180|180] "deg" LEG_R3
+ SG_ tibia_target : 32|16@1- (0.01,0) [-180|180] "deg" LEG_R3
+ SG_ servo_enable : 48|1@1+ (1,0) [0|1] "" LEG_R3
+ SG_ counter : 56|8@1+ (1,0) [0|255] "" LEG_R3
+
+BO_ 38 LEG_R3_STATE: 8 LEG_R3
+ SG_ coxa_pos : 0|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ femur_pos : 16|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ tibia_pos : 32|16@1- (0.01,0) [-180|180] "deg" CM5
+ SG_ leg_current : 48|16@1+ (1,0) [0|65535] "mA" CM5
+
+BO_ 54 LEG_R3_STATUS: 8 LEG_R3
+ SG_ tof_distance : 0|16@1+ (1,0) [0|65535] "mm" CM5
+ SG_ vbat : 16|16@1+ (1,0) [0|65535] "mV" CM5
+ SG_ servo_rail : 32|16@1+ (1,0) [0|65535] "mV" CM5
+ SG_ temperature : 48|8@1- (1,0) [-128|127] "degC" CM5
+ SG_ faults : 56|8@1+ (1,0) [0|255] "" CM5
+
+BO_ 71 POWER_STATE: 8 POWER
+ SG_ pack_voltage : 0|16@1+ (1,0) [0|65535] "mV" CM5
+ SG_ pack_current : 16|16@1- (10,0) [-327680|327670] "mA" CM5
+ SG_ soc : 32|8@1+ (0.5,0) [0|100] "%" CM5
+ SG_ max_cell_temp : 40|8@1- (1,0) [-128|127] "degC" CM5
+ SG_ state : 48|4@1+ (1,0) [0|15] "" CM5
+ SG_ faults : 56|8@1+ (1,0) [0|255] "" CM5
+
+CM_ "V.E.C.T.O.R. leg bus, classic CAN 1 Mbit/s. ID = (function << 4) | node. Draft v0.1.";
+VAL_ 0 mode 0 "IDLE" 1 "STAND" 2 "WALK" 3 "SENTINEL" 4 "WAKE" 15 "FAULT" ;

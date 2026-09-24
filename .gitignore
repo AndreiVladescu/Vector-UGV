@@ -1,0 +1,42 @@
+# KiCad
+*-backups/
+*.kicad_prl
+fp-info-cache
+_autosave-*
+*.lck
+~*.lck
+\#auto_saved_files#
+
+# Firmware builds
+build/
+Debug/
+Release/
+*.elf
+*.map
+*.o
+*.d
+
+# ROS 2 workspace
+software/ros2_ws/build/
+software/ros2_ws/install/
+software/ros2_ws/log/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# CAD backups
+*.FCBak
+*.bak
+
+# Editors / OS
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.DS_Store
+
+# Local assistant config
+CLAUDE.md
+.claude/
