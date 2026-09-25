@@ -14,7 +14,7 @@ Estimates for now. Replace them with measurements as they come in.
 | Rail | Source | Loads | Avg | Peak | Notes |
 |---|---|---|---|---|---|
 | VBAT | 4S3P 18650 (12.0–16.8 V) | everything | | ~20 A | |
-| 6V0_LEGn (×6) | LM61495 per leg cell | 3× MG996R | | ~7.5 A | Per-leg EN |
+| 6V0_LEGn (×6) | TPS56A37 per leg cell | 3× MG996R | | ~7.5 A | Per-leg EN |
 | 3V3_LEG (×2) | low-Iq buck per side board | 3× STM32C092, transceivers, ToF | | | On in Sentinel |
 | 5V_SYS | Power board 5 V / 6 A | CM5, USB, SDR, gimbal | | 6 A | |
 | 3V8_LTE | Carrier buck from VBAT_SYS | EC25-EUX | | 2 A bursts | |

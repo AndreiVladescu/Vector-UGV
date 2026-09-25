@@ -14,7 +14,7 @@ Three designs, four boards:
 
 | Board | Qty | Layers | Main parts |
 |---|---|---|---|
-| Side board | 2 | 4 | 3 leg cells, each with STM32C092, TJA1051T/3, LM61495 6 V buck |
+| Side board | 2 | 4 | 3 leg cells, each with STM32C092, TCAN332DR, TPS56A37 6 V buck |
 | Power & BMS | 1 | 4, 2 oz | BQ76952, BQ25798, 2× LM5069, 5 V / 6 A buck, STM32C092 |
 | CM5 carrier | 1 | 4, impedance-controlled | CM5, M.2, EC25-EUX LTE, 2× GNSS, MCP251863, IMU, compass |
 
@@ -31,8 +31,8 @@ power board ──VBAT_L──► side L     ──VBAT_R──► side R     �
 Both sides use the same PCB, rotated 180°. Each side board carries three independent leg cells, and the CAN bus between those cells is just traces. A leg cell has:
 
 - **MCU:** STM32C092 (UFQFPN28/32, at least 64 KB flash) with a crystal. It has FDCAN in hardware and a factory CAN bootloader.
-- **CAN transceiver:** TJA1051T/3 (the /3 version has a VIO pin for 3.3 V logic). TCAN1044V fits the same footprint.
-- **Servo buck:** LM61495 (36 V in, 10 A) set to 6.0 V, switched by the MCU through EN. Three servos near stall draw about 7.5 A.
+- **CAN transceiver:** TCAN332DR (SOIC-8), a 3.3 V-only part.
+- **Servo buck:** TPS56A37RPAR (28 V in, 10 A, 3×3 mm HotRod QFN) set to 6.0 V, switched by the MCU through EN. Three servos near stall draw about 7.5 A.
 - **Current sense:** one 10 mΩ shunt and an INA181 for the whole leg. The load on each joint comes from the pot error (commanded minus measured angle).
 - **Position:** the MG996R pot wiper goes through a divider and an RC filter into the ADC. The pot usually sits on the servo's 6 V, so measure it first; roughly a 10k/15k divider.
 - **PWM:** the outputs are tri-stated before power-off, otherwise the servo gets back-powered through the signal pin.
