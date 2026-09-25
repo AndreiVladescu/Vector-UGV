@@ -36,12 +36,12 @@ Both sides use the same PCB, rotated 180°. Each side board carries three indepe
 - **Current sense:** one 10 mΩ shunt and an INA181 for the whole leg. The load on each joint comes from the pot error (commanded minus measured angle).
 - **Position:** the MG996R pot wiper goes through a divider and an RC filter into the ADC. The pot usually sits on the servo's 6 V, so measure it first; roughly a 10k/15k divider.
 - **PWM:** the outputs are tri-stated before power-off, otherwise the servo gets back-powered through the signal pin.
-- **ToF:** a VL53L1X on its own I2C bus, so there's no address clash (JST-SH 6-pin).
+- **ToF:** a VL53L1X on its own I2C bus, so there's no address clash (JST-GH 6-pin, latching). The sensor sits on a breakout on the coxa link, such as the Pololu #3415, whose 6 pins match J-TOF one to one.
 - **Protection:** a fuse or PTC per cell, an NTC at the buck, VBAT and 6 V rail sensing.
 - **Leg ID:** a resistor divider on one ADC pin.
 - **SWD:** pads for debugging and recovery.
 
-Shared on the board: an XT60 input, a low-Iq 3.3 V buck (stays on in Sentinel), CAN in/out on JST-GH, and a termination jumper at the outer end.
+Shared on the board: an XT30 input, a low-Iq 3.3 V buck (stays on in Sentinel), CAN in/out on JST-GH, and a termination jumper at the outer end.
 
 About 24 MCU pins in total: 3 PWM, 8 ADC, 3 CAN, 1–2 oscillator, 4 ToF, 3 SWD/NRST, 3 buck control/LED. Check the fit in CubeMX before layout.
 

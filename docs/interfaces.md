@@ -12,12 +12,12 @@ Both ends of a cable use the same footprint and pin order.
 | J-NTC | Pack → Power board | JST-PH 2×2-pin *TBD* | 2 cell NTCs |
 | J-DCIN | GX-12 → Power board | GX-12 2-pin + JST-XH | 12–24 V charge input |
 | J-USBC | Panel → Power board | USB-C receptacle (on board or panel pigtail *TBD*) | PD charge input |
-| J-LEGPWR-L / -R | Power board → Side board | XT30 / XT60 *TBD* | VBAT_L / VBAT_R (~13 A peak each) |
+| J-LEGPWR-L / -R | Power board → Side board | XT30 (PCB: XT30PW-M) | VBAT_L / VBAT_R (~13 A peak each) |
 | J-SYSPWR | Power board → Carrier | Molex Micro-Fit 3.0 2×3 *TBD* | 5 V (6 A), VBAT_SYS, GND |
 | J-SYSCTL | Power board → Carrier | JST-GH 6-pin *TBD* | PWR_EN, ESTOP_N, PGOOD, spare |
 | J-CAN (×n) | Bus hops | JST-GH 4-pin | CANH, CANL, GND, ESTOP_N / spare |
 | J-SERVO (×9 per side) | Side board → servo | 4-pin latched (JST-XH or 2.54 mm latching *TBD*) | V+ (6 V), GND, PWM, POT |
-| J-TOF (×3 per side) | Side board → ToF | JST-SH 6-pin | 3V3, GND, SDA, SCL, XSHUT, INT |
+| J-TOF (×3 per side) | Side board → ToF | JST-GH 6-pin (latching; the cable crosses the coxa joint) | 3V3, GND, SDA, SCL, XSHUT, INT |
 | J-SWD (per MCU) | Debug | Tag-Connect TC2030 or 1.27 mm 2×5 *TBD* | SWDIO, SWCLK, NRST, 3V3, GND |
 | J-SWDREC | Carrier → any MCU | 1.27 mm 2×5 | CM5 GPIO SWD recovery |
 | J-ELRS | Carrier → receiver | JST-GH 4-pin | 5 V, GND, TX, RX |
@@ -49,6 +49,19 @@ J-CAN pinout (JST-GH 4-pin):
 | 2 | V+ 6.0 V | red |
 | 3 | PWM | orange |
 | 4 | POT wiper | added wire (pot mod) |
+
+## J-TOF pinout
+
+JST-GH 6-pin. The pin order matches the Pololu #3415 VL53L1X carrier.
+
+| Pin | Signal | Side board end |
+|---|---|---|
+| 1 | 3V3 | 100 nF at the connector |
+| 2 | GND | |
+| 3 | SDA | 2.2k pull-up to 3V3, DNP if the breakout has its own |
+| 4 | SCL | 2.2k pull-up to 3V3, DNP if the breakout has its own |
+| 5 | XSHUT | MCU GPIO output |
+| 6 | INT (GPIO1) | MCU GPIO input, 10k pull-up to 3V3 |
 
 ## Leg ID resistor divider
 
