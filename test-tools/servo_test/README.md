@@ -13,7 +13,7 @@ Arduino Uno sketch to put one MG996R at a set angle over serial and read the mod
 
 The MG996R's pot runs off its internal regulator, so the wiper stays around 1–2.5 V even at 6 V supply and can go straight to A0. The sketch reads it as is (`k 100`); use `k 200` if you add a 100k/100k divider.
 
-On the first `a`/`u` after a stop the sketch starts the pulses at the position read from the wiper (`CAL_MV_AT_1000`, `CAL_MV_PER_US` at the top), because this servo ignores commands if the first pulse is well below where it's sitting. Recalibrate those two numbers for a different servo from an `s` sweep.
+On the first `a`/`u` after a stop the sketch starts the pulses at the position read from the wiper plus 30 µs, because these servos ignore commands if the first pulse is even slightly below where they sit. That needs the right calibration: `c` loads the new servo's own numbers, `m <mid> <slope×1000>` loads them from `docs/servos.md` (e.g. `m 1593 1374`). The default is R1_coxa's. If a servo ignores commands, send a pulse above where it sits (`u 2600`) and it wakes up.
 
 ## Use
 
@@ -23,7 +23,10 @@ Serial monitor at 115200, line ending "Newline".
 a 90              go to 90 deg, prints pulse, ADC and wiper mV
 u 1500            go to a pulse width directly
 s 0 180 10 500    sweep 0-180 in 10 deg steps, 500 ms settle, prints CSV
+c R1_femur        calibrate that servo (label A2): sweep 500-2500 us, fit a line, print a row for docs/servos.md
+m 1593 1374       load a calibration (mid mV, slope x1000) from docs/servos.md
 n                 wiper min/avg/max over 1 s (noise; push on the horn to load it)
+d                 dump 256 raw wiper samples at full ADC speed (~9.6 kHz), for looking at the noise
 o                 stop pulses, servo goes limp
 w 500             move speed in us/s (500 = ~90 deg/s, default), w 0 jumps straight there
 p                 measure the pulses on D9 (should be ~50 Hz, width as commanded)

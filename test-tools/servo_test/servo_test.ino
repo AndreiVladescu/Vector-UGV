@@ -21,9 +21,11 @@ bool attached = false;
 float vref_mv = 5000.0;    // measure the Uno's 5V pin and set it with "v"
 float divider = 1.0;       // wiper volts = A0 volts * divider (1.0 = wiper straight to A0)
 
-// Wiper calibration of the first modded servo (2026-09-26, same at 5 V and 6 V supply).
-const float CAL_MV_AT_1000 = 958.0;
-const float CAL_MV_PER_US = 1.364;
+// Wiper calibration used to find where the servo is when pulses start. Defaults are
+// R1_coxa (label A1); a `c` run replaces them with the servo on the bench.
+float cal_mid = 1646.0;      // mV at 1500 us
+float cal_slope = 1.366;     // mV per us
+const int RESUME_MARGIN = 30;  // us above the measured position: a first pulse below it is ignored
 
 char line[48];
 byte len = 0;
@@ -54,7 +56,7 @@ float read_wiper_mv(int *raw_out);
 // Pulse width that matches where the shaft is now, from the wiper.
 int measured_us() {
   float mv = read_wiper_mv(NULL);
-  return constrain((int)(1000 + (mv - CAL_MV_AT_1000) / CAL_MV_PER_US), 400, 2600);
+  return (int)(1500 + (mv - cal_mid) / cal_slope);
 }
 
 void set_us(int us) {
@@ -62,9 +64,9 @@ void set_us(int us) {
   if (!attached) {
     // Resume from where the servo actually is. If the first pulse is well below the held
     // position, this MG996R ignores all commands until sent past that position.
-    sent_us = measured_us();
+    sent_us = constrain(measured_us() + RESUME_MARGIN, 300, 2700);
     servo.writeMicroseconds((int)sent_us);  // set before attach so the first pulse is this
-    servo.attach(SERVO_PIN, 400, 2600);
+    servo.attach(SERVO_PIN, 300, 2700);
     attached = true;
     Serial.print("resume from ");
     Serial.print((int)sent_us);
@@ -191,12 +193,89 @@ void float_check() {
                                         : "  -> A0 is connected to something low-impedance");
 }
 
+// Calibration: sweep 500-2500 us in 100 us steps, fit wiper_mV = mid + slope * (us - 1500),
+// measure noise at 1500 us and print a row for docs/servos.md.
+void calibrate(const char *name) {
+  const int N = 21;
+  float y[N];
+  Serial.println("us,wiper_mv");
+  for (int i = 0; i < N; i++) {
+    int us = 500 + i * 100;
+    set_us(us);
+    delay(500);
+    y[i] = read_wiper_mv(NULL);
+    Serial.print(us);
+    Serial.print(',');
+    Serial.println(y[i], 0);
+  }
+  // least squares with x = us - 1500 (x has zero mean over the sweep)
+  float sy = 0, sxy = 0, sxx = 0;
+  for (int i = 0; i < N; i++) {
+    float x = i * 100 - 1000;
+    sy += y[i];
+    sxy += x * y[i];
+    sxx += x * x;
+  }
+  float mid = sy / N, slope = sxy / sxx, worst = 0;
+  cal_mid = mid;      // use this servo's own numbers from now on
+  cal_slope = slope;
+  for (int i = 0; i < N; i++) {
+    worst = max(worst, fabs(y[i] - (mid + slope * (i * 100 - 1000))));
+  }
+  set_us(1500);
+  delay(500);
+  int lo = 1023, hi = 0;
+  for (unsigned long end = millis() + 1000; millis() < end;) {
+    int r = analogRead(WIPER_PIN);
+    lo = min(lo, r);
+    hi = max(hi, r);
+  }
+  float noise = (hi - lo) * vref_mv / 1023.0 * divider;
+  Serial.println(F("| Joint | Label | Date | mid (mV @ 1500 us) | slope (mV/us) | @ 500 us | @ 2500 us | fit error (mV) | noise p-p (mV) | Notes |"));
+  Serial.print("| ");
+  Serial.print(name[0] ? name : "?");
+  Serial.print(" |  |  | ");
+  Serial.print(mid, 0);
+  Serial.print(" | ");
+  Serial.print(slope, 3);
+  Serial.print(" | ");
+  Serial.print(mid - 1000 * slope, 0);
+  Serial.print(" | ");
+  Serial.print(mid + 1000 * slope, 0);
+  Serial.print(" | ");
+  Serial.print(worst, 0);
+  Serial.print(" | ");
+  Serial.print(noise, 0);
+  Serial.println(" |  |");
+}
+
+// Raw capture of the wiper at full ADC speed, to see what the noise looks like.
+void dump() {
+  const int N = 256;
+  static int buf[N];
+  unsigned long t0 = micros();
+  for (int i = 0; i < N; i++) buf[i] = analogRead(WIPER_PIN);
+  unsigned long dt = micros() - t0;
+  Serial.print("dump ");
+  Serial.print(N);
+  Serial.print(" samples, ");
+  Serial.print(dt / (float)N, 2);
+  Serial.println(" us each");
+  for (int i = 0; i < N; i++) {
+    Serial.print(buf[i]);
+    Serial.print(i % 16 == 15 ? '\n' : ' ');
+  }
+}
+
 void help() {
   Serial.println(F("a <deg>        go to angle 0-180"));
   Serial.println(F("u <us>         go to pulse width 400-2600 us"));
   Serial.println(F("s <from> <to> <step> <ms>   sweep, prints CSV (default step 10, 500 ms)"));
+  Serial.println(F("m <mid> <slope x1000>  load a servo's calibration, e.g. m 1593 1374 for R2_coxa"));
+  Serial.println(F("c <joint>      calibrate: sweep 500-2500 us, fit, print a row for docs/servos.md"));
   Serial.println(F("r              read wiper once"));
   Serial.println(F("n              wiper noise over 1 s"));
+  Serial.println(F("d              dump 256 raw wiper samples at full ADC speed"));
   Serial.println(F("p              measure the pulses on D9 (width, period)"));
   Serial.println(F("f              check whether A0 is actually connected (pull-up test)"));
   Serial.println(F("o              servo off (no pulses, goes limp)"));
@@ -222,8 +301,22 @@ void handle(char *cmd) {
     case 'a': set_us(deg_to_us(a)); delay(300); report(); break;
     case 'u': set_us(a); delay(300); report(); break;
     case 's': sweep(a, b, s, w); break;
+    case 'm':
+      if (a > 0 && b > 0) { cal_mid = a; cal_slope = b / 1000.0; }
+      Serial.print("calibration mid ");
+      Serial.print(cal_mid, 0);
+      Serial.print(" mV, slope ");
+      Serial.println(cal_slope, 3);
+      break;
+    case 'c': {
+      char *name = cmd + 1;
+      while (*name == ' ') name++;
+      calibrate(name);
+      break;
+    }
     case 'r': report(); break;
     case 'n': noise(); break;
+    case 'd': dump(); break;
     case 'p': pulse_check(); break;
     case 'f': float_check(); break;
     case 'o': servo.detach(); attached = false; Serial.println("servo off"); break;
