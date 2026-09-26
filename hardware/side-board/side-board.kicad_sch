@@ -1015,7 +1015,7 @@
 	)
 	(text "3.3V Step-Down Converter"
 		(exclude_from_sim no)
-		(at 90.805 88.9 0)
+		(at 90.17 74.295 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1032,6 +1032,16 @@
 			(type default)
 		)
 		(uuid "1f3d6bc4-d4db-498a-ba2c-9f3579fa5e1f")
+	)
+	(wire
+		(pts
+			(xy 221.615 87.63) (xy 235.585 87.63)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "30c399f5-d231-41c0-8dfa-fcade9c5735a")
 	)
 	(wire
 		(pts
@@ -1055,7 +1065,7 @@
 	)
 	(wire
 		(pts
-			(xy 74.295 105.41) (xy 77.47 105.41)
+			(xy 73.66 90.805) (xy 76.835 90.805)
 		)
 		(stroke
 			(width 0)
@@ -1072,6 +1082,36 @@
 			(type default)
 		)
 		(uuid "b4e4b8e5-c58e-4fe9-9534-4360e6687a74")
+	)
+	(wire
+		(pts
+			(xy 221.615 61.595) (xy 235.585 61.595)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cdaaee30-976c-4db4-a23f-7ebeb6beb465")
+	)
+	(wire
+		(pts
+			(xy 221.615 90.17) (xy 235.585 90.17)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d3d2ba6c-0cde-4344-970b-10de238dbf51")
+	)
+	(wire
+		(pts
+			(xy 221.615 59.055) (xy 235.585 59.055)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e09ca15b-3ab5-44be-9116-7cfe1ee702b7")
 	)
 	(wire
 		(pts
@@ -1092,6 +1132,16 @@
 			(type default)
 		)
 		(uuid "f0c35c11-d188-4ba6-bd05-650b5f63b65e")
+	)
+	(wire
+		(pts
+			(xy 196.215 27.305) (xy 201.295 27.305)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fef91d9c-7cc6-44b3-9f13-47ee773c9c95")
 	)
 	(label "SIDE_BIT"
 		(at 233.045 64.135 180)
@@ -1114,7 +1164,7 @@
 		(uuid "d1c71c16-0e13-4004-81ae-0f33b46ae386")
 	)
 	(label "SIDE_BIT"
-		(at 146.685 33.02 180)
+		(at 196.215 27.305 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1157,7 +1207,7 @@
 	)
 	(hierarchical_label "VBAT"
 		(shape input)
-		(at 74.295 105.41 180)
+		(at 73.66 90.805 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1259,7 +1309,7 @@
 	)
 	(symbol
 		(lib_id "Jumper:SolderJumper_2_Bridged")
-		(at 213.36 61.595 0)
+		(at 216.535 61.595 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -1267,10 +1317,9 @@
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "39fdc33e-7024-4660-adc1-815631bb7b7e")
 		(property "Reference" "JP101"
-			(at 213.36 55.88 0)
+			(at 215.9 64.135 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1280,7 +1329,7 @@
 			)
 		)
 		(property "Value" "Jumper_Bridged"
-			(at 213.36 58.42 0)
+			(at 215.9 66.675 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1290,7 +1339,7 @@
 			)
 		)
 		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Bridged2Bar_Pad1.0x1.5mm"
-			(at 213.36 61.595 0)
+			(at 216.535 61.595 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1301,7 +1350,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 213.36 67.945 0)
+			(at 216.535 67.945 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1312,7 +1361,7 @@
 			)
 		)
 		(property "Description" "Solder Jumper, 2-pole, closed/bridged"
-			(at 213.36 66.675 0)
+			(at 216.535 66.675 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1339,7 +1388,7 @@
 	)
 	(symbol
 		(lib_id "Jumper:SolderJumper_2_Bridged")
-		(at 216.535 83.82 0)
+		(at 216.535 87.63 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -1350,7 +1399,7 @@
 		(fields_autoplaced yes)
 		(uuid "4b986d05-4ada-4068-a87d-95cb34266f20")
 		(property "Reference" "JP104"
-			(at 216.535 78.105 0)
+			(at 216.535 81.915 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1360,7 +1409,7 @@
 			)
 		)
 		(property "Value" "Jumper_Bridged"
-			(at 216.535 80.645 0)
+			(at 216.535 84.455 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1370,7 +1419,7 @@
 			)
 		)
 		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Bridged2Bar_Pad1.0x1.5mm"
-			(at 216.535 83.82 0)
+			(at 216.535 87.63 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1381,7 +1430,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 216.535 90.17 0)
+			(at 216.535 93.98 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1392,7 +1441,7 @@
 			)
 		)
 		(property "Description" "Solder Jumper, 2-pole, closed/bridged"
-			(at 216.535 88.9 0)
+			(at 216.535 92.71 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1419,7 +1468,7 @@
 	)
 	(symbol
 		(lib_id "Jumper:SolderJumper_2_Open")
-		(at 202.565 88.265 0)
+		(at 216.535 90.17 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -1427,10 +1476,9 @@
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "65a53486-2e10-488f-9a78-3357f3c48755")
 		(property "Reference" "JP103"
-			(at 202.565 81.915 0)
+			(at 216.535 93.345 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1440,7 +1488,7 @@
 			)
 		)
 		(property "Value" "Jumper_Open"
-			(at 202.565 84.455 0)
+			(at 216.535 95.885 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1450,7 +1498,7 @@
 			)
 		)
 		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Open_Pad1.0x1.5mm"
-			(at 202.565 88.265 0)
+			(at 216.535 90.17 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1461,7 +1509,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 202.565 95.885 0)
+			(at 216.535 97.79 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1472,7 +1520,7 @@
 			)
 		)
 		(property "Description" "Solder Jumper, 2-pole, open"
-			(at 202.565 93.345 0)
+			(at 216.535 95.25 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1499,7 +1547,7 @@
 	)
 	(symbol
 		(lib_id "side-board:NUP2105LT1G")
-		(at 168.91 129.54 90)
+		(at 100.33 152.4 90)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -1510,7 +1558,7 @@
 		(fields_autoplaced yes)
 		(uuid "6d564f84-88dc-4685-9aef-c955de7e6a7f")
 		(property "Reference" "IC103"
-			(at 175.26 115.5699 90)
+			(at 106.68 138.4299 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1521,7 +1569,7 @@
 			)
 		)
 		(property "Value" "NUP2105LT1G"
-			(at 175.26 118.1099 90)
+			(at 106.68 140.9699 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1532,7 +1580,7 @@
 			)
 		)
 		(property "Footprint" "side-board:SOT96P237X111-3N"
-			(at 263.83 107.95 0)
+			(at 195.25 130.81 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1544,7 +1592,7 @@
 			)
 		)
 		(property "Datasheet" "https://www.onsemi.com/pub/Collateral/NUP2105L-D.PDF"
-			(at 363.83 107.95 0)
+			(at 295.25 130.81 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1556,7 +1604,7 @@
 			)
 		)
 		(property "Description" "Low Capacitance High-Speed CAN Data Rates; SZ Prefix for Automotive and Other Applications Requiring Unique Site and Control Change Requirements; AECQ101 Qualified and PPAP Capable; SOT-23 pacakage allows two separate bi-directional configurations; 350 W Peak Power Dissipation per line (8x20 us waveform); Low reverse leakage current (< 100 nA); IEC-61000-4-2: Level 4 Compatible.; IEC-61000-4-4: 5/50 ns 50 A Max.; IEC-61000-4-5: 8.0 A (8x20 us); ISO 76372 Pulse 2a: Repetitive Load Switch Disconnect, 9.5 A;"
-			(at 168.91 129.54 0)
+			(at 100.33 152.4 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1567,7 +1615,7 @@
 			)
 		)
 		(property "Height" "1.11"
-			(at 563.83 107.95 0)
+			(at 495.25 130.81 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1579,7 +1627,7 @@
 			)
 		)
 		(property "Mouser Part Number" "863-NUP2105LT1G"
-			(at 663.83 107.95 0)
+			(at 595.25 130.81 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1591,7 +1639,7 @@
 			)
 		)
 		(property "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/onsemi/NUP2105LT1G?qs=ZXBb0xZ9WeDHmiHN%252BYKtYA%3D%3D"
-			(at 763.83 107.95 0)
+			(at 695.25 130.81 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1603,7 +1651,7 @@
 			)
 		)
 		(property "Manufacturer_Name" "onsemi"
-			(at 863.83 107.95 0)
+			(at 795.25 130.81 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1615,7 +1663,7 @@
 			)
 		)
 		(property "Manufacturer_Part_Number" "NUP2105LT1G"
-			(at 963.83 107.95 0)
+			(at 895.25 130.81 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1646,7 +1694,7 @@
 	)
 	(symbol
 		(lib_id "Jumper:SolderJumper_2_Open")
-		(at 195.58 57.15 0)
+		(at 216.535 59.055 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -1657,7 +1705,7 @@
 		(fields_autoplaced yes)
 		(uuid "8c284878-c795-4ba3-a18f-45c5f0ba6036")
 		(property "Reference" "JP102"
-			(at 195.58 50.8 0)
+			(at 216.535 52.705 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1667,7 +1715,7 @@
 			)
 		)
 		(property "Value" "Jumper_Open"
-			(at 195.58 53.34 0)
+			(at 216.535 55.245 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1677,7 +1725,7 @@
 			)
 		)
 		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Open_Pad1.0x1.5mm"
-			(at 195.58 57.15 0)
+			(at 216.535 59.055 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1688,7 +1736,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 195.58 64.77 0)
+			(at 216.535 66.675 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1699,7 +1747,7 @@
 			)
 		)
 		(property "Description" "Solder Jumper, 2-pole, open"
-			(at 195.58 62.23 0)
+			(at 216.535 64.135 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1726,7 +1774,7 @@
 	)
 	(symbol
 		(lib_id "Jumper:SolderJumper_2_Open")
-		(at 156.845 33.02 0)
+		(at 206.375 27.305 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -1737,7 +1785,7 @@
 		(fields_autoplaced yes)
 		(uuid "b08f7e59-8743-4df0-b051-2576c51994a5")
 		(property "Reference" "JP107"
-			(at 156.845 26.67 0)
+			(at 206.375 20.955 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1747,7 +1795,7 @@
 			)
 		)
 		(property "Value" "Jumper_Open"
-			(at 156.845 29.21 0)
+			(at 206.375 23.495 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1757,7 +1805,7 @@
 			)
 		)
 		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Open_Pad1.0x1.5mm"
-			(at 156.845 33.02 0)
+			(at 206.375 27.305 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1768,7 +1816,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 156.845 40.64 0)
+			(at 206.375 34.925 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1779,7 +1827,7 @@
 			)
 		)
 		(property "Description" "Solder Jumper, 2-pole, open"
-			(at 156.845 38.1 0)
+			(at 206.375 32.385 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1886,7 +1934,7 @@
 	)
 	(symbol
 		(lib_id "side-board:TPS62933DRLR")
-		(at 77.47 100.33 0)
+		(at 76.835 85.725 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -1897,7 +1945,7 @@
 		(fields_autoplaced yes)
 		(uuid "c6bfd32d-24cd-466a-83b1-d25cf62f5421")
 		(property "Reference" "IC101"
-			(at 90.17 93.345 0)
+			(at 89.535 78.74 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1907,7 +1955,7 @@
 			)
 		)
 		(property "Value" "TPS62933DRLR"
-			(at 90.17 95.885 0)
+			(at 89.535 81.28 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1917,7 +1965,7 @@
 			)
 		)
 		(property "Footprint" "side-board:SOTFL50P160X60-8N"
-			(at 99.06 195.25 0)
+			(at 98.425 180.645 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1929,7 +1977,7 @@
 			)
 		)
 		(property "Datasheet" "https://www.ti.com/lit/ds/symlink/tps62933.pdf?ts=1626073394234"
-			(at 99.06 295.25 0)
+			(at 98.425 280.645 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1941,7 +1989,7 @@
 			)
 		)
 		(property "Description" "The TPS62933 is a high-efficiency, easy-to-use synchronous buck converter with a wide input voltage range of 3.8 V to 30 V"
-			(at 77.47 100.33 0)
+			(at 76.835 85.725 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1952,7 +2000,7 @@
 			)
 		)
 		(property "Height" "0.6"
-			(at 99.06 495.25 0)
+			(at 98.425 480.645 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1964,7 +2012,7 @@
 			)
 		)
 		(property "Mouser Part Number" "595-TPS62933DRLR"
-			(at 99.06 595.25 0)
+			(at 98.425 580.645 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1976,7 +2024,7 @@
 			)
 		)
 		(property "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/Texas-Instruments/TPS62933DRLR?qs=Rp5uXu7WBW9fv47wfQVntQ%3D%3D"
-			(at 99.06 695.25 0)
+			(at 98.425 680.645 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1988,7 +2036,7 @@
 			)
 		)
 		(property "Manufacturer_Name" "Texas Instruments"
-			(at 99.06 795.25 0)
+			(at 98.425 780.645 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2000,7 +2048,7 @@
 			)
 		)
 		(property "Manufacturer_Part_Number" "TPS62933DRLR"
-			(at 99.06 895.25 0)
+			(at 98.425 880.645 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2046,7 +2094,7 @@
 	)
 	(symbol
 		(lib_id "side-board:NUP2105LT1G")
-		(at 144.78 129.54 90)
+		(at 73.66 151.765 90)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -2057,7 +2105,7 @@
 		(fields_autoplaced yes)
 		(uuid "d679d69b-cfc3-4621-87af-d6e75a32d506")
 		(property "Reference" "IC102"
-			(at 151.13 115.5699 90)
+			(at 80.01 137.7949 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -2068,7 +2116,7 @@
 			)
 		)
 		(property "Value" "NUP2105LT1G"
-			(at 151.13 118.1099 90)
+			(at 80.01 140.3349 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -2079,7 +2127,7 @@
 			)
 		)
 		(property "Footprint" "side-board:SOT96P237X111-3N"
-			(at 239.7 107.95 0)
+			(at 168.58 130.175 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2091,7 +2139,7 @@
 			)
 		)
 		(property "Datasheet" "https://www.onsemi.com/pub/Collateral/NUP2105L-D.PDF"
-			(at 339.7 107.95 0)
+			(at 268.58 130.175 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2103,7 +2151,7 @@
 			)
 		)
 		(property "Description" "Low Capacitance High-Speed CAN Data Rates; SZ Prefix for Automotive and Other Applications Requiring Unique Site and Control Change Requirements; AECQ101 Qualified and PPAP Capable; SOT-23 pacakage allows two separate bi-directional configurations; 350 W Peak Power Dissipation per line (8x20 us waveform); Low reverse leakage current (< 100 nA); IEC-61000-4-2: Level 4 Compatible.; IEC-61000-4-4: 5/50 ns 50 A Max.; IEC-61000-4-5: 8.0 A (8x20 us); ISO 76372 Pulse 2a: Repetitive Load Switch Disconnect, 9.5 A;"
-			(at 144.78 129.54 0)
+			(at 73.66 151.765 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2114,7 +2162,7 @@
 			)
 		)
 		(property "Height" "1.11"
-			(at 539.7 107.95 0)
+			(at 468.58 130.175 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2126,7 +2174,7 @@
 			)
 		)
 		(property "Mouser Part Number" "863-NUP2105LT1G"
-			(at 639.7 107.95 0)
+			(at 568.58 130.175 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2138,7 +2186,7 @@
 			)
 		)
 		(property "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/onsemi/NUP2105LT1G?qs=ZXBb0xZ9WeDHmiHN%252BYKtYA%3D%3D"
-			(at 739.7 107.95 0)
+			(at 668.58 130.175 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2150,7 +2198,7 @@
 			)
 		)
 		(property "Manufacturer_Name" "onsemi"
-			(at 839.7 107.95 0)
+			(at 768.58 130.175 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2162,7 +2210,7 @@
 			)
 		)
 		(property "Manufacturer_Part_Number" "NUP2105LT1G"
-			(at 939.7 107.95 0)
+			(at 868.58 130.175 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)

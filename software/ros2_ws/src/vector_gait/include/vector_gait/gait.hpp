@@ -44,6 +44,8 @@ struct GaitParams
   double body_height = 0.10;  // m, hip plane above ground
   double reach = 0.13;        // m, neutral foot distance from the hip
   double max_stride = 0.06;   // m, commands are scaled down to respect this
+  double accel = 0.25;        // m/s², walking speed ramp
+  double turn_accel = 1.5;    // rad/s², turning speed ramp
   double pose_speed = 0.05;   // m/s, body shift rate
   double pose_turn = 0.5;     // rad/s, body tilt rate
 };
@@ -74,7 +76,7 @@ public:
   const std::array<Vec3, kLegs> & neutral() const {return neutral_;}
   bool swinging(int leg) const {return swinging_[leg];}
   bool standing() const {return standing_;}
-  // Command actually applied after stride limiting.
+  // Command actually applied after stride limiting and the acceleration ramp.
   const Twist2D & applied() const {return applied_;}
 
   double duty() const;
@@ -96,6 +98,7 @@ private:
   std::array<Vec3, kLegs> liftoff_{};
   std::array<bool, kLegs> swinging_{};
   std::array<bool, kLegs> skip_{};  // leg stays planted through this swing window
+  std::array<double, kLegs> swing_start_{};  // swing progress when the step began (0 normally)
   std::array<JointAngles, kLegs> joints_{};
   BodyPose pose_, pose_target_;
   Twist2D applied_;

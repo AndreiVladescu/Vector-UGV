@@ -4,8 +4,13 @@ gait_node:
     period: 1.0         # s per full cycle
     step_height: 0.035  # m
     max_stride: 0.06    # m
+    accel: 0.25         # m/s², ramp for starts, stops and direction changes
+    turn_accel: 1.5     # rad/s²
     rate: 200.0         # Hz
-    cmd_timeout: 0.5    # s without cmd_vel before stopping
+    cmd_timeout: 0.0    # s without cmd_vel before stopping; 0 = latch the last key, 0.6 = hold-to-move
+    height_step: 0.005  # m per t/b press (cmd_vel with only linear.z)
+    height_min: -0.04   # m, limits for that height offset
+    height_max: 0.03
     # body offset from the walking frame, m and rad; ramped, can be set live
     body_x: 0.0
     body_y: 0.0

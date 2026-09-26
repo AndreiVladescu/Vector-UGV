@@ -19,7 +19,9 @@ sudo dpkg -i /tmp/ros2-apt-source.deb
 sudo apt update
 sudo apt install ros-jazzy-desktop ros-jazzy-ros2-control ros-jazzy-ros2-controllers \
   ros-jazzy-xacro ros-jazzy-teleop-twist-keyboard ros-jazzy-plotjuggler-ros \
-  ros-jazzy-ros-gz ros-jazzy-gz-ros2-control python3-colcon-common-extensions
+  ros-jazzy-ros-gz ros-jazzy-gz-ros2-control python3-colcon-common-extensions \
+  python3-can can-utils
+pip install --user --break-system-packages cantools
 ```
 
 On Mint the `UBUNTU_CODENAME` line resolves to `noble`, which is what the ROS repo needs.
@@ -36,6 +38,21 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard     # second terminal
 ros2 param set /gait_node gait ripple                     # tripod / ripple / wave, while standing
 ros2 param set /gait_node body_pitch 0.15                 # body_x/y/z/roll/pitch/yaw, live
 ```
+
+Teleop keys (the teleop terminal needs focus). By default a key latches: the robot keeps doing it until the next key, and `k` stops. For hold-to-move instead, `ros2 param set /gait_node cmd_timeout 0.6`: it walks while the key is held (keyboard auto-repeat) and stops 0.6 s after release.
+
+| Key | Motion |
+|---|---|
+| `i` `,` | forward / back |
+| `j` `l` | turn left / right |
+| `u` `o` `m` `.` | forward or back while turning |
+| `J` `L` (shift) | strafe left / right |
+| `U` `O` `M` `>` (shift) | diagonal |
+| `t` `b` | body 5 mm up / down per press, −40 to +30 mm; doesn't stop the walk |
+| `k` | stop |
+| `q`/`z`, `w`/`x`, `e`/`c` | all / linear / turn speed ±10% |
+
+Teleop starts at 0.5 m/s but the gait caps walking at about 0.12 m/s (6 cm stride), so the speed keys only show once you're below that. Speed changes ramp at 0.25 m/s² (`accel`, `turn_accel`), so starting, stopping and switching direction take about half a second. Switching gait needs the robot standing: press `k` first. In rviz the camera follows the robot, so strafing shows as the grid and foot trails sliding sideways.
 
 Mock hardware, so the joints go exactly where they're told. Useful for checking foot paths (the coloured trails), reach and joint speeds (PlotJuggler on `/joint_states`), not loads. Change geometry in `legs.yaml` and relaunch.
 
@@ -56,8 +73,7 @@ Worlds: `flat`, `slope` (8°), `rough` (40 slabs, 1–3 cm, fixed layout). `leve
 `fake_legs.py` plays the six leg nodes on a virtual CAN bus, from `protocol/vector.dbc`. It follows commands at the servo speed limit, reports state and status, and faults if SYNC stops.
 
 ```sh
-sudo modprobe vcan && sudo ip link add dev vcan0 type vcan && sudo ip link set up vcan0
-pip install python-can cantools
+sudo modprobe vcan && sudo ip link add dev vcan0 type vcan && sudo ip link set up vcan0   # again after a reboot
 ros2 run vector_hw fake_legs.py --channel vcan0
 ros2 launch vector_bringup robot.launch.py hardware:=can can_interface:=vcan0
 candump vcan0 | cantools decode ../../protocol/vector.dbc      # watch the traffic
@@ -87,3 +103,13 @@ First numbers with the placeholder legs (coxa 50 / femur 80 / tibia 120 mm):
 So with these legs, 2.5 kg is too much for comfortable tripod walking on MG996Rs. Shorter femur reach or less mass is where to look. Wave gait also needs a longer period than 1 s (joints too fast).
 
 `tools/` holds bring-up scripts (python-can, cantools) and the CAN flasher.
+
+## When the robot doesn't move
+
+1. Leftovers from earlier runs. A closed terminal or a crashed launch can leave a Gazebo server or an old `gait_node` running; the next launch then talks to the old controller manager and the new robot gets no controllers. `sim_gazebo.launch.py` prints a warning if it finds an old Gazebo. Clean up with:
+   ```sh
+   pkill -f "gz sim"; pkill -f gait_node; pkill -f ros2_control_node; ros2 daemon stop
+   ```
+2. Controllers: `ros2 control list_controllers` should show `joint_state_broadcaster` and `leg_controller` as active.
+3. Commands arrive: `ros2 topic echo /cmd_vel` while pressing keys, and `ros2 node list` should show one `/gait_node`. The teleop terminal needs keyboard focus.
+4. After pulling changes to C++ code, rebuild (`colcon build --symlink-install`) and re-source `install/setup.zsh` in every terminal.

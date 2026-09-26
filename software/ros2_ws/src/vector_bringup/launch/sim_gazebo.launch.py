@@ -5,13 +5,16 @@
   world:=flat|slope|rough, level:=true for IMU leveling
 """
 import os
+import subprocess
 import sys
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
+from launch.actions import (DeclareLaunchArgument, EmitEvent, ExecuteProcess, LogInfo,
+                            OpaqueFunction, RegisterEventHandler)
 from launch.conditions import IfCondition
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.event_handlers import OnProcessExit
+from launch.events import Shutdown
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -20,14 +23,34 @@ sys.path.insert(0, os.path.dirname(__file__))
 from common import geometry_params  # noqa: E402
 
 
+# `gz sim` starts the server (and GUI) as child processes and ignores a SIGINT sent to itself
+# alone, which is what ros2 launch does on Ctrl+C. A leftover server keeps its controller
+# manager alive and the next launch's spawner talks to that one instead, so the new robot
+# never gets controllers. Run gz in its own process group and signal the whole group.
+GZ_WRAPPER = (
+    'setsid gz sim "$@" & pid=$!; '
+    'trap \'kill -INT -$pid 2>/dev/null; (sleep 5; kill -KILL -$pid 2>/dev/null) & wait $pid\' INT TERM HUP; '
+    'wait $pid')
+
+
 def gazebo(context):
+    actions = []
+    running = subprocess.run(['pgrep', '-f', 'gz sim .*vector_bringup/worlds/'],
+                             capture_output=True, text=True).stdout.split()
+    if running:
+        actions.append(LogInfo(msg=(
+            'WARNING: an older Gazebo for this robot is still running (pid ' + ' '.join(running) +
+            '). Stop it first: pkill -f "gz sim"')))
+
     world = os.path.join(get_package_share_directory('vector_bringup'), 'worlds',
                          LaunchConfiguration('world').perform(context) + '.sdf')
-    flags = '-r -v 1 ' + ('' if LaunchConfiguration('gui').perform(context) == 'true' else '-s ')
-    return [IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(
-            get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')),
-        launch_arguments={'gz_args': flags + world, 'on_exit_shutdown': 'true'}.items())]
+    args = ['-r', '-v', '1'] + ([] if LaunchConfiguration('gui').perform(context) == 'true' else ['-s'])
+    gz = ExecuteProcess(cmd=['bash', '-c', GZ_WRAPPER, 'gz'] + args + [world],
+                        name='gazebo', output='screen')
+    actions.append(gz)
+    # closing the Gazebo window ends the whole launch
+    actions.append(RegisterEventHandler(OnProcessExit(target_action=gz, on_exit=[EmitEvent(event=Shutdown())])))
+    return actions
 
 
 def generate_launch_description():

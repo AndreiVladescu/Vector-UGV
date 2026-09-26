@@ -105,7 +105,9 @@ TEST(Gait, SettlesBackToStanding)
 TEST(Gait, StrideIsLimited)
 {
   auto g = make(vector::GaitType::Tripod);
-  g.update({5.0, 0.0, 0.0}, kDt);
+  for (int i = 0; i < 400; ++i) {  // past the acceleration ramp
+    g.update({5.0, 0.0, 0.0}, kDt);
+  }
   const double stride = g.applied().vx * g.params().period * g.duty();
   EXPECT_NEAR(stride, g.params().max_stride, 1e-6);
 }
@@ -145,4 +147,53 @@ TEST(Gait, BodyPoseMovesBodyNotFeet)
     EXPECT_NEAR(by, want.y, 1e-9);
     EXPECT_NEAR(p.z, want.z, 1e-9);
   }
+}
+
+TEST(Gait, RestartAfterStopDoesNotOverreach)
+{
+  // Walk, stop until standing, then set off in each direction. The first steps must not
+  // push any foot further from neutral than a normal stride, and must not jump in height.
+  const vector::Twist2D starts[] = {{0.12, 0, 0}, {0, 0.12, 0}, {0, 0, 0.6}, {-0.12, 0, 0}};
+  for (auto type : {vector::GaitType::Tripod, vector::GaitType::Ripple, vector::GaitType::Wave}) {
+    for (const auto & go : starts) {
+      auto g = make(type);
+      for (int i = 0; i < 700; ++i) {
+        g.update({0.08, 0.0, 0.0}, kDt);
+      }
+      for (int i = 0; i < 2000 && !g.standing(); ++i) {
+        g.update({}, kDt);
+      }
+      ASSERT_TRUE(g.standing());
+
+      // a normal swing's fastest height change per tick, for this gait
+      const double swing_time = g.params().period * (1 - g.duty());
+      const double normal = g.params().step_height * M_PI * kDt / swing_time;
+      double worst = 0, jump = 0;
+      auto prev = g.feet();
+      for (int i = 0; i < 600; ++i) {
+        EXPECT_TRUE(g.update(go, kDt));
+        for (int l = 0; l < vector::kLegs; ++l) {
+          const auto & f = g.feet()[l];
+          const auto & n = g.neutral()[l];
+          worst = std::max(worst, std::hypot(f.x - n.x, f.y - n.y));
+          jump = std::max(jump, std::abs(f.z - prev[l].z));
+        }
+        prev = g.feet();
+      }
+      EXPECT_LE(worst, g.params().max_stride + 0.002)
+        << "gait " << static_cast<int>(type) << " cmd " << go.vx << "," << go.vy << "," << go.wz;
+      EXPECT_LT(jump, 2.0 * normal) << "foot height jumped";
+    }
+  }
+}
+
+TEST(Gait, SpeedRampsUp)
+{
+  auto g = make(vector::GaitType::Tripod);
+  g.update({0.12, 0.0, 0.0}, kDt);
+  EXPECT_NEAR(g.applied().vx, 0.25 * kDt, 1e-9);
+  for (int i = 0; i < 200; ++i) {
+    g.update({0.12, 0.0, 0.0}, kDt);
+  }
+  EXPECT_NEAR(g.applied().vx, 0.12, 1e-9);
 }

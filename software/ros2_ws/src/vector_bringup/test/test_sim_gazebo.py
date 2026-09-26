@@ -3,6 +3,7 @@
 Peaks hit the effort limit during fast swings (the position loop saturates), so the
 median and 95th percentile are the useful numbers.
 """
+import math
 import os
 import sys
 
@@ -39,3 +40,18 @@ class TestFlat(GazeboTest):
         self.assertGreater(self.min_z, 0.05, 'body hit the ground')
         self.assertLess(self.max_tilt * 57.3, 20.0, 'robot tipped')
         self.assertGreater(end.x - start.x, 0.2, 'did not walk forward')
+
+        # strafe left (teleop shift+J), then turn (j)
+        side = Twist()
+        side.linear.y = 0.08
+        self.spin_for(5.0, side)
+        after = self.odom.pose.pose.position
+        turn = Twist()
+        turn.angular.z = 0.4
+        q0 = self.odom.pose.pose.orientation
+        self.spin_for(4.0, turn)
+        q1 = self.odom.pose.pose.orientation
+        yaw = lambda q: math.atan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y * q.y + q.z * q.z))  # noqa: E731
+        print(f'strafed {after.y - end.y:+.3f} m, turned {math.degrees(yaw(q1) - yaw(q0)):+.0f} deg')
+        self.assertGreater(after.y - end.y, 0.2, 'did not strafe')
+        self.assertGreater(math.degrees(yaw(q1) - yaw(q0)), 45, 'did not turn')

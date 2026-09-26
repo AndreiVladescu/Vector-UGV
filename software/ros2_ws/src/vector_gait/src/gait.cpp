@@ -10,6 +10,8 @@ namespace
 {
 constexpr double kNeutralTolerance = 0.003;  // m
 constexpr double kIdle = 1e-4;
+// A step that would start later than this in its window is left for the next window.
+constexpr double kLateStart = 0.5;
 
 // Phase offsets per leg, in kLegNames order: L1 L2 L3 R1 R2 R3.
 constexpr std::array<double, kLegs> kTripod = {0.0, 0.5, 0.0, 0.5, 0.0, 0.5};
@@ -145,8 +147,13 @@ Vec3 Gait::to_leg(int leg, const Vec3 & p) const
 
 bool Gait::update(const Twist2D & cmd_in, double dt)
 {
-  const bool is_idle = idle(cmd_in);
-  applied_ = is_idle ? Twist2D{} : limit(cmd_in);
+  // Ramp toward the (stride-limited) command, so starts, stops and direction changes
+  // happen over a few steps instead of in one.
+  const Twist2D target = idle(cmd_in) ? Twist2D{} : limit(cmd_in);
+  applied_.vx = step_toward(applied_.vx, target.vx, params_.accel * dt);
+  applied_.vy = step_toward(applied_.vy, target.vy, params_.accel * dt);
+  applied_.wz = step_toward(applied_.wz, target.wz, params_.turn_accel * dt);
+  const bool is_idle = idle(target) && idle(applied_);
 
   const bool pose_moving = ramp_pose(dt);
 
@@ -176,6 +183,7 @@ bool Gait::update(const Twist2D & cmd_in, double dt)
     const bool at_neutral = std::hypot(f.x - n.x, f.y - n.y) < kNeutralTolerance;
     const bool swing_window = p >= d;
 
+    const double s = swing_window ? (p - d) / (1 - d) : 0.0;
     if (swing_window && !swinging_[i] && !skip_[i]) {
       // Start of a swing. If there's nowhere to go, keep the foot down.
       if (is_idle && at_neutral) {
@@ -183,7 +191,15 @@ bool Gait::update(const Twist2D & cmd_in, double dt)
       } else {
         swinging_[i] = true;
         liftoff_[i] = f;
+        swing_start_[i] = s;
       }
+    } else if (swing_window && skip_[i] && !is_idle && s < kLateStart) {
+      // Walking again while this leg sat out its step: take the step now in the time left,
+      // instead of pushing on through the window and over-reaching.
+      skip_[i] = false;
+      swinging_[i] = true;
+      liftoff_[i] = f;
+      swing_start_[i] = s;
     }
     if (!swing_window) {
       swinging_[i] = false;
@@ -191,15 +207,16 @@ bool Gait::update(const Twist2D & cmd_in, double dt)
     }
 
     if (swinging_[i]) {
-      const double s = (p - d) / (1 - d);
-      const double e = s * s * (3 - 2 * s);
+      // progress over the part of the window this step actually uses
+      const double u = (s - swing_start_[i]) / (1 - swing_start_[i]);
+      const double e = u * u * (3 - 2 * u);
       double vx, vy;
       point_velocity(applied_, n, vx, vy);
       const double tx = n.x + 0.5 * vx * stance_time;
       const double ty = n.y + 0.5 * vy * stance_time;
       f.x = liftoff_[i].x + (tx - liftoff_[i].x) * e;
       f.y = liftoff_[i].y + (ty - liftoff_[i].y) * e;
-      f.z = -params_.body_height + params_.step_height * std::sin(M_PI * s);
+      f.z = -params_.body_height + params_.step_height * std::sin(M_PI * u);
       settled = false;
     } else {
       double vx, vy;

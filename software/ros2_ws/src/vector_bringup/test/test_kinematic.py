@@ -59,6 +59,11 @@ class TestKinematicSim(unittest.TestCase):
             if each and self.joints:
                 each()
 
+    def key(self, twist):
+        """One message, like teleop_twist_keyboard sends per key press."""
+        self.cmd_pub.publish(twist)
+        rclpy.spin_once(self.node, timeout_sec=0.05)
+
     def odom_x(self):
         t = self.tf.lookup_transform('odom', 'base_link', rclpy.time.Time())
         return t.transform.translation
@@ -96,7 +101,8 @@ class TestKinematicSim(unittest.TestCase):
             self.assertGreater(lift, 0.2, f'{name} never lifted')
         self.assertGreater(self.odom_x().x, 0.2)
 
-        # Stop: the robot settles back into the same standing pose.
+        # Stop (teleop 'k' sends one zero twist): back into the same standing pose.
+        self.key(Twist())
         self.spin_for(3.0)
         for name, angle in standing.items():
             self.assertAlmostEqual(self.joints[name], angle, delta=0.05, msg=name)
@@ -107,3 +113,83 @@ class TestKinematicSim(unittest.TestCase):
         self.spin_for(1.5)
         t = self.tf.lookup_transform('odom', 'base_link', rclpy.time.Time())
         self.assertGreater(abs(t.transform.rotation.y), 0.05, 'body did not pitch')
+
+    def test_teleop_keys(self):
+        """Single messages like teleop_twist_keyboard: the command holds until the next key."""
+        end = time.time() + 30
+        while time.time() < end and 'L1_femur' not in self.joints:
+            rclpy.spin_once(self.node, timeout_sec=0.1)
+        self.spin_for(3.0)
+
+        def pose():
+            return self.tf.lookup_transform('odom', 'base_link', rclpy.time.Time()).transform.translation
+
+        # 'i' once, then nothing for 2 s: still walking forward
+        fwd = Twist()
+        fwd.linear.x = 0.5
+        self.key(fwd)
+        self.spin_for(1.0)
+        mid = pose()
+        self.spin_for(1.0)
+        self.assertGreater(pose().x - mid.x, 0.05, 'stopped after a single key press')
+
+        # 't' four times while walking: body 20 mm up, and it keeps walking
+        up = Twist()
+        up.linear.z = 0.5
+        for _ in range(4):
+            self.key(up)
+        before = pose()
+        self.spin_for(1.5)
+        self.assertGreater(pose().x - before.x, 0.05, "'t' stopped the walk")
+        self.assertAlmostEqual(pose().z, 0.12, delta=0.002, msg='body not 20 mm up')
+
+        # 'b' once: 15 mm up
+        down = Twist()
+        down.linear.z = -0.5
+        self.key(down)
+        self.spin_for(1.0)
+        self.assertAlmostEqual(pose().z, 0.115, delta=0.002)
+
+        # 'J' (shift, holonomic): strafe left
+        left = Twist()
+        left.linear.y = 0.5
+        self.key(left)
+        before = pose()
+        self.spin_for(2.0)
+        self.assertGreater(pose().y - before.y, 0.1, 'no sideways motion')
+
+        # 'k': stop
+        self.key(Twist())
+        self.spin_for(3.0)
+        stopped = pose()
+        self.spin_for(1.0)
+        self.assertAlmostEqual(pose().x, stopped.x, delta=0.002, msg='still walking after k')
+        self.assertAlmostEqual(pose().y, stopped.y, delta=0.002, msg='still walking after k')
+
+    def test_hold_to_move(self):
+        """cmd_timeout 0.6: walks while a key is held (auto-repeat), stops when released."""
+        end = time.time() + 30
+        while time.time() < end and 'L1_femur' not in self.joints:
+            rclpy.spin_once(self.node, timeout_sec=0.1)
+        self.spin_for(3.0)
+        self.assertTrue(self.set_param('cmd_timeout', 0.6))
+
+        def x():
+            return self.tf.lookup_transform('odom', 'base_link', rclpy.time.Time()).transform.translation.x
+
+        fwd = Twist()
+        fwd.linear.x = 0.5
+        start = x()
+        # typical auto-repeat: first press, 0.5 s delay, then ~30 per second for 2 s
+        self.key(fwd)
+        self.spin_for(0.5)
+        for _ in range(60):
+            self.key(fwd)
+            self.spin_for(1 / 30)
+        held = x()
+        self.assertGreater(held - start, 0.15, 'did not keep walking while held')
+        self.spin_for(3.0)  # released
+        stopped = x()
+        self.spin_for(1.0)
+        self.assertAlmostEqual(x(), stopped, delta=0.002, msg='kept walking after release')
+        self.assertTrue(self.set_param('cmd_timeout', 0.0))

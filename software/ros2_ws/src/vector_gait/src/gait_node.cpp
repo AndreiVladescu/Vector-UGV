@@ -2,6 +2,8 @@
 // forward command controller, plus odom -> base_link from the commanded motion
 // and foot trails for rviz. Body pose via the body_* parameters (live).
 // With level:=true the IMU tilt is fed back into the body pose to keep it level.
+// A cmd_vel with only linear.z set (teleop keys t/b) steps the body height up/down by
+// height_step and leaves the walking command alone.
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -51,13 +53,21 @@ public:
     p.body_height = declare_parameter("body_height", p.body_height);
     p.reach = declare_parameter("reach", p.reach);
     p.max_stride = declare_parameter("max_stride", p.max_stride);
+    p.accel = declare_parameter("accel", p.accel);
+    p.turn_accel = declare_parameter("turn_accel", p.turn_accel);
     const auto gait_name = declare_parameter("gait", std::string("tripod"));
     if (!vector::parse_gait(gait_name, p.type)) {
       throw std::runtime_error("unknown gait: " + gait_name);
     }
 
     rate_ = declare_parameter("rate", 200.0);
-    cmd_timeout_ = declare_parameter("cmd_timeout", 0.5);
+    // 0 keeps the last command until a new one arrives (teleop_twist_keyboard publishes only
+    // on key presses). > 0 stops that long after the last message: ~0.6 s gives hold-to-move
+    // with keyboard auto-repeat; joystick/ELRS sources stream and can use ~0.3 s.
+    cmd_timeout_ = declare_parameter("cmd_timeout", 0.0);
+    height_step_ = declare_parameter("height_step", 0.005);
+    height_min_ = declare_parameter("height_min", -0.04);
+    height_max_ = declare_parameter("height_max", 0.03);
     // Off in Gazebo, where odom -> base_link comes from the simulator's ground truth.
     publish_odom_ = declare_parameter("publish_odom_tf", true);
 
@@ -82,6 +92,15 @@ public:
 
     cmd_sub_ = create_subscription<geometry_msgs::msg::Twist>(
       "cmd_vel", 10, [this](geometry_msgs::msg::Twist::SharedPtr msg) {
+        const bool height_only = msg->linear.z != 0.0 && msg->linear.x == 0.0 &&
+          msg->linear.y == 0.0 && msg->angular.z == 0.0;
+        if (height_only) {
+          height_ = std::clamp(height_ + (msg->linear.z > 0 ? height_step_ : -height_step_),
+              height_min_, height_max_);
+          pose_dirty_ = true;
+          RCLCPP_INFO(get_logger(), "body height %+.0f mm", height_ * 1000);
+          return;
+        }
         cmd_ = {msg->linear.x, msg->linear.y, msg->angular.z};
         last_cmd_ = now();
       });
@@ -96,6 +115,10 @@ public:
         for (const auto & prm : params) {
           if (prm.get_name().rfind("body_", 0) == 0) {
             pose_dirty_ = true;
+            continue;
+          }
+          if (prm.get_name() == "cmd_timeout") {
+            cmd_timeout_ = prm.as_double();
             continue;
           }
           if (prm.get_name() == "level") {
@@ -146,7 +169,10 @@ private:
     if (pose_dirty_) {
       update_pose();
     }
-    const vector::Twist2D cmd = (t - last_cmd_).seconds() > cmd_timeout_ ? vector::Twist2D{} : cmd_;
+    if (cmd_timeout_ > 0 && (t - last_cmd_).seconds() > cmd_timeout_) {
+      cmd_ = {};  // gone for good, so it can't come back if the timeout is changed later
+    }
+    const vector::Twist2D cmd = cmd_;
     if (!gait_->update(cmd, dt)) {
       RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "foot target out of reach");
     }
@@ -204,7 +230,7 @@ private:
     vector::BodyPose b;
     b.x = get_parameter("body_x").as_double();
     b.y = get_parameter("body_y").as_double();
-    b.z = get_parameter("body_z").as_double();
+    b.z = get_parameter("body_z").as_double() + height_;
     b.roll = get_parameter("body_roll").as_double() + (level_ ? leveler_->roll() : 0.0);
     b.pitch = get_parameter("body_pitch").as_double() + (level_ ? leveler_->pitch() : 0.0);
     b.yaw = get_parameter("body_yaw").as_double();
@@ -263,7 +289,8 @@ private:
   unsigned tick_count_ = 0;
   std::array<std::deque<geometry_msgs::msg::Point>, vector::kLegs> trails_;
   vector::Twist2D cmd_;
-  double rate_ = 200, cmd_timeout_ = 0.5;
+  double rate_ = 200, cmd_timeout_ = 0.0;
+  double height_ = 0, height_step_ = 0.005, height_min_ = -0.04, height_max_ = 0.03;
   double x_ = 0, y_ = 0, yaw_ = 0;
   rclcpp::Time last_cmd_, last_tick_;
 
