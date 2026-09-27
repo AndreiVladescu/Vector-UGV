@@ -15,7 +15,10 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from nav_msgs.msg import Odometry
 from rcl_interfaces.srv import SetParameters
 from rclpy.parameter import Parameter
+from rclpy.qos import QoSProfile, DurabilityPolicy
 from sensor_msgs.msg import JointState
+from std_msgs.msg import String
+from std_srvs.srv import Trigger
 
 KGCM = 100 / 9.81  # N·m -> kg·cm
 
@@ -65,6 +68,10 @@ class GazeboTest(unittest.TestCase):
         self.node.create_subscription(JointState, '/joint_states', self.on_joints, 10)
         self.node.create_subscription(Odometry, '/ground_truth', self.on_odom, 10)
         self.cmd_pub = self.node.create_publisher(Twist, '/cmd_vel', 10)
+        self.mode = None
+        self.node.create_subscription(
+            String, '/gait_node/mode', lambda m: setattr(self, 'mode', m.data),
+            QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.reset_stats()
 
     def tearDown(self):
@@ -130,3 +137,16 @@ class GazeboTest(unittest.TestCase):
         future = client.call_async(req)
         rclpy.spin_until_future_complete(self.node, future, timeout_sec=5.0)
         return future.result().results[0].successful
+
+    def call(self, service):
+        client = self.node.create_client(Trigger, service)
+        self.assertTrue(client.wait_for_service(timeout_sec=5.0))
+        future = client.call_async(Trigger.Request())
+        rclpy.spin_until_future_complete(self.node, future, timeout_sec=5.0)
+        return future.result().success
+
+    def wait_mode(self, mode, timeout):
+        end = time.time() + timeout
+        while time.time() < end and self.mode != mode:
+            rclpy.spin_once(self.node, timeout_sec=0.05)
+        return self.mode == mode

@@ -5,7 +5,7 @@ Runs on the Pi 5 during development and on the CM5 later: Raspberry Pi OS, with 
 Packages in `ros2_ws/src/`:
 - `vector_description`: URDF and `config/legs.yaml`, the one place leg lengths and hip positions live
 - `vector_gait`: kinematics and gait in plain C++ (`vector_core`, no ROS), plus `gait_node`
-- `vector_hw`: ros2_control hardware for the leg nodes over SocketCAN, plus `fake_legs.py`
+- `vector_hw`: ros2_control hardware for the leg nodes over SocketCAN, plus `sim_legs` (the leg firmware logic with simulated servos) and `leg_config.py` (calibration and settings over CAN)
 - `vector_bringup`: launch files, controller config, rviz config, Gazebo worlds
 - later: `vector_perception`, `vector_links`
 
@@ -68,15 +68,39 @@ Same controllers and gait node, with masses from `legs.yaml` and the joint effor
 
 Worlds: `flat`, `slope` (8°), `rough` (40 slabs, 1–3 cm, fixed layout). `level:=true` (or `ros2 param set /gait_node level true`) feeds the IMU tilt back into the body pose. On the 8° slope the body goes from −8.0° to 0.0°.
 
+## Sentinel Stance
+
+```sh
+ros2 service call /gait_node/sentinel std_srvs/srv/Trigger   # stop, lower onto the belly, legs off
+ros2 service call /gait_node/wake std_srvs/srv/Trigger        # legs on, wait for all six, stand up
+ros2 topic echo /gait_node/mode                                # walk, stopping, lowering, sentinel, powering, raising
+```
+
+The legs switch through the `leg_power` GPIO controller (`legs/enable`): on CAN it sets the enable bit in `LEG_CMD`, and its state reads 1 only when all six legs report active. If they don't within `power_timeout` (10 s) the robot stays down. Keys are ignored while sitting or getting up. `sentinel_height` (30 mm hip height) should become the real belly height once the body is designed. In Gazebo there is no leg power, so it only lowers and raises (body at 49 mm, back to 90 mm).
+
+## Touchdown (off by default)
+
+`touchdown:=true` makes each foot stop where it meets the ground late in its swing, or probe up to 20 mm deeper into a hole; stance feet then keep their own height. Contact comes from `contact_from: position` (measured foot higher than anything commanded in the last 40 ms, from the pots) or `load` (femur + tibia torque, leg current on the robot).
+
+In Gazebo it isn't convincing yet: on the rough world tilt goes from 2.7° to 2.0–2.5° RMS, but on flat ground the body bobs 2–5 mm more, and the gain with `load` came from feet pressing down, not from contact being sensed. Gazebo's servo is ideal and stiff; tune this against the real MG996R (pot error and leg current when a foot is blocked) before turning it on.
+
 ## CAN without hardware
 
-`fake_legs.py` plays the six leg nodes on a virtual CAN bus, from `protocol/vector.dbc`. It follows commands at the servo speed limit, reports state and status, and faults if SYNC stops.
+`sim_legs` runs the actual leg firmware logic (`firmware/leg-node`) six times, each with three simulated MG996Rs that behave like the bench measurements (wiper noise, speed, the restart quirk), on a virtual CAN bus. `vector_hw` builds it.
 
 ```sh
 sudo modprobe vcan && sudo ip link add dev vcan0 type vcan && sudo ip link set up vcan0   # again after a reboot
-ros2 run vector_hw fake_legs.py --channel vcan0
+ros2 run vector_hw sim_legs vcan0 --calibrated --limits -45.8,45.8,-80.2,80.2,-149,17   # joint limits from legs.yaml
 ros2 launch vector_bringup robot.launch.py hardware:=can can_interface:=vcan0
 candump vcan0 | cantools decode ../../protocol/vector.dbc      # watch the traffic
+```
+
+Without `--calibrated` the legs start like fresh boards and refuse to wake until calibrated. Try the calibration mode on them:
+
+```sh
+ros2 run vector_hw leg_config.py --channel vcan0 status
+ros2 run vector_hw leg_config.py --channel vcan0 calibrate R1 --mode limits
+ros2 run vector_hw leg_config.py --channel vcan0 push     # docs/servos.md + legs.yaml, run from the repo
 ```
 
 On the real robot it's the same launch with `can_interface:=can0` (CANable on the Pi 5, MCP251863 on the carrier). The hardware waits for all six legs before activating, starts from their measured angles, and drops out if a leg is silent for 100 ms. Walking at 200 Hz uses about 32% of the 1 Mbit/s bus.

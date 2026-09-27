@@ -2,7 +2,7 @@
 
   ros2 launch vector_bringup robot.launch.py                       # mock joints (kinematic sim)
   ros2 launch vector_bringup robot.launch.py hardware:=can          # leg nodes on can0
-  ros2 launch vector_bringup robot.launch.py hardware:=can can_interface:=vcan0   # fake_legs.py
+  ros2 launch vector_bringup robot.launch.py hardware:=can can_interface:=vcan0   # sim_legs
 
 Drive it with: ros2 run teleop_twist_keyboard teleop_twist_keyboard
 """
@@ -51,7 +51,7 @@ def generate_launch_description():
         Node(
             package='controller_manager',
             executable='spawner',
-            arguments=['joint_state_broadcaster', 'leg_controller']),
+            arguments=['joint_state_broadcaster', 'leg_controller', 'leg_power']),
 
         Node(
             package='vector_gait',

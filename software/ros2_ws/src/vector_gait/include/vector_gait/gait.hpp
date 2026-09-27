@@ -46,6 +46,9 @@ struct GaitParams
   double max_stride = 0.06;   // m, commands are scaled down to respect this
   double accel = 0.25;        // m/s², walking speed ramp
   double turn_accel = 1.5;    // rad/s², turning speed ramp
+  bool touchdown = false;     // plant the foot where it meets the ground (needs set_contact)
+  double probe_depth = 0.02;  // m, how far below nominal a foot may reach looking for ground
+  double touch_after = 0.5;   // swing progress after which contact counts
   double pose_speed = 0.05;   // m/s, body shift rate
   double pose_turn = 0.5;     // rad/s, body tilt rate
 };
@@ -64,6 +67,9 @@ public:
   bool update(const Twist2D & cmd, double dt);
 
   void set_type(GaitType type);
+  // Per-leg foot contact (load) from the hardware, used when params.touchdown is on.
+  void set_contact(const std::array<bool, kLegs> & contact) {contact_ = contact;}
+  double ground_z(int leg) const {return ground_z_[leg];}
   // Target body pose; the actual pose ramps toward it at pose_speed / pose_turn.
   void set_body_pose(const BodyPose & target) {pose_target_ = target;}
   const BodyPose & body_pose() const {return pose_;}
@@ -99,6 +105,8 @@ private:
   std::array<bool, kLegs> swinging_{};
   std::array<bool, kLegs> skip_{};  // leg stays planted through this swing window
   std::array<double, kLegs> swing_start_{};  // swing progress when the step began (0 normally)
+  std::array<bool, kLegs> contact_{}, touched_{};
+  std::array<double, kLegs> ground_z_{};     // where each stance foot sits (walking frame z)
   std::array<JointAngles, kLegs> joints_{};
   BodyPose pose_, pose_target_;
   Twist2D applied_;

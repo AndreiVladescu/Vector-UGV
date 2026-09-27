@@ -6,7 +6,7 @@
 
 namespace
 {
-vector::Gait make(vector::GaitType type)
+vector::Gait make(vector::GaitType type, bool touchdown = false)
 {
   const vector::LegGeometry geo{0.05, 0.08, 0.12};
   const std::array<vector::LegMount, vector::kLegs> mounts = {{
@@ -14,6 +14,7 @@ vector::Gait make(vector::GaitType type)
     {0.10, -0.07, -0.7854}, {0.0, -0.09, -1.5708}, {-0.10, -0.07, -2.3562}}};
   vector::GaitParams p;
   p.type = type;
+  p.touchdown = touchdown;
   return vector::Gait(geo, mounts, p);
 }
 
@@ -196,4 +197,31 @@ TEST(Gait, SpeedRampsUp)
     g.update({0.12, 0.0, 0.0}, kDt);
   }
   EXPECT_NEAR(g.applied().vx, 0.12, 1e-9);
+}
+
+TEST(Gait, TouchdownStopsOnObstacleAndProbesHoles)
+{
+  // Leg 0 walks onto a 20 mm block, leg 1 steps into a hole, the rest are on flat ground.
+  auto g = make(vector::GaitType::Tripod, true);
+  const double h = -g.params().body_height, block = h + 0.020;
+  for (int i = 0; i < 1200; ++i) {
+    std::array<bool, vector::kLegs> contact{};
+    for (int l = 0; l < vector::kLegs; ++l) {
+      const double ground = l == 0 ? block : l == 1 ? -1.0 : h;
+      contact[l] = g.feet()[l].z <= ground + 1e-4;
+    }
+    g.set_contact(contact);
+    ASSERT_TRUE(g.update({0.06, 0.0, 0.0}, kDt));
+  }
+  // contact is seen one tick after the foot gets there, so a few mm of overshoot
+  EXPECT_NEAR(g.ground_z(0), block - 0.0025, 0.0025);
+  EXPECT_NEAR(g.ground_z(1), h - g.params().probe_depth, 0.003);
+  EXPECT_NEAR(g.ground_z(2), h - 0.0025, 0.0025);
+  EXPECT_GT(g.ground_z(0) - g.ground_z(2), 0.015);  // the block leg really stands higher
+  // stance feet sit on the ground they found
+  for (int l : {0, 1, 2}) {
+    if (!g.swinging(l)) {
+      EXPECT_NEAR(g.feet()[l].z, g.ground_z(l), 1e-9);
+    }
+  }
 }

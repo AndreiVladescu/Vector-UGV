@@ -12,6 +12,8 @@ find_package(std_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(control_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 # Core library, no ROS dependencies.
@@ -22,7 +24,7 @@ target_include_directories(vector_core PUBLIC
 
 add_executable(gait_node src/gait_node.cpp)
 target_link_libraries(gait_node vector_core
-  rclcpp::rclcpp ${geometry_msgs_TARGETS} ${std_msgs_TARGETS} ${visualization_msgs_TARGETS} ${sensor_msgs_TARGETS} tf2_ros::tf2_ros)
+  rclcpp::rclcpp ${geometry_msgs_TARGETS} ${std_msgs_TARGETS} ${visualization_msgs_TARGETS} ${sensor_msgs_TARGETS} ${control_msgs_TARGETS} ${std_srvs_TARGETS} tf2_ros::tf2_ros)
 
 install(TARGETS vector_core EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)

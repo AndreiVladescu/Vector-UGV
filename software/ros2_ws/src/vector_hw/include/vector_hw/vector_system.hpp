@@ -53,6 +53,9 @@ private:
   std::array<double, kJoints> pos_{}, vel_{}, eff_{}, cmd_{};
   std::array<Clock::time_point, kLegs> last_rx_{};
   std::array<bool, kLegs> seen_{};
+  std::array<uint8_t, kLegs> leg_state_{};
+  double legs_enable_cmd_ = 1.0, legs_active_ = 0.0;
+  bool has_gpio_ = false;
   uint16_t sync_counter_ = 0;
   uint8_t cmd_counter_ = 0;
   rclcpp::Logger log_ = rclcpp::get_logger("VectorSystem");

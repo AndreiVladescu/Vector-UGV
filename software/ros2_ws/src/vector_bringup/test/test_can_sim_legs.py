@@ -1,12 +1,14 @@
-"""Full loop over CAN: gait -> ros2_control -> VectorSystem -> vcan0 -> fake_legs.py and back.
+"""Full loop over CAN: gait -> ros2_control -> VectorSystem -> vcan0 -> leg firmware logic (sim_legs) and back.
 
 Needs a vcan0 interface (sudo ip link add dev vcan0 type vcan && sudo ip link set up vcan0);
 skips itself otherwise.
 """
+import math
 import os
 import sys
 import unittest
 
+import yaml
 import launch
 import launch_testing.actions
 import pytest
@@ -24,20 +26,22 @@ HAVE_VCAN = os.path.exists('/sys/class/net/vcan0')
 def generate_test_description():
     if not HAVE_VCAN:
         return launch.LaunchDescription([launch_testing.actions.ReadyToTest()])
-    fake_legs = ExecuteProcess(
-        cmd=['python3', os.path.join(get_package_share_directory('vector_hw'), '..', '..',
-                                     'lib', 'vector_hw', 'fake_legs.py'),
-             '--channel', 'vcan0', '--quiet'],
+    with open(os.path.join(get_package_share_directory('vector_description'), 'config', 'legs.yaml')) as f:
+        lim = yaml.safe_load(f)['limits']
+    limits = ','.join(f'{math.degrees(a):.1f}' for j in ('coxa', 'femur', 'tibia') for a in lim[j])
+    legs = ExecuteProcess(
+        cmd=[os.path.join(get_package_share_directory('vector_hw'), '..', '..', 'lib', 'vector_hw', 'sim_legs'),
+             'vcan0', '--calibrated', '--limits', limits],
         output='screen')
     robot = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(
             get_package_share_directory('vector_bringup'), 'launch', 'robot.launch.py')),
         launch_arguments={'hardware': 'can', 'can_interface': 'vcan0', 'rviz': 'false'}.items())
-    return launch.LaunchDescription([fake_legs, robot, launch_testing.actions.ReadyToTest()])
+    return launch.LaunchDescription([legs, robot, launch_testing.actions.ReadyToTest()])
 
 
 @unittest.skipUnless(HAVE_VCAN, 'no vcan0 interface')
-class TestCanFakeLegs(TestKinematicSim):
+class TestCanSimLegs(TestKinematicSim):
     """Same stand / walk / stop / tilt sequence, but the joint states now come back over CAN."""
 
 

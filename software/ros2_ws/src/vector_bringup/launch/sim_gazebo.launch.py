@@ -2,7 +2,7 @@
 
   ros2 launch vector_bringup sim_gazebo.launch.py            # with the Gazebo window
   ros2 launch vector_bringup sim_gazebo.launch.py gui:=false # headless
-  world:=flat|slope|rough, level:=true for IMU leveling
+  world:=flat|slope|rough, level:=true for IMU leveling, touchdown:=true for contact-aware steps
 """
 import os
 import subprocess
@@ -71,6 +71,7 @@ def generate_launch_description():
         DeclareLaunchArgument('rviz', default_value='false'),
         DeclareLaunchArgument('world', default_value='flat'),
         DeclareLaunchArgument('level', default_value='false'),
+        DeclareLaunchArgument('touchdown', default_value='false'),
 
         OpaqueFunction(function=gazebo),
 
@@ -109,7 +110,8 @@ def generate_launch_description():
             executable='gait_node',
             parameters=[os.path.join(gait, 'config', 'gait.yaml'), legs, sim_time,
                         {'publish_odom_tf': False,
-                         'level': ParameterValue(LaunchConfiguration('level'), value_type=bool)}]),
+                         'level': ParameterValue(LaunchConfiguration('level'), value_type=bool),
+                         'touchdown': ParameterValue(LaunchConfiguration('touchdown'), value_type=bool)}]),
 
         Node(
             package='rviz2',

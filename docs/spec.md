@@ -30,7 +30,7 @@ power board ──VBAT_L──► side L     ──VBAT_R──► side R     �
 
 Both sides use the same PCB, rotated 180°. Each side board carries three independent leg cells, and the CAN bus between those cells is just traces. A leg cell has:
 
-- **MCU:** STM32C092 (UFQFPN28/32, at least 64 KB flash) with a crystal. It has FDCAN in hardware and a factory CAN bootloader.
+- **MCU:** STM32C092KCT6 (LQFP32) with a 40 MHz crystal for FDCAN (the same part as the carrier's MCP251863); the core runs from the internal 48 MHz. It has FDCAN in hardware and a factory CAN bootloader. Pin map in `firmware/leg-node/README.md`.
 - **CAN transceiver:** TCAN332DR (SOIC-8), a 3.3 V-only part.
 - **Servo buck:** TPS56A37RPAR (28 V in, 10 A, 3×3 mm HotRod QFN) set to 6.0 V, switched by the MCU through EN. Three servos near stall draw about 7.5 A.
 - **Current sense:** one 10 mΩ shunt and an INA181 for the whole leg. The load on each joint comes from the pot error (commanded minus measured angle).

@@ -8,6 +8,9 @@ controller_manager:
     leg_controller:
       type: forward_command_controller/ForwardCommandController
 
+    leg_power:
+      type: gpio_controllers/GpioCommandController
+
 leg_controller:
   ros__parameters:
     interface_name: position
@@ -30,3 +33,13 @@ leg_controller:
       - R3_coxa
       - R3_femur
       - R3_tibia
+
+leg_power:
+  ros__parameters:
+    gpios: [legs]
+    command_interfaces:
+      legs:
+        interfaces: [enable]
+    state_interfaces:
+      legs:
+        interfaces: [enable]

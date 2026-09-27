@@ -64,13 +64,14 @@ TEST(Protocol, LegState)
 
 TEST(Protocol, LegStatus)
 {
-  const auto s = decode_leg_status(from_hex(0x032, "d204fe3d7a17fb81"));
+  const auto s = decode_leg_status(from_hex(0x032, "d204339625fb8102"));
   ASSERT_TRUE(s);
   EXPECT_EQ(s->tof_mm, 1234);
   EXPECT_EQ(s->vbat_mv, 15870);
   EXPECT_EQ(s->rail_mv, 6010);
   EXPECT_EQ(s->temperature, -5);
   EXPECT_EQ(s->faults, 0x81);
+  EXPECT_EQ(s->state, 2);
 }
 
 TEST(Protocol, RejectsOtherFrames)

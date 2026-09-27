@@ -3,7 +3,7 @@
   <xacro:arg name="hardware" default="mock"/>
   <!-- controller config, needed by the Gazebo plugin -->
   <xacro:arg name="controllers" default=""/>
-  <!-- CAN interface for the real leg nodes (or fake_legs.py on vcan0) -->
+  <!-- CAN interface for the real leg nodes (or sim_legs on vcan0) -->
   <xacro:arg name="can_interface" default="can0"/>
 
   <xacro:property name="g" value="${xacro.load_yaml('$(find vector_description)/config/legs.yaml')}"/>
@@ -164,6 +164,13 @@
     <xacro:leg_if name="R1"/>
     <xacro:leg_if name="R2"/>
     <xacro:leg_if name="R3"/>
+    <!-- leg power: command 1/0 switches the legs on/off, state is 1 once all six are active -->
+    <xacro:unless value="${gazebo}">
+      <gpio name="legs">
+        <command_interface name="enable"/>
+        <state_interface name="enable"><param name="initial_value">1.0</param></state_interface>
+      </gpio>
+    </xacro:unless>
   </ros2_control>
 
   <xacro:if value="${gazebo}">

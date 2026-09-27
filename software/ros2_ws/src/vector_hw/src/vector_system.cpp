@@ -56,6 +56,9 @@ VectorSystem::CallbackReturn VectorSystem::on_init(
     }
   }
   cmd_ = pos_;
+  for (const auto & g : info_.gpios) {
+    has_gpio_ = has_gpio_ || g.name == "legs";
+  }
   return CallbackReturn::SUCCESS;
 }
 
@@ -116,6 +119,9 @@ std::vector<hardware_interface::StateInterface> VectorSystem::export_state_inter
     out.emplace_back(name, hardware_interface::HW_IF_VELOCITY, &vel_[slot_[k]]);
     out.emplace_back(name, hardware_interface::HW_IF_EFFORT, &eff_[slot_[k]]);
   }
+  if (has_gpio_) {
+    out.emplace_back("legs", "enable", &legs_active_);
+  }
   return out;
 }
 
@@ -124,6 +130,9 @@ std::vector<hardware_interface::CommandInterface> VectorSystem::export_command_i
   std::vector<hardware_interface::CommandInterface> out;
   for (size_t k = 0; k < info_.joints.size(); ++k) {
     out.emplace_back(info_.joints[k].name, hardware_interface::HW_IF_POSITION, &cmd_[slot_[k]]);
+  }
+  if (has_gpio_) {
+    out.emplace_back("legs", "enable", &legs_enable_cmd_);
   }
   return out;
 }
@@ -142,6 +151,8 @@ void VectorSystem::drain()
       pos_[l * 3 + 2] = s->tibia * kDeg;
       last_rx_[l] = Clock::now();
       seen_[l] = true;
+    } else if (auto st = vector::can::decode_leg_status(*f)) {
+      leg_state_[*vector::can::leg_of(f->id)] = st->state;
     }
   }
 }
@@ -154,6 +165,12 @@ hardware_interface::return_type VectorSystem::read(const rclcpp::Time &, const r
   for (int i = 0; i < kJoints; ++i) {
     vel_[i] = dt > 0 ? (pos_[i] - before[i]) / dt : 0.0;
   }
+
+  int active = 0;
+  for (auto st : leg_state_) {
+    active += st == 2;  // LEG_ACTIVE
+  }
+  legs_active_ = active == kLegs ? 1.0 : active == 0 ? 0.0 : 0.5;
 
   const auto now = Clock::now();
   for (int l = 0; l < kLegs; ++l) {
@@ -168,7 +185,8 @@ hardware_interface::return_type VectorSystem::read(const rclcpp::Time &, const r
 
 hardware_interface::return_type VectorSystem::write(const rclcpp::Time &, const rclcpp::Duration &)
 {
-  send_all(true);
+  // NaN until the power controller has said anything: keep the legs on
+  send_all(std::isnan(legs_enable_cmd_) || legs_enable_cmd_ >= 0.5);
   return hardware_interface::return_type::OK;
 }
 

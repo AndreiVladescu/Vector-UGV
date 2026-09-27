@@ -11,7 +11,11 @@ from ament_index_python.packages import get_package_share_directory
 from geometry_msgs.msg import Twist
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from control_msgs.msg import DynamicInterfaceGroupValues
 from rcl_interfaces.srv import SetParameters
+from rclpy.qos import QoSProfile, DurabilityPolicy
+from std_msgs.msg import String
+from std_srvs.srv import Trigger
 from rclpy.parameter import Parameter
 from sensor_msgs.msg import JointState
 from tf2_ros import Buffer, TransformListener
@@ -43,12 +47,39 @@ class TestKinematicSim(unittest.TestCase):
         self.cmd_pub = self.node.create_publisher(Twist, '/cmd_vel', 10)
         self.tf = Buffer()
         self.tf_listener = TransformListener(self.tf, self.node)
+        self.mode = None
+        self.power = None
+        self.node.create_subscription(
+            String, '/gait_node/mode', self.on_mode,
+            QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
+        self.node.create_subscription(DynamicInterfaceGroupValues, '/leg_power/gpio_states', self.on_power, 10)
 
     def tearDown(self):
         self.node.destroy_node()
 
     def on_joints(self, msg):
         self.joints = dict(zip(msg.name, msg.position))
+
+    def on_mode(self, msg):
+        self.mode = msg.data
+
+    def on_power(self, msg):
+        for group, values in zip(msg.interface_groups, msg.interface_values):
+            if group == 'legs':
+                self.power = dict(zip(values.interface_names, values.values)).get('enable')
+
+    def call(self, service):
+        client = self.node.create_client(Trigger, service)
+        self.assertTrue(client.wait_for_service(timeout_sec=5.0))
+        future = client.call_async(Trigger.Request())
+        rclpy.spin_until_future_complete(self.node, future, timeout_sec=5.0)
+        return future.result().success
+
+    def wait_mode(self, mode, timeout):
+        end = time.time() + timeout
+        while time.time() < end and self.mode != mode:
+            rclpy.spin_once(self.node, timeout_sec=0.05)
+        return self.mode == mode
 
     def spin_for(self, seconds, cmd=None, each=None):
         end = time.time() + seconds
@@ -194,3 +225,41 @@ class TestKinematicSim(unittest.TestCase):
         self.spin_for(1.0)
         self.assertAlmostEqual(x(), stopped, delta=0.002, msg='kept walking after release')
         self.assertTrue(self.set_param('cmd_timeout', 0.0))
+
+    def test_sentinel(self):
+        """Sit down, legs off, keys ignored; wake, legs on, back up, walking again."""
+        end = time.time() + 30
+        while time.time() < end and 'L1_femur' not in self.joints:
+            rclpy.spin_once(self.node, timeout_sec=0.1)
+        self.spin_for(3.0)
+
+        def pose():
+            return self.tf.lookup_transform('odom', 'base_link', rclpy.time.Time()).transform.translation
+
+        standing_z = pose().z
+        self.assertTrue(self.call('/gait_node/sentinel'))
+        self.assertTrue(self.wait_mode('sentinel', 15.0), f'mode {self.mode}')
+        self.spin_for(1.0)
+        self.assertAlmostEqual(pose().z, 0.03, delta=0.003, msg='body not lowered')
+        self.assertEqual(self.power, 0.0, 'legs still powered')
+
+        fwd = Twist()
+        fwd.linear.x = 0.5
+        before = pose()
+        self.key(fwd)
+        self.spin_for(1.0)
+        self.assertAlmostEqual(pose().x, before.x, delta=0.002, msg='walked while in sentinel')
+        self.assertFalse(self.call('/gait_node/sentinel'), 'sentinel twice')
+
+        self.assertTrue(self.call('/gait_node/wake'))
+        self.assertTrue(self.wait_mode('walk', 20.0), f'mode {self.mode}')
+        self.spin_for(0.5)
+        self.assertAlmostEqual(pose().z, standing_z, delta=0.003, msg='body not back up')
+        self.assertEqual(self.power, 1.0, 'legs not all active')
+
+        self.key(fwd)
+        before = pose()
+        self.spin_for(1.5)
+        self.assertGreater(pose().x - before.x, 0.05, 'does not walk after waking')
+        self.key(Twist())
+        self.spin_for(2.0)

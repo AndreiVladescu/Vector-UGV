@@ -4,6 +4,11 @@
 // With level:=true the IMU tilt is fed back into the body pose to keep it level.
 // A cmd_vel with only linear.z set (teleop keys t/b) steps the body height up/down by
 // height_step and leaves the walking command alone.
+//
+// Sentinel Stance (~/sentinel, ~/wake services): stop, lower the body to sentinel_height,
+// switch the legs off through the leg_power GPIO controller; waking powers them, waits
+// until they all report active, raises the body and walks again. Without the GPIO
+// (Gazebo) it only lowers and raises.
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -13,11 +18,15 @@
 #include <string>
 #include <vector>
 
+#include "control_msgs/msg/dynamic_interface_group_values.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "sensor_msgs/msg/imu.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
+#include "std_msgs/msg/string.hpp"
+#include "std_srvs/srv/trigger.hpp"
 #include "tf2_ros/transform_broadcaster.h"
 #include "visualization_msgs/msg/marker_array.hpp"
 #include "vector_gait/gait.hpp"
@@ -68,6 +77,12 @@ public:
     height_step_ = declare_parameter("height_step", 0.005);
     height_min_ = declare_parameter("height_min", -0.04);
     height_max_ = declare_parameter("height_max", 0.03);
+    p.touchdown = declare_parameter("touchdown", false);
+    p.probe_depth = declare_parameter("probe_depth", p.probe_depth);
+    p.touch_after = declare_parameter("touch_after", 0.7);
+    contact_threshold_ = declare_parameter("contact_threshold", 0.6);
+    sentinel_height_ = declare_parameter("sentinel_height", 0.03);
+    power_timeout_ = declare_parameter("power_timeout", 10.0);
     // Off in Gazebo, where odom -> base_link comes from the simulator's ground truth.
     publish_odom_ = declare_parameter("publish_odom_tf", true);
 
@@ -85,6 +100,15 @@ public:
 
     gait_ = std::make_unique<vector::Gait>(geo, mounts, p);
 
+    // Foot contact for touchdown. "position": the measured joints put the foot higher than
+    // commanded, i.e. something is in the way (the pots on the robot). "load": femur + tibia
+    // torque (Gazebo effort, leg current on the robot).
+    contact_from_ = declare_parameter("contact_from", std::string("position"));
+    contact_height_ = declare_parameter("contact_height", 0.003);
+    geo_ = geo;
+    joint_sub_ = create_subscription<sensor_msgs::msg::JointState>(
+      "joint_states", 10, [this](sensor_msgs::msg::JointState::SharedPtr msg) {on_joints(*msg);});
+
     for (const char * name : kPoseParams) {
       declare_parameter(name, 0.0);
     }
@@ -94,6 +118,9 @@ public:
       "cmd_vel", 10, [this](geometry_msgs::msg::Twist::SharedPtr msg) {
         const bool height_only = msg->linear.z != 0.0 && msg->linear.x == 0.0 &&
           msg->linear.y == 0.0 && msg->angular.z == 0.0;
+        if (mode_ != Mode::Walk) {
+          return;  // sitting down or getting up: ignore the keys
+        }
         if (height_only) {
           height_ = std::clamp(height_ + (msg->linear.z > 0 ? height_step_ : -height_step_),
               height_min_, height_max_);
@@ -105,6 +132,42 @@ public:
         last_cmd_ = now();
       });
     joint_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("leg_controller/commands", 10);
+
+    power_pub_ = create_publisher<control_msgs::msg::DynamicInterfaceGroupValues>("leg_power/commands", 10);
+    power_sub_ = create_subscription<control_msgs::msg::DynamicInterfaceGroupValues>(
+      "leg_power/gpio_states", 10, [this](control_msgs::msg::DynamicInterfaceGroupValues::SharedPtr msg) {
+        for (size_t i = 0; i < msg->interface_groups.size() && i < msg->interface_values.size(); ++i) {
+          const auto & v = msg->interface_values[i];
+          for (size_t k = 0; k < v.interface_names.size() && k < v.values.size(); ++k) {
+            if (msg->interface_groups[i] == "legs" && v.interface_names[k] == "enable") {
+              legs_active_ = v.values[k];
+              have_power_ = true;
+            }
+          }
+        }
+      });
+    mode_pub_ = create_publisher<std_msgs::msg::String>(
+      "~/mode", rclcpp::QoS(1).transient_local());
+    sentinel_srv_ = create_service<std_srvs::srv::Trigger>(
+      "~/sentinel", [this](const std_srvs::srv::Trigger::Request::SharedPtr,
+      std_srvs::srv::Trigger::Response::SharedPtr res) {
+        res->success = mode_ == Mode::Walk;
+        res->message = res->success ? "sitting down" : "only from walking";
+        if (res->success) {
+          set_mode(Mode::Stopping);
+        }
+      });
+    wake_srv_ = create_service<std_srvs::srv::Trigger>(
+      "~/wake", [this](const std_srvs::srv::Trigger::Request::SharedPtr,
+      std_srvs::srv::Trigger::Response::SharedPtr res) {
+        res->success = mode_ == Mode::Sentinel;
+        res->message = res->success ? "waking up" : "only from sentinel";
+        if (res->success) {
+          power(true);
+          set_mode(Mode::Powering);
+        }
+      });
+    set_mode(Mode::Walk);
     tf_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
     trail_pub_ = create_publisher<visualization_msgs::msg::MarkerArray>("foot_trails", 10);
 
@@ -172,10 +235,14 @@ private:
     if (cmd_timeout_ > 0 && (t - last_cmd_).seconds() > cmd_timeout_) {
       cmd_ = {};  // gone for good, so it can't come back if the timeout is changed later
     }
-    const vector::Twist2D cmd = cmd_;
+    sentinel_step(t);
+    const vector::Twist2D cmd = mode_ == Mode::Walk ? cmd_ : vector::Twist2D{};
     if (!gait_->update(cmd, dt)) {
       RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "foot target out of reach");
     }
+
+    history_i_ = (history_i_ + 1) % cmd_history_.size();
+    cmd_history_[history_i_] = gait_->joints();
 
     std_msgs::msg::Float64MultiArray out;
     out.data.reserve(3 * vector::kLegs);
@@ -212,6 +279,106 @@ private:
     }
   }
 
+  void on_joints(const sensor_msgs::msg::JointState & msg)
+  {
+    std::array<vector::JointAngles, vector::kLegs> meas{};
+    std::array<double, vector::kLegs> load{};
+    std::array<int, vector::kLegs> seen{};
+    const bool efforts = msg.effort.size() == msg.name.size();
+    for (size_t k = 0; k < msg.name.size() && k < msg.position.size(); ++k) {
+      const auto & n = msg.name[k];
+      for (int l = 0; l < vector::kLegs; ++l) {
+        if (n.rfind(vector::kLegNames[l], 0) != 0) {
+          continue;
+        }
+        const double q = msg.position[k];
+        if (n.find("_coxa") != std::string::npos) {meas[l].coxa = q; seen[l]++;}
+        if (n.find("_femur") != std::string::npos) {meas[l].femur = q; seen[l]++;}
+        if (n.find("_tibia") != std::string::npos) {meas[l].tibia = q; seen[l]++;}
+        if (efforts && n.find("_coxa") == std::string::npos) {load[l] += std::abs(msg.effort[k]);}
+      }
+    }
+    std::array<bool, vector::kLegs> contact{};
+    for (int l = 0; l < vector::kLegs; ++l) {
+      if (contact_from_ == "load") {
+        contact[l] = efforts && load[l] > contact_threshold_;
+      } else if (seen[l] == 3) {
+        // blocked: higher than the highest the foot was told to be over the last 40 ms,
+        // which servo lag on the way down can't explain
+        double highest = -1e9;
+        for (const auto & c : cmd_history_) {
+          highest = std::max(highest, vector::forward(geo_, c[l]).z);
+        }
+        contact[l] = vector::forward(geo_, meas[l]).z - highest > contact_height_;
+      }
+    }
+    gait_->set_contact(contact);
+  }
+
+  enum class Mode { Walk, Stopping, Lowering, Sentinel, Powering, Raising };
+
+  void set_mode(Mode m)
+  {
+    static const char * names[] = {"walk", "stopping", "lowering", "sentinel", "powering", "raising"};
+    mode_ = m;
+    mode_t_ = now();
+    std_msgs::msg::String msg;
+    msg.data = names[static_cast<int>(m)];
+    mode_pub_->publish(msg);
+    RCLCPP_INFO(get_logger(), "mode: %s", msg.data.c_str());
+  }
+
+  void power(bool on)
+  {
+    control_msgs::msg::DynamicInterfaceGroupValues msg;
+    msg.interface_groups = {"legs"};
+    msg.interface_values.resize(1);
+    msg.interface_values[0].interface_names = {"enable"};
+    msg.interface_values[0].values = {on ? 1.0 : 0.0};
+    power_pub_->publish(msg);
+  }
+
+  bool body_at(double z) const {return std::abs(gait_->body_pose().z - z) < 1e-4;}
+
+  void sentinel_step(const rclcpp::Time & t)
+  {
+    const double down = sentinel_height_ - gait_->params().body_height;
+    const double up = get_parameter("body_z").as_double() + height_;
+    switch (mode_) {
+      case Mode::Stopping:
+        if (gait_->standing()) {
+          sentinel_z_ = down - up;
+          pose_dirty_ = true;
+          set_mode(Mode::Lowering);
+        }
+        break;
+      case Mode::Lowering:
+        if (body_at(down)) {
+          power(false);
+          set_mode(Mode::Sentinel);
+        }
+        break;
+      case Mode::Powering:
+        if (!have_power_ || legs_active_ > 0.999) {
+          sentinel_z_ = 0;
+          pose_dirty_ = true;
+          set_mode(Mode::Raising);
+        } else if ((t - mode_t_).seconds() > power_timeout_) {
+          RCLCPP_ERROR(get_logger(), "legs did not come back within %.0f s, staying down", power_timeout_);
+          power(false);
+          set_mode(Mode::Sentinel);
+        }
+        break;
+      case Mode::Raising:
+        if (body_at(up)) {
+          set_mode(Mode::Walk);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
   static geometry_msgs::msg::Quaternion rpy_to_quat(double roll, double pitch, double yaw)
   {
     const double cr = std::cos(roll / 2), sr = std::sin(roll / 2);
@@ -230,7 +397,7 @@ private:
     vector::BodyPose b;
     b.x = get_parameter("body_x").as_double();
     b.y = get_parameter("body_y").as_double();
-    b.z = get_parameter("body_z").as_double() + height_;
+    b.z = get_parameter("body_z").as_double() + height_ + sentinel_z_;
     b.roll = get_parameter("body_roll").as_double() + (level_ ? leveler_->roll() : 0.0);
     b.pitch = get_parameter("body_pitch").as_double() + (level_ ? leveler_->pitch() : 0.0);
     b.yaw = get_parameter("body_yaw").as_double();
@@ -291,6 +458,20 @@ private:
   vector::Twist2D cmd_;
   double rate_ = 200, cmd_timeout_ = 0.0;
   double height_ = 0, height_step_ = 0.005, height_min_ = -0.04, height_max_ = 0.03;
+  double contact_threshold_ = 0.6, contact_height_ = 0.003;
+  std::string contact_from_ = "position";
+  vector::LegGeometry geo_;
+  std::array<std::array<vector::JointAngles, vector::kLegs>, 8> cmd_history_{};
+  size_t history_i_ = 0;
+  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_sub_;
+  Mode mode_ = Mode::Walk;
+  rclcpp::Time mode_t_;
+  double sentinel_height_ = 0.03, power_timeout_ = 10.0, sentinel_z_ = 0, legs_active_ = 1.0;
+  bool have_power_ = false;
+  rclcpp::Publisher<control_msgs::msg::DynamicInterfaceGroupValues>::SharedPtr power_pub_;
+  rclcpp::Subscription<control_msgs::msg::DynamicInterfaceGroupValues>::SharedPtr power_sub_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr mode_pub_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr sentinel_srv_, wake_srv_;
   double x_ = 0, y_ = 0, yaw_ = 0;
   rclcpp::Time last_cmd_, last_tick_;
 

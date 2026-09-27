@@ -56,6 +56,7 @@ Gait::Gait(const LegGeometry & geometry, const std::array<LegMount, kLegs> & mou
       m.y + params_.reach * std::sin(m.yaw),
       -params_.body_height};
     feet_[i] = neutral_[i];
+    ground_z_[i] = -params_.body_height;
     solve(i);
   }
   set_type(params_.type);
@@ -190,6 +191,7 @@ bool Gait::update(const Twist2D & cmd_in, double dt)
         skip_[i] = true;
       } else {
         swinging_[i] = true;
+        touched_[i] = false;
         liftoff_[i] = f;
         swing_start_[i] = s;
       }
@@ -198,10 +200,14 @@ bool Gait::update(const Twist2D & cmd_in, double dt)
       // instead of pushing on through the window and over-reaching.
       skip_[i] = false;
       swinging_[i] = true;
+      touched_[i] = false;
       liftoff_[i] = f;
       swing_start_[i] = s;
     }
     if (!swing_window) {
+      if (swinging_[i]) {
+        ground_z_[i] = params_.touchdown ? f.z : -params_.body_height;
+      }
       swinging_[i] = false;
       skip_[i] = false;
     }
@@ -216,14 +222,24 @@ bool Gait::update(const Twist2D & cmd_in, double dt)
       const double ty = n.y + 0.5 * vy * stance_time;
       f.x = liftoff_[i].x + (tx - liftoff_[i].x) * e;
       f.y = liftoff_[i].y + (ty - liftoff_[i].y) * e;
-      f.z = -params_.body_height + params_.step_height * std::sin(M_PI * u);
+      const double h = -params_.body_height;
+      if (!params_.touchdown) {
+        f.z = h + params_.step_height * std::sin(M_PI * u);
+      } else if (!touched_[i]) {
+        // head back toward nominal ground, landing slowly (sin^2 has zero speed at the ends)
+        // so contact stops the foot close to where it touched, then probe deeper at the end
+        const double lift = std::sin(M_PI * u), k = std::clamp((u - 0.8) / 0.2, 0.0, 1.0);
+        const double probe = params_.probe_depth * k * k * (3 - 2 * k);
+        f.z = liftoff_[i].z + (h - liftoff_[i].z) * e + params_.step_height * lift * lift - probe;
+        touched_[i] = contact_[i] && u > params_.touch_after;
+      }
       settled = false;
     } else {
       double vx, vy;
       point_velocity(applied_, f, vx, vy);
       f.x -= vx * dt;
       f.y -= vy * dt;
-      f.z = -params_.body_height;
+      f.z = params_.touchdown ? ground_z_[i] : -params_.body_height;
       if (!at_neutral) {
         settled = false;
       }

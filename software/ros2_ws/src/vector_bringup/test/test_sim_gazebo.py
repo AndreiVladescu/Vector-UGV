@@ -55,3 +55,17 @@ class TestFlat(GazeboTest):
         print(f'strafed {after.y - end.y:+.3f} m, turned {math.degrees(yaw(q1) - yaw(q0)):+.0f} deg')
         self.assertGreater(after.y - end.y, 0.2, 'did not strafe')
         self.assertGreater(math.degrees(yaw(q1) - yaw(q0)), 45, 'did not turn')
+
+        # Sentinel Stance: sit down on the belly, then get up again
+        self.spin_for(1.0, Twist())
+        self.assertTrue(self.call('/gait_node/sentinel'))
+        self.assertTrue(self.wait_mode('sentinel', 20.0), f'mode {self.mode}')
+        self.spin_for(1.0)
+        down = self.odom.pose.pose.position.z
+        self.assertTrue(self.call('/gait_node/wake'))
+        self.assertTrue(self.wait_mode('walk', 20.0), f'mode {self.mode}')
+        self.spin_for(1.0)
+        up = self.odom.pose.pose.position.z
+        print(f'sentinel: body at {down * 1000:.0f} mm down, {up * 1000:.0f} mm back up')
+        self.assertLess(down, 0.05, 'body did not come down')
+        self.assertGreater(up, 0.075, 'body did not get back up')

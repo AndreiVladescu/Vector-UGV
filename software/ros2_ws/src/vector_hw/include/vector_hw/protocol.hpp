@@ -51,9 +51,10 @@ struct LegState
 
 struct LegStatus
 {
-  uint16_t tof_mm = 0, vbat_mv = 0, rail_mv = 0;
+  uint16_t tof_mm = 0, vbat_mv = 0, rail_mv = 0;  // vbat and rail travel in 10 mV steps
   int8_t temperature = 0;
   uint8_t faults = 0;
+  uint8_t state = 0;  // 0 off, 1 wake, 2 active, 3 crouch, 4 calibrate, 5 fault
 };
 
 Frame encode_sync(uint16_t counter, Mode mode, bool estop);

@@ -22,3 +22,13 @@ gait_node:
     level: false
     level_gain: 2.0     # 1/s
     level_max: 0.3      # rad
+    # Sentinel Stance: hip height when resting on the belly, and how long to wait for the legs
+    sentinel_height: 0.03
+    power_timeout: 10.0
+    # Touchdown: plant each foot where it meets the ground
+    touchdown: false
+    contact_from: position  # position: measured foot higher than commanded (pots); load: joint torque
+    contact_height: 0.003   # m, for position: above the highest commanded height of the last 40 ms
+    probe_depth: 0.02       # m below nominal ground a foot may search
+    touch_after: 0.7        # only the last 30 % of a swing can end it (the leg's own swing loads it too)
+    contact_threshold: 0.6  # N·m, for load: femur + tibia; swing ~0.1, stance ~1.6 in Gazebo

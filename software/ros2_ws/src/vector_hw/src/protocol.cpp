@@ -77,7 +77,14 @@ std::optional<LegStatus> decode_leg_status(const Frame & f)
   if (function_of(f.id) != kLegStatus || !leg_of(f.id) || f.len < 8) {
     return std::nullopt;
   }
-  return LegStatus{get16(f, 0), get16(f, 2), get16(f, 4), static_cast<int8_t>(f.data[6]), f.data[7]};
+  LegStatus s;
+  s.tof_mm = get16(f, 0);
+  s.vbat_mv = static_cast<uint16_t>((f.data[2] | ((f.data[3] & 0x0f) << 8)) * 10);
+  s.rail_mv = static_cast<uint16_t>(((f.data[3] >> 4) | (f.data[4] << 4)) * 10);
+  s.temperature = static_cast<int8_t>(f.data[5]);
+  s.faults = f.data[6];
+  s.state = f.data[7] & 0x0f;
+  return s;
 }
 
 }  // namespace vector::can
