@@ -134,6 +134,7 @@ class TestKinematicSim(unittest.TestCase):
         self.assertGreater(pose().x - mid.x, 0.05, 'stopped after a single key press')
 
         # 't' four times while walking: body 20 mm up, and it keeps walking
+        base_z = pose().z
         up = Twist()
         up.linear.z = 0.5
         for _ in range(4):
@@ -141,14 +142,14 @@ class TestKinematicSim(unittest.TestCase):
         before = pose()
         self.spin_for(1.5)
         self.assertGreater(pose().x - before.x, 0.05, "'t' stopped the walk")
-        self.assertAlmostEqual(pose().z, 0.12, delta=0.002, msg='body not 20 mm up')
+        self.assertAlmostEqual(pose().z, base_z + 0.02, delta=0.002, msg='body not 20 mm up')
 
         # 'b' once: 15 mm up
         down = Twist()
         down.linear.z = -0.5
         self.key(down)
         self.spin_for(1.0)
-        self.assertAlmostEqual(pose().z, 0.115, delta=0.002)
+        self.assertAlmostEqual(pose().z, base_z + 0.015, delta=0.002)
 
         # 'J' (shift, holonomic): strafe left
         left = Twist()

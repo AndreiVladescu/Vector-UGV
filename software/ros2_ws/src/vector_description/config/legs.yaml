@@ -1,19 +1,20 @@
-# Leg geometry, metres and radians. Placeholders until the Fusion model exists.
+# Leg geometry, metres and radians. From the previous hexapod (SPECTRA, const_data.h),
+# which matches the measured coxa axle at 52 mm from its mount.
 # Leg frame: origin at the coxa axis, x pointing outward, z up.
-coxa: 0.050
-femur: 0.080
-tibia: 0.120
+coxa: 0.051
+femur: 0.079
+tibia: 0.126
 
-body: {length: 0.26, width: 0.14, thickness: 0.04}
+body: {length: 0.28, width: 0.17, thickness: 0.04}
 
 # Hip (coxa axis) position in base_link and the leg's mounting yaw.
 mounts:
-  L1: {x: 0.10, y: 0.07, yaw: 0.7854}
-  L2: {x: 0.00, y: 0.09, yaw: 1.5708}
-  L3: {x: -0.10, y: 0.07, yaw: 2.3562}
-  R1: {x: 0.10, y: -0.07, yaw: -0.7854}
-  R2: {x: 0.00, y: -0.09, yaw: -1.5708}
-  R3: {x: -0.10, y: -0.07, yaw: -2.3562}
+  L1: {x: 0.1228, y: 0.0698, yaw: 0.7854}
+  L2: {x: 0.0, y: 0.1075, yaw: 1.5708}
+  L3: {x: -0.1228, y: 0.0698, yaw: 2.3562}
+  R1: {x: 0.1228, y: -0.0698, yaw: -0.7854}
+  R2: {x: 0.0, y: -0.1075, yaw: -1.5708}
+  R3: {x: -0.1228, y: -0.0698, yaw: -2.3562}
 
 limits:
   coxa: [-0.8, 0.8]
@@ -24,8 +25,8 @@ limits:
 
 # Neutral stance: foot distance from the hip (horizontal) and hip height above ground.
 stand:
-  reach: 0.13
-  height: 0.10
+  reach: 0.116
+  height: 0.080
 
 # Mass estimates, kg (2.5 kg total). Coxa servos, battery and electronics sit in the body;
 # the femur servo rides on the coxa link, the tibia servo on the femur link.
