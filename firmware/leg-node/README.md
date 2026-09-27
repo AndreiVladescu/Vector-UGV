@@ -111,4 +111,10 @@ ros2 run vector_hw leg_config.py --channel can0 status
 ros2 run vector_hw leg_config.py --channel can0 calibrate L1 --joint coxa
 ```
 
-The ToF driver (VL53L1X) isn't in yet; `LEG_STATUS` reports 0 mm.
+## ToF
+
+`src/vl53l1x.c` is a small C port of ST's VL53L1X ultra lite driver, the one inside the SparkFun Arduino library; its init sequence, default config and timing tables are checked register by register against SparkFun's copy and Pololu's library, and `test_leg` runs it against a register model (`sim/tof_sim.c`).
+
+I2C1 at 400 kHz on PB6/PB7, XSHUT on PB5 (TOF_INT on PB4 is unused, the driver polls every 5 ms). Short mode, 20 ms budget, a reading every 25 ms. Init runs once at boot and takes about 100 ms, so a sensor plugged in later needs a reset. `LEG_STATUS` carries 0 with no sensor or no reading in the last 200 ms, 65535 when nothing valid is in range.
+
+On the Nucleo the breakout goes to the same pins on the morpho header. To check a breakout on its own first, the Pololu `VL53L1X` Arduino library's Continuous example on the Uno does the same thing.

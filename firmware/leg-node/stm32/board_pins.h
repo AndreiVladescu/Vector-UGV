@@ -58,4 +58,9 @@
 #define PWM_PORT GPIOA
 #define PWM_PINS (GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10)
 
+/* VL53L1X on I2C1; on the Nucleo these are on the morpho header */
+#define TOF_PORT GPIOB
+#define TOF_I2C_PINS (GPIO_PIN_6 | GPIO_PIN_7)
+#define TOF_XSHUT_PIN GPIO_PIN_5
+
 #endif

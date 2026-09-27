@@ -6,17 +6,26 @@
 
 #include "board_pins.h"
 #include "leg.h"
+#include "vl53l1x.h"
 
 #define ADC_ROUNDS 16
 #define ADC_CH (3 + ADC_EXTRA_CHANNELS)
 #define CONFIG_ADDR (FLASH_BASE + FLASH_SIZE - FLASH_PAGE_SIZE)
 #define CAN_BITRATE 1000000u
+#define I2C_TIMING_400K 0x50330309u /* RM table for a 48 MHz I2C clock */
+#define TOF_POLL_MS 5
+#define TOF_STALE_MS 200
 
 static ADC_HandleTypeDef hadc;
 static DMA_HandleTypeDef hdma;
 static TIM_HandleTypeDef htim;
 static FDCAN_HandleTypeDef hcan;
 static IWDG_HandleTypeDef hiwdg;
+static I2C_HandleTypeDef hi2c;
+static struct vl53l1x tof;
+static bool tof_ok;
+static uint16_t tof_last_mm;
+static uint32_t tof_last_t, tof_errors;
 static volatile uint16_t adc_buf[ADC_ROUNDS * ADC_CH];
 static struct leg leg;
 static uint32_t can_tx_dropped;
@@ -79,6 +88,13 @@ static void gpio(void)
 
     g = (GPIO_InitTypeDef){.Pin = LED_PIN, .Mode = GPIO_MODE_OUTPUT_PP};
     HAL_GPIO_Init(LED_PORT, &g);
+
+    g = (GPIO_InitTypeDef){.Pin = TOF_I2C_PINS, .Mode = GPIO_MODE_AF_OD, .Pull = GPIO_PULLUP,
+                           .Speed = GPIO_SPEED_FREQ_HIGH, .Alternate = GPIO_AF6_I2C1};
+    HAL_GPIO_Init(TOF_PORT, &g);
+    HAL_GPIO_WritePin(TOF_PORT, TOF_XSHUT_PIN, GPIO_PIN_RESET); /* sensor held in reset until tof() */
+    g = (GPIO_InitTypeDef){.Pin = TOF_XSHUT_PIN, .Mode = GPIO_MODE_OUTPUT_PP};
+    HAL_GPIO_Init(TOF_PORT, &g);
 
 #if defined(BOARD_NUCLEO)
     HAL_GPIO_WritePin(CAN_STBY_PORT, CAN_STBY_PIN, GPIO_PIN_RESET);
@@ -203,6 +219,55 @@ static void can(void)
         fail();
 }
 
+static bool tof_write(void *ctx, uint16_t reg, const uint8_t *data, int n)
+{
+    (void)ctx;
+    return HAL_I2C_Mem_Write(&hi2c, VL53L1X_ADDR << 1, reg, I2C_MEMADD_SIZE_16BIT, (uint8_t *)data, n, 10) == HAL_OK;
+}
+
+static bool tof_read(void *ctx, uint16_t reg, uint8_t *data, int n)
+{
+    (void)ctx;
+    return HAL_I2C_Mem_Read(&hi2c, VL53L1X_ADDR << 1, reg, I2C_MEMADD_SIZE_16BIT, data, n, 10) == HAL_OK;
+}
+
+static void tof_delay(void *ctx, uint32_t ms) { (void)ctx; HAL_Delay(ms); }
+
+/* Runs before the watchdog starts: init blocks for ~100 ms. A sensor plugged in later
+   is only picked up after a reset. */
+static void tof_start(void)
+{
+    __HAL_RCC_I2C1_CLK_ENABLE();
+    hi2c.Instance = I2C1;
+    hi2c.Init.Timing = I2C_TIMING_400K;
+    hi2c.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+    hi2c.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+    hi2c.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+    hi2c.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+    if (HAL_I2C_Init(&hi2c) != HAL_OK)
+        fail();
+
+    HAL_GPIO_WritePin(TOF_PORT, TOF_XSHUT_PIN, GPIO_PIN_SET);
+    HAL_Delay(2);
+    tof = (struct vl53l1x){.write = tof_write, .read = tof_read, .delay_ms = tof_delay};
+    tof_ok = vl53l1x_init(&tof, VL53L1X_SHORT, 20, 25);
+}
+
+static void tof_poll(uint32_t t)
+{
+    uint16_t mm;
+    uint8_t status;
+    if (!tof_ok || t % TOF_POLL_MS)
+        return;
+    int r = vl53l1x_poll(&tof, &mm, &status);
+    if (r > 0) {
+        tof_last_mm = mm;
+        tof_last_t = t;
+    } else if (r < 0) {
+        tof_errors++;
+    }
+}
+
 static void watchdog(void)
 {
     hiwdg.Instance = IWDG;
@@ -282,7 +347,12 @@ static uint8_t hal_leg_id(void *ctx)
 #endif
 }
 
-static uint16_t hal_tof(void *ctx) { (void)ctx; return 0; } /* VL53L1X driver still to come */
+/* 0 = no sensor or no fresh reading, 0xffff = nothing in range */
+static uint16_t hal_tof(void *ctx)
+{
+    (void)ctx;
+    return tof_ok && HAL_GetTick() - tof_last_t < TOF_STALE_MS ? tof_last_mm : 0;
+}
 
 static void hal_send(void *ctx, const struct can_frame_t *f)
 {
@@ -358,7 +428,7 @@ int main(void)
     pwm_timer();
     adc();
     can();
-    HAL_Delay(2); /* let the DMA fill the ADC buffer once */
+    tof_start();
 
     leg_init(&leg, &hal, (const struct leg_config *)CONFIG_ADDR);
     watchdog();
@@ -369,6 +439,7 @@ int main(void)
         uint32_t t = HAL_GetTick();
         if (t != last) {
             last = t;
+            tof_poll(t);
             leg_tick(&leg);
             led(t);
             HAL_IWDG_Refresh(&hiwdg);

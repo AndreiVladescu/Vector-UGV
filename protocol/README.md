@@ -15,7 +15,7 @@
 | 6 | LEG_REPLY (joint, key, value, seq, status) | leg → CM5 | on demand |
 | 7 | reserved for the bootloader | | |
 
-Units: 0.01°, mV, mA, mm. VBAT and the 6 V rail travel in 10 mV steps.
+Units: 0.01°, mV, mA, mm. VBAT and the 6 V rail travel in 10 mV steps. ToF: 0 = no sensor or no fresh reading, 65535 = nothing in range.
 
 Leg state: 0 off, 1 wake, 2 active, 3 crouch, 4 calibrate, 5 fault. Fault bits: watchdog, e-stop, wake failed, uncalibrated, buck, overtemp, calibration failed, config.
 

@@ -3,6 +3,8 @@
 #include <string.h>
 
 #include "leg_sim.h"
+#include "tof_sim.h"
+#include "vl53l1x.h"
 #include "vector_can.h"
 
 static int failures, checks;
@@ -330,6 +332,68 @@ static void test_config(void)
     CHECK(!(again.leg.faults & FAULT_UNCALIBRATED));
 }
 
+/* ---- VL53L1X, against the registers the SparkFun/ST driver writes ---- */
+
+static uint16_t be16(const struct tof_sim *t, uint16_t reg) { return (uint16_t)(t->reg[reg] << 8 | t->reg[reg + 1]); }
+
+static void tof_setup(struct tof_sim *t, struct vl53l1x *d)
+{
+    tof_sim_init(t);
+    *d = (struct vl53l1x){t, tof_sim_write, tof_sim_read, tof_sim_delay, 0};
+}
+
+static void test_tof(void)
+{
+    struct tof_sim t;
+    struct vl53l1x d;
+    uint16_t mm = 0;
+    uint8_t st = 0;
+
+    tof_setup(&t, &d);
+    CHECK(vl53l1x_init(&d, VL53L1X_SHORT, 20, 25));
+    CHECK(t.t_ms > 0 && t.t_ms < 150); /* waited for the throwaway first measurement */
+    CHECK(t.reg[0x4B] == 0x14 && t.reg[0x60] == 0x07 && t.reg[0x63] == 0x05 && t.reg[0x69] == 0x38);
+    CHECK(be16(&t, 0x78) == 0x0705 && be16(&t, 0x7A) == 0x0606);
+    CHECK(be16(&t, 0x5E) == 0x0051 && be16(&t, 0x61) == 0x006E);
+    CHECK(t.reg[0x08] == 0x09 && t.reg[0x0B] == 0x00 && t.reg[0x2E] == 0x01);
+    CHECK((uint32_t)(be16(&t, 0x6C) << 16 | be16(&t, 0x6E)) == (uint32_t)(0x01A8 * 25 * 1.075f));
+    CHECK(t.ranging);
+
+    CHECK(vl53l1x_poll(&d, &mm, &st) == 0);
+    t.distance_mm = 1234;
+    tof_sim_step(&t, 25);
+    CHECK(vl53l1x_poll(&d, &mm, &st) == 1 && mm == 1234 && st == 0);
+    CHECK(vl53l1x_poll(&d, &mm, &st) == 0);
+    t.raw_status = 4; /* signal fail: nothing in range */
+    tof_sim_step(&t, 25);
+    CHECK(vl53l1x_poll(&d, &mm, &st) == 1 && mm == VL53L1X_NO_TARGET && st == 2);
+    t.raw_status = 7;
+    tof_sim_step(&t, 25);
+    CHECK(vl53l1x_poll(&d, &mm, &st) == 1 && mm == VL53L1X_NO_TARGET && st == 7);
+
+    /* switching mode keeps the budget, as SetDistanceMode does */
+    CHECK(vl53l1x_set_budget(&d, 33) && vl53l1x_set_mode(&d, VL53L1X_LONG));
+    CHECK(t.reg[0x4B] == 0x0A && be16(&t, 0x78) == 0x0F0D && be16(&t, 0x5E) == 0x0060 && be16(&t, 0x61) == 0x006E);
+    CHECK(!vl53l1x_set_budget(&d, 15)); /* short mode only */
+
+    tof_setup(&t, &d);
+    CHECK(vl53l1x_init(&d, VL53L1X_LONG, 50, 50));
+    CHECK(t.reg[0x4B] == 0x0A && be16(&t, 0x5E) == 0x00AD && be16(&t, 0x61) == 0x00C6);
+
+    tof_setup(&t, &d);
+    t.present = false;
+    CHECK(!vl53l1x_init(&d, VL53L1X_SHORT, 20, 25));
+    CHECK(vl53l1x_poll(&d, &mm, &st) == -1);
+
+    tof_setup(&t, &d);
+    t.reg[0x0110] = 0xCD; /* some other ST part answering at 0x29 */
+    CHECK(!vl53l1x_init(&d, VL53L1X_SHORT, 20, 25));
+
+    tof_setup(&t, &d);
+    t.reg[0x00E5] = 0; /* never finishes booting */
+    CHECK(!vl53l1x_init(&d, VL53L1X_SHORT, 20, 25));
+}
+
 int main(void)
 {
     const float park_high[3] = {2000, 2400, 1900}, park_mid[3] = {1500, 1200, 800};
@@ -341,6 +405,7 @@ int main(void)
         {"watchdog", test_watchdog},
         {"estop", test_estop},
         {"config", test_config},
+        {"tof", test_tof},
     };
     for (unsigned i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
         printf("%s\n", tests[i].name);

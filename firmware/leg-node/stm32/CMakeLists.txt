@@ -32,14 +32,14 @@ set(LEG ${CMAKE_CURRENT_LIST_DIR}/..)
 set(HAL ${c0_hal_SOURCE_DIR}/Src)
 add_executable(leg-node
   main.c
-  ${LEG}/src/leg.c ${LEG}/src/joint.c ${LEG}/src/filter.c ${LEG}/src/config.c ${LEG}/../common/vector_can.c
+  ${LEG}/src/leg.c ${LEG}/src/joint.c ${LEG}/src/filter.c ${LEG}/src/config.c ${LEG}/src/vl53l1x.c ${LEG}/../common/vector_can.c
   ${cmsis_device_c0_SOURCE_DIR}/Source/Templates/gcc/startup_stm32c092xx.s
   ${cmsis_device_c0_SOURCE_DIR}/Source/Templates/system_stm32c0xx.c
   ${HAL}/stm32c0xx_hal.c ${HAL}/stm32c0xx_hal_cortex.c ${HAL}/stm32c0xx_hal_rcc.c ${HAL}/stm32c0xx_hal_rcc_ex.c
   ${HAL}/stm32c0xx_hal_gpio.c ${HAL}/stm32c0xx_hal_dma.c ${HAL}/stm32c0xx_hal_dma_ex.c
   ${HAL}/stm32c0xx_hal_adc.c ${HAL}/stm32c0xx_hal_adc_ex.c ${HAL}/stm32c0xx_hal_tim.c ${HAL}/stm32c0xx_hal_tim_ex.c
   ${HAL}/stm32c0xx_hal_fdcan.c ${HAL}/stm32c0xx_hal_flash.c ${HAL}/stm32c0xx_hal_flash_ex.c
-  ${HAL}/stm32c0xx_hal_iwdg.c ${HAL}/stm32c0xx_hal_pwr.c ${HAL}/stm32c0xx_hal_pwr_ex.c)
+  ${HAL}/stm32c0xx_hal_i2c.c ${HAL}/stm32c0xx_hal_i2c_ex.c ${HAL}/stm32c0xx_hal_iwdg.c ${HAL}/stm32c0xx_hal_pwr.c ${HAL}/stm32c0xx_hal_pwr_ex.c)
 target_include_directories(leg-node PRIVATE
   ${CMAKE_CURRENT_LIST_DIR} ${LEG}/src ${LEG}/../common ${CMAKE_BINARY_DIR}/conf
   ${cmsis_core_SOURCE_DIR}/Include ${cmsis_device_c0_SOURCE_DIR}/Include ${c0_hal_SOURCE_DIR}/Inc)
