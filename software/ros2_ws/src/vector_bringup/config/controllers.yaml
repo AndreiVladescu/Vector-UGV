@@ -39,7 +39,7 @@ leg_power:
     gpios: [legs]
     command_interfaces:
       legs:
-        interfaces: [enable]
+        interfaces: [enable, estop]
     state_interfaces:
       legs:
         interfaces: [enable]

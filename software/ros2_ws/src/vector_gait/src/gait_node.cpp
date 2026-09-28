@@ -9,6 +9,12 @@
 // switch the legs off through the leg_power GPIO controller; waking powers them, waits
 // until they all report active, raises the body and walks again. Without the GPIO
 // (Gazebo) it only lowers and raises.
+//
+// A leg that drops out while walking (fault, lost power) halts the gait: the other legs
+// finish their step and stand. ~/sentinel then ~/wake power-cycles the legs, which clears
+// the fault if its cause is gone. ~/estop (true) sets the e-stop flag on the bus, which
+// switches every leg off at once, and puts the node in sentinel; after ~/estop (false),
+// ~/wake stands it up again.
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -26,6 +32,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 #include "std_msgs/msg/string.hpp"
+#include "std_srvs/srv/set_bool.hpp"
 #include "std_srvs/srv/trigger.hpp"
 #include "tf2_ros/transform_broadcaster.h"
 #include "visualization_msgs/msg/marker_array.hpp"
@@ -140,8 +147,7 @@ public:
           const auto & v = msg->interface_values[i];
           for (size_t k = 0; k < v.interface_names.size() && k < v.values.size(); ++k) {
             if (msg->interface_groups[i] == "legs" && v.interface_names[k] == "enable") {
-              legs_active_ = v.values[k];
-              have_power_ = true;
+              on_legs_active(v.values[k]);
             }
           }
         }
@@ -151,8 +157,8 @@ public:
     sentinel_srv_ = create_service<std_srvs::srv::Trigger>(
       "~/sentinel", [this](const std_srvs::srv::Trigger::Request::SharedPtr,
       std_srvs::srv::Trigger::Response::SharedPtr res) {
-        res->success = mode_ == Mode::Walk;
-        res->message = res->success ? "sitting down" : "only from walking";
+        res->success = mode_ == Mode::Walk || mode_ == Mode::Halted;
+        res->message = res->success ? "sitting down" : "only from walking or halted";
         if (res->success) {
           set_mode(Mode::Stopping);
         }
@@ -160,12 +166,19 @@ public:
     wake_srv_ = create_service<std_srvs::srv::Trigger>(
       "~/wake", [this](const std_srvs::srv::Trigger::Request::SharedPtr,
       std_srvs::srv::Trigger::Response::SharedPtr res) {
-        res->success = mode_ == Mode::Sentinel;
-        res->message = res->success ? "waking up" : "only from sentinel";
+        res->success = mode_ == Mode::Sentinel && !estop_;
+        res->message = res->success ? "waking up" : estop_ ? "e-stop engaged" : "only from sentinel";
         if (res->success) {
           power(true);
           set_mode(Mode::Powering);
         }
+      });
+    estop_srv_ = create_service<std_srvs::srv::SetBool>(
+      "~/estop", [this](const std_srvs::srv::SetBool::Request::SharedPtr req,
+      std_srvs::srv::SetBool::Response::SharedPtr res) {
+        estop(req->data);
+        res->success = true;
+        res->message = req->data ? "e-stop: legs off" : "released, ~/wake to stand up";
       });
     set_mode(Mode::Walk);
     tf_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
@@ -315,11 +328,11 @@ private:
     gait_->set_contact(contact);
   }
 
-  enum class Mode { Walk, Stopping, Lowering, Sentinel, Powering, Raising };
+  enum class Mode { Walk, Stopping, Lowering, Sentinel, Powering, Raising, Halted };
 
   void set_mode(Mode m)
   {
-    static const char * names[] = {"walk", "stopping", "lowering", "sentinel", "powering", "raising"};
+    static const char * names[] = {"walk", "stopping", "lowering", "sentinel", "powering", "raising", "halted"};
     mode_ = m;
     mode_t_ = now();
     std_msgs::msg::String msg;
@@ -328,14 +341,55 @@ private:
     RCLCPP_INFO(get_logger(), "mode: %s", msg.data.c_str());
   }
 
-  void power(bool on)
+  void legs_gpio(const std::vector<std::string> & names, const std::vector<double> & values)
   {
     control_msgs::msg::DynamicInterfaceGroupValues msg;
     msg.interface_groups = {"legs"};
     msg.interface_values.resize(1);
-    msg.interface_values[0].interface_names = {"enable"};
-    msg.interface_values[0].values = {on ? 1.0 : 0.0};
+    msg.interface_values[0].interface_names = names;
+    msg.interface_values[0].values = values;
     power_pub_->publish(msg);
+  }
+
+  void power(bool on)
+  {
+    legs_were_up_ = false;
+    legs_gpio({"enable"}, {on ? 1.0 : 0.0});
+  }
+
+  void on_legs_active(double active)
+  {
+    legs_active_ = active;
+    have_power_ = true;
+    if (mode_ != Mode::Walk) {
+      return;
+    }
+    if (active > 0.999) {
+      legs_were_up_ = true;
+    } else if (legs_were_up_) {
+      cmd_ = {};
+      RCLCPP_ERROR(get_logger(), "a leg dropped out (see /diagnostics), stopped; "
+        "~/sentinel then ~/wake to power-cycle the legs");
+      set_mode(Mode::Halted);
+    }
+  }
+
+  void estop(bool on)
+  {
+    estop_ = on;
+    if (!on) {
+      legs_gpio({"estop"}, {0.0});
+      RCLCPP_WARN(get_logger(), "e-stop released, ~/wake to stand up");
+      return;
+    }
+    legs_were_up_ = false;
+    legs_gpio({"enable", "estop"}, {0.0, 1.0});
+    cmd_ = {};
+    // the body is on the ground by now; command the sentinel pose so waking starts from it
+    sentinel_z_ = (sentinel_height_ - gait_->params().body_height) - (get_parameter("body_z").as_double() + height_);
+    pose_dirty_ = true;
+    RCLCPP_ERROR(get_logger(), "e-stop");
+    set_mode(Mode::Sentinel);
   }
 
   bool body_at(double z) const {return std::abs(gait_->body_pose().z - z) < 1e-4;}
@@ -467,11 +521,12 @@ private:
   Mode mode_ = Mode::Walk;
   rclcpp::Time mode_t_;
   double sentinel_height_ = 0.03, power_timeout_ = 10.0, sentinel_z_ = 0, legs_active_ = 1.0;
-  bool have_power_ = false;
+  bool have_power_ = false, legs_were_up_ = false, estop_ = false;
   rclcpp::Publisher<control_msgs::msg::DynamicInterfaceGroupValues>::SharedPtr power_pub_;
   rclcpp::Subscription<control_msgs::msg::DynamicInterfaceGroupValues>::SharedPtr power_sub_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr mode_pub_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr sentinel_srv_, wake_srv_;
+  rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr estop_srv_;
   double x_ = 0, y_ = 0, yaw_ = 0;
   rclcpp::Time last_cmd_, last_tick_;
 

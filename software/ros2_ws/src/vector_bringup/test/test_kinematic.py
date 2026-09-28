@@ -11,11 +11,11 @@ from ament_index_python.packages import get_package_share_directory
 from geometry_msgs.msg import Twist
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from control_msgs.msg import DynamicInterfaceGroupValues
+from control_msgs.msg import DynamicInterfaceGroupValues, InterfaceValue
 from rcl_interfaces.srv import SetParameters
 from rclpy.qos import QoSProfile, DurabilityPolicy
 from std_msgs.msg import String
-from std_srvs.srv import Trigger
+from std_srvs.srv import SetBool, Trigger
 from rclpy.parameter import Parameter
 from sensor_msgs.msg import JointState
 from tf2_ros import Buffer, TransformListener
@@ -72,6 +72,13 @@ class TestKinematicSim(unittest.TestCase):
         client = self.node.create_client(Trigger, service)
         self.assertTrue(client.wait_for_service(timeout_sec=5.0))
         future = client.call_async(Trigger.Request())
+        rclpy.spin_until_future_complete(self.node, future, timeout_sec=5.0)
+        return future.result().success
+
+    def estop(self, on):
+        client = self.node.create_client(SetBool, '/gait_node/estop')
+        self.assertTrue(client.wait_for_service(timeout_sec=5.0))
+        future = client.call_async(SetBool.Request(data=on))
         rclpy.spin_until_future_complete(self.node, future, timeout_sec=5.0)
         return future.result().success
 
@@ -263,3 +270,68 @@ class TestKinematicSim(unittest.TestCase):
         self.assertGreater(pose().x - before.x, 0.05, 'does not walk after waking')
         self.key(Twist())
         self.spin_for(2.0)
+
+    def wait_ready(self):
+        end = time.time() + 30
+        while time.time() < end and ('L1_femur' not in self.joints or self.mode != 'walk'):
+            rclpy.spin_once(self.node, timeout_sec=0.1)
+        self.spin_for(2.0)
+
+    def test_estop(self):
+        """E-stop: legs off, straight into sentinel, no waking until released."""
+        self.wait_ready()
+        fwd = Twist()
+        fwd.linear.x = 0.5
+        self.key(fwd)
+        self.spin_for(1.0)
+        self.assertTrue(self.estop(True))
+        self.assertTrue(self.wait_mode('sentinel', 2.0), f'mode {self.mode}')
+        self.spin_for(0.5)
+        self.assertEqual(self.power, 0.0, 'legs still powered')
+        self.assertFalse(self.call('/gait_node/wake'), 'woke up with the e-stop engaged')
+
+        self.assertTrue(self.estop(False))
+        self.assertTrue(self.call('/gait_node/wake'))
+        self.assertTrue(self.wait_mode('walk', 20.0), f'mode {self.mode}')
+        self.spin_for(0.5)
+        self.assertEqual(self.power, 1.0)
+        self.key(Twist())
+        self.spin_for(2.0)
+
+    def test_halted_when_a_leg_drops_out(self):
+        """All six were active, then one isn't: stop walking, until a sentinel/wake cycle."""
+        self.wait_ready()
+        fwd = Twist()
+        fwd.linear.x = 0.5
+        self.key(fwd)
+        self.spin_for(1.0)
+
+        # what the hardware reports when some legs are active and some aren't
+        pub = self.node.create_publisher(DynamicInterfaceGroupValues, '/leg_power/gpio_states', 10)
+        msg = DynamicInterfaceGroupValues()
+        msg.interface_groups = ['legs']
+        values = InterfaceValue()
+        values.interface_names = ['enable']
+        values.values = [0.5]
+        msg.interface_values = [values]
+        end = time.time() + 2
+        while time.time() < end and self.mode != 'halted':
+            pub.publish(msg)
+            rclpy.spin_once(self.node, timeout_sec=0.05)
+        self.assertEqual(self.mode, 'halted')
+
+        def x():
+            return self.tf.lookup_transform('odom', 'base_link', rclpy.time.Time()).transform.translation.x
+
+        self.spin_for(2.0)  # the other legs finish their step
+        stopped = x()
+        self.key(fwd)
+        self.spin_for(1.0)
+        self.assertAlmostEqual(x(), stopped, delta=0.002, msg='walks while halted')
+
+        self.assertTrue(self.call('/gait_node/sentinel'))
+        self.assertTrue(self.wait_mode('sentinel', 15.0), f'mode {self.mode}')
+        self.assertTrue(self.call('/gait_node/wake'))
+        self.assertTrue(self.wait_mode('walk', 20.0), f'mode {self.mode}')
+        self.key(Twist())
+        self.spin_for(1.0)

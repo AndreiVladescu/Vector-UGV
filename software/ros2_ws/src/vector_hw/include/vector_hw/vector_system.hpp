@@ -3,7 +3,9 @@
 // write(): SYNC + one LEG_CMD per leg every cycle. read(): drains LEG_STATE frames into
 // joint positions. Activation waits until every leg has reported, and starts the
 // commands at the measured angles so nothing jumps. A leg that goes quiet stops the
-// hardware; the leg itself crouches and powers down on its own heartbeat watchdog.
+// hardware; with SYNC gone every leg crouches and powers down on its own watchdog.
+// GPIO "legs": enable (command 1/0, state 1 when all six are active, 0.5 when some are)
+// and estop (command 1 sets the e-stop flag in SYNC and holds the legs off).
 #pragma once
 
 #include <array>
@@ -42,7 +44,7 @@ private:
   static constexpr int kJoints = 18;
 
   void drain();
-  void send_all(bool enable);
+  void send_all(bool enable, bool estop);
 
   vector::can::SocketCan bus_;
   std::string ifname_ = "can0";
@@ -54,8 +56,8 @@ private:
   std::array<Clock::time_point, kLegs> last_rx_{};
   std::array<bool, kLegs> seen_{};
   std::array<uint8_t, kLegs> leg_state_{};
-  double legs_enable_cmd_ = 1.0, legs_active_ = 0.0;
-  bool has_gpio_ = false;
+  double legs_enable_cmd_ = 1.0, legs_estop_cmd_ = 0.0, legs_active_ = 0.0;
+  bool has_gpio_ = false, has_estop_ = false;
   uint16_t sync_counter_ = 0;
   uint8_t cmd_counter_ = 0;
   rclcpp::Logger log_ = rclcpp::get_logger("VectorSystem");

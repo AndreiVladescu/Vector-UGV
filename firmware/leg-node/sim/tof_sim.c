@@ -47,7 +47,7 @@ void tof_sim_step(struct tof_sim *s, uint32_t ms)
 bool tof_sim_write(void *ctx, uint16_t reg, const uint8_t *data, int n)
 {
     struct tof_sim *s = ctx;
-    if (!s->present || reg + n > (int)sizeof(s->reg))
+    if (!s->present || s->xshut_low || s->stuck || reg + n > (int)sizeof(s->reg))
         return false;
     if (n > s->max_write)
         s->max_write = n;
@@ -67,10 +67,30 @@ bool tof_sim_write(void *ctx, uint16_t reg, const uint8_t *data, int n)
 bool tof_sim_read(void *ctx, uint16_t reg, uint8_t *data, int n)
 {
     struct tof_sim *s = ctx;
-    if (!s->present || reg + n > (int)sizeof(s->reg)) {
+    if (!s->present || s->xshut_low || s->stuck || reg + n > (int)sizeof(s->reg)) {
         s->failed_reads++;
         return false;
     }
     memcpy(data, &s->reg[reg], n);
     return true;
+}
+
+void tof_sim_shutdown(void *ctx, bool off)
+{
+    struct tof_sim *s = ctx;
+    if (off || !s->xshut_low) {
+        s->xshut_low = off;
+        if (off)
+            s->stuck = false; /* in reset it lets go of the bus */
+        return;
+    }
+    /* out of reset: a fresh sensor, same scene */
+    struct tof_sim was = *s;
+    tof_sim_init(s);
+    s->present = was.present;
+    s->t_ms = was.t_ms;
+    s->distance_mm = was.distance_mm;
+    s->raw_status = was.raw_status;
+    s->max_write = was.max_write;
+    s->failed_reads = was.failed_reads;
 }

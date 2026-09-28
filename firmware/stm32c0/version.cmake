@@ -1,6 +1,6 @@
 execute_process(COMMAND git rev-parse --short=7 HEAD WORKING_DIRECTORY ${SRC}
   OUTPUT_VARIABLE hash OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
-execute_process(COMMAND git diff --quiet HEAD -- . ../common WORKING_DIRECTORY ${SRC}
+execute_process(COMMAND git diff --quiet HEAD -- . ../common ../stm32c0 WORKING_DIRECTORY ${SRC}
   RESULT_VARIABLE dirty ERROR_QUIET)
 if(NOT hash)
   set(hash 0)

@@ -111,7 +111,8 @@ static void read_inputs(struct leg *l)
     float v = sample(l, ADC_NTC, 5);
     if (v > 1.0f && v < VDDA_MV - 1.0f) {
         float r = NTC_PULLUP * v / (VDDA_MV - v);
-        l->temp_c = (int8_t)lroundf(1.0f / (1.0f / 298.15f + logf(r / NTC_R25) / NTC_BETA) - 273.15f);
+        float c = 1.0f / (1.0f / 298.15f + logf(r / NTC_R25) / NTC_BETA) - 273.15f;
+        l->temp_c = (int8_t)lroundf(fmaxf(-40.0f, fminf(125.0f, c))); /* a shorted NTC reads hot */
     }
 }
 
@@ -184,8 +185,9 @@ static void wake_tick(struct leg *l)
             break;
         /* test move away from whichever edge (angle limit or pulse range) is near */
         w->test_us = w->start_us + TEST_DEG * c->us_per_deg;
-        if (w->test_us > 2500.0f || joint_us_to_deg(c, w->test_us) > c->max_deg ||
-            joint_us_to_deg(c, w->test_us) < c->min_deg)
+        if ((w->test_us > 2500.0f || joint_us_to_deg(c, w->test_us) > c->max_deg ||
+             joint_us_to_deg(c, w->test_us) < c->min_deg) &&
+            w->start_us - TEST_DEG * c->us_per_deg >= 500.0f)
             w->test_us = w->start_us - TEST_DEG * c->us_per_deg;
         w->before_us = meas_us;
         pwm(l, j, w->test_us);
@@ -209,7 +211,7 @@ static void wake_tick(struct leg *l)
                 break;
             }
             /* a servo that ignores its first pulse wakes up when sent past where it sits */
-            w->start_us = fmaxf(meas_us, w->start_us) + 60.0f * w->tries;
+            w->start_us = fminf(fmaxf(meas_us, w->start_us) + 60.0f * w->tries, 2500.0f);
             pwm(l, j, w->start_us);
             w->t = t;
             w->phase = 1;
@@ -261,7 +263,7 @@ static void cal_finish_joint(struct leg *l)
     bool ok = linfit_solve(&fit, &a, &b);
     if (ok)
         for (int i = 0; i < 2 * CAL_POINTS; i++)
-            err = fmaxf(err, fabsf(c->y[i] - (float)(a + b * c->x[i])));
+            err = fmaxf(err, (float)fabs((double)c->y[i] - (a + b * (double)c->x[i])));
 
     ok = ok && b > 0.5 && b < 3.0 && err < CAL_MAX_ERR_MV && hi - lo > CAL_MIN_SPAN_MV;
     if (ok) {
@@ -361,6 +363,25 @@ static void test_done(struct leg *l)
 {
     power(l, false);
     reply(l, 0xff, 0, l->test.failed, 0, ST_TEST_DONE);
+    enter(l, LEG_OFF);
+}
+
+/* A calibration or self-test cut short still tells the host it ended, as a failure. */
+static void abort_running(struct leg *l)
+{
+    if (l->state == LEG_CALIBRATE) {
+        l->faults |= FAULT_CAL;
+        reply(l, 0xff, 0, 0, 0, ST_CAL_DONE);
+    } else if (l->state == LEG_TEST) {
+        l->test.failed++;
+        reply(l, 0xff, 0, l->test.failed, 0, ST_TEST_DONE);
+    }
+}
+
+static void estop_now(struct leg *l)
+{
+    l->faults |= FAULT_ESTOP;
+    abort_running(l);
     enter(l, LEG_OFF);
 }
 
@@ -465,18 +486,22 @@ static uint8_t key_set(struct joint_cfg *c, uint8_t key, int32_t v)
         c->us_per_deg = v / 1000.0f;
         return ST_OK;
     case KEY_MIN_DEG:
-    case KEY_MAX_DEG:
-        if (v < -18000 || v > 18000) return ST_BAD_VALUE;
-        if (key == KEY_MIN_DEG) c->min_deg = v / 100.0f;
-        else c->max_deg = v / 100.0f;
-        return c->min_deg < c->max_deg ? ST_OK : ST_BAD_VALUE;
+    case KEY_MAX_DEG: {
+        float lo = key == KEY_MIN_DEG ? v / 100.0f : c->min_deg, hi = key == KEY_MAX_DEG ? v / 100.0f : c->max_deg;
+        if (v < -18000 || v > 18000 || lo >= hi) return ST_BAD_VALUE;
+        c->min_deg = lo;
+        c->max_deg = hi;
+        return ST_OK;
+    }
     }
     return ST_BAD_KEY;
 }
 
 static void config_frame(struct leg *l, const struct leg_cfg_msg *m)
 {
-    bool busy = l->state == LEG_CALIBRATE || l->state == LEG_WAKE || l->state == LEG_TEST;
+    /* joint settings, defaults and saving (the flash erase stalls the CPU for ~30 ms) only
+       while the servos are off; the leg-wide corrections are harmless any time */
+    bool busy = l->state != LEG_OFF && l->state != LEG_FAULT;
     int32_t v = 0;
 
     switch (m->op) {
@@ -488,12 +513,12 @@ static void config_frame(struct leg *l, const struct leg_cfg_msg *m)
             reply(l, m->joint, m->key, v, m->seq, ST_OK);
         break;
     case OP_WRITE:
-        if (busy) {
-            reply(l, m->joint, m->key, m->value, m->seq, ST_BUSY);
-        } else if (m->joint == 0xff) {
+        if (m->joint == 0xff) {
             uint8_t st = leg_key_set(&l->cfg, m->key, m->value);
             config_seal(&l->cfg);
             reply(l, m->joint, m->key, m->value, m->seq, st);
+        } else if (busy) {
+            reply(l, m->joint, m->key, m->value, m->seq, ST_BUSY);
         } else if (m->joint >= JOINTS) {
             reply(l, m->joint, m->key, m->value, m->seq, ST_BAD_KEY);
         } else {
@@ -505,6 +530,10 @@ static void config_frame(struct leg *l, const struct leg_cfg_msg *m)
         }
         break;
     case OP_SAVE: {
+        if (busy) {
+            reply(l, m->joint, 0, 0, m->seq, ST_BUSY);
+            break;
+        }
         /* write over the older slot; the other keeps the last good copy if power drops now */
         l->cfg.seq++;
         config_seal(&l->cfg);
@@ -525,15 +554,19 @@ static void config_frame(struct leg *l, const struct leg_cfg_msg *m)
     case OP_SELFTEST:
         test_start(l, m->seq);
         break;
-    case OP_DEFAULTS:
+    case OP_DEFAULTS: {
         if (busy) {
             reply(l, m->joint, 0, 0, m->seq, ST_BUSY);
             break;
         }
+        uint32_t seq = l->cfg.seq; /* or the next save would look older than what's in flash */
         config_defaults(&l->cfg);
+        l->cfg.seq = seq;
+        config_seal(&l->cfg);
         l->faults |= FAULT_UNCALIBRATED;
         reply(l, m->joint, 0, 0, m->seq, ST_OK);
         break;
+    }
     default:
         reply(l, m->joint, m->key, 0, m->seq, ST_BAD_KEY);
     }
@@ -548,10 +581,8 @@ void leg_frame(struct leg *l, const struct can_frame_t *f)
     if (can_unpack_sync(f, &s)) {
         l->last_sync = now(l);
         l->synced = true;
-        if (s.estop && l->state != LEG_OFF && l->state != LEG_CALIBRATE) {
-            l->faults |= FAULT_ESTOP;
-            enter(l, LEG_OFF);
-        }
+        if (s.estop && l->state != LEG_OFF)
+            estop_now(l);
         send_state(l, (l->sync_count++ & 3) == (l->node & 3));
         return;
     }
@@ -595,14 +626,7 @@ static bool protect(struct leg *l)
     if (!f)
         return false;
     l->faults |= f;
-    if (l->state == LEG_CALIBRATE) {
-        l->faults |= FAULT_CAL;
-        reply(l, 0xff, 0, 0, 0, ST_CAL_DONE);
-    }
-    if (l->state == LEG_TEST) {
-        l->test.failed++;
-        reply(l, 0xff, 0, l->test.failed, 0, ST_TEST_DONE);
-    }
+    abort_running(l);
     enter(l, LEG_FAULT);
     return true;
 }
@@ -667,12 +691,10 @@ void leg_tick(struct leg *l)
         }
         break;
     case LEG_CALIBRATE:
-        if (estop) {
-            l->faults |= FAULT_CAL;
-            enter(l, LEG_OFF);
-        } else {
+        if (estop)
+            estop_now(l);
+        else
             cal_tick(l);
-        }
         break;
     case LEG_FAULT:
         if (!l->enable)
@@ -680,7 +702,7 @@ void leg_tick(struct leg *l)
         break;
     case LEG_TEST:
         if (estop)
-            test_done(l);
+            estop_now(l);
         else
             test_tick(l);
         break;

@@ -73,10 +73,15 @@ Worlds: `flat`, `slope` (8°), `rough` (40 slabs, 1–3 cm, fixed layout). `leve
 ```sh
 ros2 service call /gait_node/sentinel std_srvs/srv/Trigger   # stop, lower onto the belly, legs off
 ros2 service call /gait_node/wake std_srvs/srv/Trigger        # legs on, wait for all six, stand up
-ros2 topic echo /gait_node/mode                                # walk, stopping, lowering, sentinel, powering, raising
+ros2 topic echo /gait_node/mode                                # walk, stopping, lowering, sentinel, powering, raising, halted
+ros2 service call /gait_node/estop std_srvs/srv/SetBool "{data: true}"   # e-stop; false releases, then wake
 ```
 
 The legs switch through the `leg_power` GPIO controller (`legs/enable`): on CAN it sets the enable bit in `LEG_CMD`, and its state reads 1 only when all six legs report active. If they don't within `power_timeout` (10 s) the robot stays down. Keys are ignored while sitting or getting up. `sentinel_height` (30 mm hip height) should become the real belly height once the body is designed. In Gazebo there is no leg power, so it only lowers and raises (body at 49 mm, back to 90 mm).
+
+If a leg drops out while walking (a fault, see below), the node stops in `halted`: the other legs finish their step and stand, keys are ignored. Sentinel then wake power-cycles the legs, which clears the fault if its cause is gone.
+
+E-stop sets the flag in SYNC (`legs/estop`): every leg switches off at once, which drops the body, and the node goes straight to sentinel. Wake is refused until the e-stop is released. The hardware e-stop line to the legs does the same without ROS.
 
 ## Touchdown (off by default)
 
@@ -103,13 +108,24 @@ ros2 run vector_hw leg_config.py --channel vcan0 calibrate R1 --mode limits
 ros2 run vector_hw leg_config.py --channel vcan0 push     # docs/servos.md + legs.yaml, run from the repo
 ```
 
-On the real robot it's the same launch with `can_interface:=can0` (CANable on the Pi 5, MCP251863 on the carrier). The hardware waits for all six legs before activating, starts from their measured angles, and drops out if a leg is silent for 100 ms. Walking at 200 Hz uses about 32% of the 1 Mbit/s bus.
+On the real robot it's the same launch with `can_interface:=can0` (CANable on the Pi 5, MCP251863 on the carrier). The hardware waits for all six legs before activating, starts from their measured angles, and drops out if a leg is silent for 100 ms; SYNC then stops, and every leg crouches and powers down on its own. Walking at 200 Hz uses about 32% of the 1 Mbit/s bus.
+
+With `hardware:=can` the launch also starts `leg_monitor`, which listens on the same bus:
+
+```sh
+ros2 topic echo /diagnostics          # per leg: state, faults, current, battery, servo rail, temperature, ToF
+ros2 run rqt_robot_monitor rqt_robot_monitor
+ros2 topic echo /legs/L1/tof          # sensor_msgs/Range in frame L1_tof (+inf: nothing in range)
+```
+
+Fault changes also go to the log as they happen. The `<leg>_tof` frames sit on the coxa links at a placeholder pose (`tof` in `legs.yaml`) until the sensor bracket exists.
 
 ## Checks
 
 ```sh
 ros2 run vector_gait gait_report src/vector_description/config/legs.yaml --mass 2.5
 colcon test --ctest-args -LE gazebo          # unit tests, kinematic sim, CAN loop (skips without vcan0)
+                                             # also checks that the DBC, firmware, C++ and leg_config.py agree
 colcon test --ctest-args -L gazebo           # headless Gazebo: flat walk, slope leveling, rough walk
 colcon test-result --verbose
 ```

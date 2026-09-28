@@ -10,6 +10,8 @@ find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(diagnostic_msgs REQUIRED)
 
 # Protocol + SocketCAN, no ROS.
 add_library(vector_can STATIC src/protocol.cpp src/socketcan.cpp)
@@ -22,6 +24,11 @@ target_link_libraries(vector_hw vector_can
   hardware_interface::hardware_interface pluginlib::pluginlib rclcpp::rclcpp rclcpp_lifecycle::rclcpp_lifecycle)
 
 pluginlib_export_plugin_description_file(hardware_interface vector_hw.xml)
+
+# Status, faults and ToF from the legs, published next to ros2_control.
+add_executable(leg_monitor src/leg_monitor.cpp)
+target_link_libraries(leg_monitor vector_can rclcpp::rclcpp ${sensor_msgs_TARGETS} ${diagnostic_msgs_TARGETS})
+install(TARGETS leg_monitor DESTINATION lib/${PROJECT_NAME})
 
 install(TARGETS vector_hw vector_can LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 install(DIRECTORY include/ DESTINATION include)
@@ -43,6 +50,13 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   ament_add_gtest(test_protocol test/test_protocol.cpp)
   target_link_libraries(test_protocol vector_can)
+  # the firmware's C encoder against this C++ one, frame for frame
+  ament_add_gtest(test_protocol_c test/test_protocol_c.cpp ${LEG_FW}/common/vector_can.c)
+  target_include_directories(test_protocol_c PRIVATE ${LEG_FW}/common)
+  target_link_libraries(test_protocol_c vector_can)
+  # enums and names in the DBC, the firmware header, this package and leg_config.py
+  find_package(ament_cmake_pytest REQUIRED)
+  ament_add_pytest_test(test_protocol_names test/test_protocol_names.py)
 endif()
 
 ament_package()

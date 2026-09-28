@@ -16,6 +16,7 @@ struct vl53l1x {
     void *ctx;
     bool (*write)(void *ctx, uint16_t reg, const uint8_t *data, int n);
     bool (*read)(void *ctx, uint16_t reg, uint8_t *data, int n);
+    void (*shutdown)(void *ctx, bool off); /* XSHUT, optional: a reset frees a stuck bus */
 
     enum vl53l1x_mode mode;
     uint16_t budget_ms, period_ms;
@@ -31,7 +32,7 @@ void vl53l1x_begin(struct vl53l1x *d, enum vl53l1x_mode mode, uint16_t budget_ms
 /* Call every few ms, never blocks for more than one short I2C transfer. Finds the sensor
    (every 500 ms while there's none), loads ST's default config in pieces, runs the VHV
    calibration, starts ranging, and starts over if the sensor stops answering or stops
-   producing ranges. 1 = new range in *mm and *status, 0 = none this time, -1 = not ranging.
+   producing ranges; with XSHUT wired it holds the sensor in reset while it waits. 1 = new range in *mm and *status, 0 = none this time, -1 = not ranging.
    *mm is VL53L1X_NO_TARGET when nothing valid is in range; *status is ST's range status
    (0 valid, 1 sigma, 2 signal, 4 out of bounds, 7 wrap). */
 int vl53l1x_run(struct vl53l1x *d, uint32_t now_ms, uint16_t *mm, uint8_t *status);

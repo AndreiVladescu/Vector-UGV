@@ -2,6 +2,7 @@
 // anything generated from the DBC (firmware) agree bit for bit.
 #include <gtest/gtest.h>
 
+#include <cmath>
 #include <string>
 
 #include "vector_hw/protocol.hpp"
@@ -72,6 +73,19 @@ TEST(Protocol, LegStatus)
   EXPECT_EQ(s->temperature, -5);
   EXPECT_EQ(s->faults, 0x81);
   EXPECT_EQ(s->state, 2);
+}
+
+TEST(Protocol, Names)
+{
+  EXPECT_STREQ(state_name(kActive), "active");
+  EXPECT_STREQ(state_name(kTest), "test");
+  EXPECT_STREQ(state_name(9), "unknown");
+  EXPECT_EQ(fault_names(0), "");
+  EXPECT_EQ(fault_names(kFaultBuck | kFaultOverload), "buck, overload");
+  EXPECT_EQ(fault_names(0x81), "watchdog, config");
+  EXPECT_TRUE(std::isnan(tof_range_m(0)));
+  EXPECT_TRUE(std::isinf(tof_range_m(0xFFFF)));
+  EXPECT_DOUBLE_EQ(tof_range_m(400), 0.4);
 }
 
 TEST(Protocol, RejectsOtherFrames)

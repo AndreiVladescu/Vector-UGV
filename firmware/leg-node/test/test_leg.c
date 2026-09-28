@@ -534,10 +534,93 @@ static void test_leg_keys(void)
     config(&s, OP_WRITE, 0xff, KEY_RAIL_GAIN, 13000);
     config(&s, OP_WRITE, 0xff, KEY_UPTIME, 5);
     CHECK(replies(ST_BAD_VALUE, NULL) == 1 && replies(ST_BAD_KEY, NULL) == 1);
+    /* saving and joint settings wait until the servos are off */
+    nrx = 0;
+    config(&s, OP_SAVE, 0, 0, 0);
+    config(&s, OP_WRITE, 1, KEY_MIN_DEG, -3000);
+    config(&s, OP_DEFAULTS, 0, 0, 0);
+    CHECK(replies(ST_BUSY, NULL) == 3 && !s.flash_written && s.leg.cfg.joint[1].min_deg == -80.0f);
+    h.enable = false;
+    run(&s, &h, 20);
     config(&s, OP_SAVE, 0, 0, 0);
     struct leg_sim again;
     leg_sim_init(&again, 4, config_newest(&s.flash[0], &s.flash[1]));
     CHECK_NEAR(again.leg.cfg.vbat_gain, 1.01, 1e-4);
+
+    /* defaults, then save: the defaults win at the next boot, not the older slot */
+    for (int j = 0; j < JOINTS; j++)
+        config(&s, OP_WRITE, j, KEY_WIPER_MID, 15600);
+    config(&s, OP_SAVE, 0, 0, 0);
+    config(&s, OP_SAVE, 0, 0, 0);
+    leg_sim_init(&again, 4, config_newest(&s.flash[0], &s.flash[1]));
+    CHECK(again.leg.cfg.joint[0].calibrated);
+    config(&s, OP_DEFAULTS, 0, 0, 0);
+    config(&s, OP_SAVE, 0, 0, 0);
+    leg_sim_init(&again, 4, config_newest(&s.flash[0], &s.flash[1]));
+    CHECK(!again.leg.cfg.joint[0].calibrated && again.leg.cfg.vbat_gain == 1.0f);
+
+    /* a rejected limit leaves the old one */
+    nrx = 0;
+    config(&s, OP_WRITE, 2, KEY_MIN_DEG, 9000); /* above max 80 */
+    config(&s, OP_WRITE, 2, KEY_MAX_DEG, -9000);
+    CHECK(replies(ST_BAD_VALUE, NULL) == 2);
+    CHECK(s.leg.cfg.joint[2].min_deg == -80.0f && s.leg.cfg.joint[2].max_deg == 80.0f);
+}
+
+static struct can_frame_t sync_frame(bool estop)
+{
+    struct can_frame_t f;
+    struct sync_msg sm = {0, 2, estop};
+    can_pack_sync(&f, &sm);
+    return f;
+}
+
+static void test_estop_ends_runs(void)
+{
+    struct leg_sim s;
+    struct leg_config c;
+    struct servo_sim ref[JOINTS];
+    for (int j = 0; j < JOINTS; j++)
+        servo_sim_init(&ref[j], 1560, 1.433f, 1500);
+    calibrated_config(&c, ref);
+    int32_t v = -1;
+
+    /* the SYNC e-stop flag stops a calibration too, and the host hears that it ended */
+    setup(&s, &c);
+    config(&s, OP_CALIBRATE, 0, 0, CAL_FULL);
+    run(&s, NULL, 1000);
+    CHECK(s.leg.state == LEG_CALIBRATE && s.buck);
+    struct can_frame_t f = sync_frame(true);
+    leg_frame(&s.leg, &f);
+    CHECK(s.leg.state == LEG_OFF && !s.buck && (s.leg.faults & FAULT_CAL) && (s.leg.faults & FAULT_ESTOP));
+    CHECK(replies(ST_CAL_DONE, NULL) == 1);
+
+    /* same for the self-test, which counts as failed */
+    setup(&s, &c);
+    config(&s, OP_SELFTEST, 0xff, 0, 0);
+    run(&s, NULL, 200);
+    f = sync_frame(true);
+    leg_frame(&s.leg, &f);
+    CHECK(s.leg.state == LEG_OFF && !s.buck);
+    CHECK(test_replies(ST_TEST_DONE, 0, &v) == 1 && v >= 1);
+
+    /* the e-stop pin during calibration */
+    setup(&s, &c);
+    config(&s, OP_CALIBRATE, 0xff, 0, CAL_FULL);
+    run(&s, NULL, 500);
+    s.estop = true;
+    run(&s, NULL, 2);
+    CHECK(s.leg.state == LEG_OFF && !s.buck && replies(ST_CAL_DONE, NULL) == 1);
+}
+
+static void test_ntc_shorted(void)
+{
+    struct leg_sim s;
+    struct host h;
+    active_leg(&s, &h);
+    s.ntc_mv = 2; /* a few ohms: shorted, not 590 C wrapping around to something harmless */
+    run(&s, &h, 5);
+    CHECK(s.leg.temp_c == 125 && s.leg.state == LEG_FAULT && (s.leg.faults & FAULT_OVERLOAD));
 }
 
 /* ---- VL53L1X, against the registers the SparkFun/ST driver writes ---- */
@@ -626,6 +709,25 @@ static void test_tof(void)
     tof_run(&t, &d, 700, &mm, &st);
     CHECK(vl53l1x_ranging(&d));
 
+    /* holds the bus mid-range: three failures in a row, XSHUT reset, back up */
+    tof_setup(&t, &d, VL53L1X_SHORT, 20, 25);
+    d.shutdown = tof_sim_shutdown;
+    tof_run(&t, &d, 200, &mm, &st);
+    CHECK(vl53l1x_ranging(&d) && !t.xshut_low);
+    t.stuck = true;
+    tof_run(&t, &d, 20, &mm, &st);
+    CHECK(!vl53l1x_ranging(&d) && t.xshut_low && !t.stuck); /* held in reset, which cleared it */
+    tof_run(&t, &d, 700, &mm, &st);
+    CHECK(vl53l1x_ranging(&d) && d.starts == 2 && !t.xshut_low);
+    /* intermittent errors never add up to a restart */
+    for (int i = 0; i < 20; i++) {
+        t.present = false;
+        tof_run(&t, &d, 5, &mm, &st);
+        t.present = true;
+        tof_run(&t, &d, 40, &mm, &st);
+    }
+    CHECK(vl53l1x_ranging(&d) && d.starts == 2);
+
     tof_setup(&t, &d, VL53L1X_SHORT, 20, 25);
     t.reg[0x0110] = 0xCD; /* some other ST part answering at 0x29 */
     tof_run(&t, &d, 2000, &mm, &st);
@@ -653,6 +755,8 @@ int main(void)
         {"power_good_lost", test_power_good_lost},
         {"selftest", test_selftest},
         {"leg_keys", test_leg_keys},
+        {"estop_ends_runs", test_estop_ends_runs},
+        {"ntc_shorted", test_ntc_shorted},
         {"tof", test_tof},
     };
     for (unsigned i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {

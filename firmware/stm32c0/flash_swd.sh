@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
-# First flash over SWD: bootloader + leg firmware, then write-protect the bootloader.
+# First flash over SWD: bootloader + application, then write-protect the bootloader.
 #   flash_swd.sh build/leg-stm32        side board: asks for each of the three cells in turn
-#   flash_swd.sh build/nucleo 1         one chip
+#   flash_swd.sh build/nucleo 1         one chip (Nucleo, power board)
 # Later updates go over CAN (leg_config.py flash). Needs STM32CubeProgrammer's CLI.
 set -euo pipefail
 
 dir=${1:?usage: flash_swd.sh BUILD_DIR [CELLS]}
 cells=${2:-3}
 cli=${STM32_PROGRAMMER_CLI:-STM32_Programmer_CLI}
-for f in bootloader.bin leg-node.bin; do
-    [[ -f $dir/$f ]] || { echo "$dir/$f not found, build first"; exit 1; }
+[[ -f $dir/bootloader.bin ]] || { echo "$dir/bootloader.bin not found, build first"; exit 1; }
+app=
+for f in "$dir"/*.bin; do
+    [[ $(basename "$f") == bootloader.bin ]] && continue
+    [[ -z $app ]] || { echo "more than one application .bin in $dir"; exit 1; }
+    app=$f
 done
+[[ -n $app ]] || { echo "no application .bin in $dir"; exit 1; }
 
 # WRP area A over pages 0-7 (the 16 KB bootloader); start > end switches it off
 protect=(-ob WRP1A_STRT=0x0 WRP1A_END=0x7)
@@ -23,7 +28,7 @@ for ((i = 1; i <= cells; i++)); do
     "$cli" -c port=SWD mode=UR -q "${unprotect[@]}"
     "$cli" -c port=SWD mode=UR -q -e all \
         -w "$dir/bootloader.bin" 0x08000000 -v \
-        -w "$dir/leg-node.bin" 0x08004000 -v
+        -w "$app" 0x08004000 -v
     "$cli" -c port=SWD mode=UR -q "${protect[@]}" -rst
     echo "cell $i done"
 done

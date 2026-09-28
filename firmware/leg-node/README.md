@@ -50,7 +50,8 @@ The schematic still needs the ADC_VBAT and ADC_6V0 dividers, and the pot inputs 
 - **Wake**: buck on, then per joint: start the pulses at the measured position + 30 µs, make a 5° test move (away from whichever end of the range is near) and check the wiper moved by that much. A servo that ignores its first pulse gets sent past its position and tried again, three times, then the leg faults.
 - **Active**: follows the commanded angles, slew-limited to 400°/s, clamped to the joint limits.
 - **Crouch**: SYNC lost for 100 ms: moves slowly to a crouch, then off after 2 s. SYNC back during the crouch returns to active.
-- **E-stop** (pin or SYNC flag): off at once.
+- **E-stop** (pin or SYNC flag): off at once, calibration and self-test included (they reply done, as failed).
+- Joint settings, defaults and saving only while the servos are off: a flash erase stalls the CPU for ~30 ms.
 - **Protection**, in any powered state, goes to fault with the buck off:
   - leg current above 5 A for about 500 ms (a leaky count, so short peaks and brief dips don't matter); three stalled MG996Rs draw ~7.5 A,
   - NTC at 85 °C; the leg can't wake again until it's below 70 °C,
@@ -98,14 +99,14 @@ A result is rejected if the slope is outside 0.5–3 mV/µs, the fit is off by m
 
 ```sh
 cmake -S firmware/leg-node -B build/leg-node && cmake --build build/leg-node
-build/leg-node/test_leg                 # 163 checks: restart quirk, protection, config slots, self-test, ToF
+build/leg-node/test_leg                 # 179 checks: restart quirk, protection, config slots, self-test, e-stop, ToF
 build/leg-node/test_boot                # bootloader protocol against a RAM flash
 build/leg-node/sim_legs vcan0           # six legs on a virtual CAN bus, bootloader included
 ```
 
 ## STM32 build
 
-`stm32/` builds the same logic for the chip: `main.c` sets up TIM1, the ADC with DMA, I2C, the two flash config pages and the watchdog, and implements `hal.h`; `board.c` has the clocks, FDCAN and leg ID, shared with `bootloader.c`. ST's HAL and CMSIS come from their GitHub repos at pinned tags (fetched by CMake). The application is about 33 KB, the bootloader 7 KB.
+`stm32/` builds the same logic for the chip: `main.c` sets up TIM1, the ADC with DMA, I2C, the two flash config pages and the watchdog, and implements `hal.h`; `board.c` has the pins and the leg ID. The rest is shared with the power board in `firmware/stm32c0/`: clocks, FDCAN (`mcu.c`), the bootloader, linker scripts, the build helper and `flash_swd.sh`. ST's HAL and CMSIS come from their GitHub repos at pinned tags (fetched by CMake). The application is about 33 KB, the bootloader 7 KB.
 
 ```sh
 sudo apt install gcc-arm-none-eabi libnewlib-arm-none-eabi
@@ -113,7 +114,7 @@ cmake -S firmware/leg-node/stm32 -B build/leg-stm32 -DBOARD=nucleo -DLEG_ID=1   
 cmake --build build/leg-stm32                                   # -> bootloader.bin, leg-node.bin
 ```
 
-The first time, over SWD (ST-LINK, or the Nucleo's own), with `stm32/flash_swd.sh build/leg-stm32` (asks for each of the three cells in turn; `build/nucleo 1` for one chip). It erases, writes and verifies both images, then write-protects the bootloader pages 0–7 (option bytes `WRP1A_STRT`/`WRP1A_END`; the names are from the G0 and still to be checked on the C0). By hand:
+The first time, over SWD (ST-LINK, or the Nucleo's own), with `firmware/stm32c0/flash_swd.sh build/leg-stm32` (asks for each of the three cells in turn; `build/nucleo 1` for one chip). It erases, writes and verifies both images, then write-protects the bootloader pages 0–7 (option bytes `WRP1A_STRT`/`WRP1A_END`; the names are from the G0 and still to be checked on the C0). By hand:
 
 ```sh
 STM32_Programmer_CLI -c port=SWD -e all -w bootloader.bin 0x08000000 -w leg-node.bin 0x08004000 -rst
@@ -154,7 +155,7 @@ LED: on = active; while off, the leg number every 3 s (short blinks = left, long
 
 `src/vl53l1x.c` is a small C port of ST's VL53L1X ultra lite driver, the one inside the SparkFun Arduino library; its init sequence, default config and timing tables are checked register by register against SparkFun's copy and Pololu's library, and `test_leg` runs it against a register model (`sim/tof_sim.c`).
 
-I2C1 at 400 kHz on PB6/PB7, XSHUT on PB5 (TOF_INT on PB4 is unused, the driver polls every 5 ms). Short mode, 20 ms budget, a reading every 25 ms. The driver is a state machine that never blocks for more than one I2C transfer (the default config goes over in 23-byte pieces): it looks for the sensor every 500 ms, brings it up, and starts over after three bus errors in a row or a second without a range, so a sensor plugged in, unplugged or browned out comes back on its own. `LEG_STATUS` carries 0 with no sensor or no reading in the last 200 ms, 65535 when nothing valid is in range.
+I2C1 at 400 kHz on PB6/PB7, XSHUT on PB5 (TOF_INT on PB4 is unused, the driver polls every 5 ms). Short mode, 20 ms budget, a reading every 25 ms. The driver is a state machine that never blocks for more than one I2C transfer (the default config goes over in 23-byte pieces): it looks for the sensor every 500 ms, brings it up, and starts over after three bus errors in a row or a second without a range, so a sensor plugged in, unplugged or browned out comes back on its own. While it waits it holds XSHUT low, which also frees a bus the sensor was holding (a glitch on the cable through the coxa), and the I2C block is reset with it. A stuck bus costs one 25 ms HAL timeout per failed transfer before that. `LEG_STATUS` carries 0 with no sensor or no reading in the last 200 ms, 65535 when nothing valid is in range.
 
 On the Nucleo the breakout goes to the same pins on the morpho header. To check a breakout on its own first, the Pololu `VL53L1X` Arduino library's Continuous example on the Uno does the same thing.
 
@@ -164,7 +165,7 @@ In this order; each step only needs the ones before it. `lc` is `ros2 run vector
 
 Wiring: Nucleo CAN header to the CANable, 120 Ω at both ends. Servos from the bench supply at 6 V, grounds joined: signals to PA8/PA9/PA10, wipers to PA0/PA1/PA4. CANable up with `sudo ip link set can0 up type can bitrate 1000000`.
 
-1. **Build and flash.** `cmake -S firmware/leg-node/stm32 -B build/nucleo -DBOARD=nucleo -DLEG_ID=1 && cmake --build build/nucleo`, then `flash_swd.sh build/nucleo 1`. If the option-byte step fails, flash by hand and fix the names in the script. `STM32_Programmer_CLI -c port=SWD -r32 0x08004000 8` should show `200077F0` and a reset vector in 0x0800xxxx.
+1. **Build and flash.** `cmake -S firmware/leg-node/stm32 -B build/nucleo -DBOARD=nucleo -DLEG_ID=1 && cmake --build build/nucleo`, then `firmware/stm32c0/flash_swd.sh build/nucleo 1`. If the option-byte step fails, flash by hand and fix the names in the script. `STM32_Programmer_CLI -c port=SWD -r32 0x08004000 8` should show `200077F0` and a reset vector in 0x0800xxxx.
 2. **Application starts.** LD1 blinks slowly (leg off). A fast 10 Hz blink means it stayed in the bootloader: the image is missing or the jump failed.
 3. **CAN.** `candump can0` shows `021` and `031` every 50 ms. Nothing: check the termination and the bit rate, and `ip -s -d link show can0` for errors. `lc status` prints L1 off, uncalibrated; `lc read L1` shows the git hash of the build and the last reset: power after a power cycle, software after `flash`.
 4. **Bootloader over CAN.** `lc flash L1 build/nucleo/leg-node.bin` ends with `L1: running`. This proves the RAM flag survives the reset and the jump back.

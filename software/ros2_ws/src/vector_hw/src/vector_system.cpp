@@ -57,7 +57,13 @@ VectorSystem::CallbackReturn VectorSystem::on_init(
   }
   cmd_ = pos_;
   for (const auto & g : info_.gpios) {
-    has_gpio_ = has_gpio_ || g.name == "legs";
+    if (g.name != "legs") {
+      continue;
+    }
+    has_gpio_ = true;
+    for (const auto & ci : g.command_interfaces) {
+      has_estop_ = has_estop_ || ci.name == "estop";
+    }
   }
   return CallbackReturn::SUCCESS;
 }
@@ -70,7 +76,7 @@ VectorSystem::CallbackReturn VectorSystem::on_configure(const rclcpp_lifecycle::
     RCLCPP_ERROR(log_, "can't open %s: %s", ifname_.c_str(), e.what());
     return CallbackReturn::ERROR;
   }
-  RCLCPP_INFO(log_, "on %s, leg timeout %ld ms", ifname_.c_str(), static_cast<long>(timeout_.count()));
+  RCLCPP_INFO(log_, "on %s, leg timeout %ld ms", ifname_.c_str(), timeout_.count());
   return CallbackReturn::SUCCESS;
 }
 
@@ -100,7 +106,9 @@ VectorSystem::CallbackReturn VectorSystem::on_activate(const rclcpp_lifecycle::S
 
 VectorSystem::CallbackReturn VectorSystem::on_deactivate(const rclcpp_lifecycle::State &)
 {
-  send_all(false);
+  // No "enable off" here: that would drop the robot where it stands. Without SYNC the
+  // legs crouch slowly and then switch off by themselves.
+  RCLCPP_INFO(log_, "stopped, the legs crouch and power down on their own");
   return CallbackReturn::SUCCESS;
 }
 
@@ -133,6 +141,9 @@ std::vector<hardware_interface::CommandInterface> VectorSystem::export_command_i
   }
   if (has_gpio_) {
     out.emplace_back("legs", "enable", &legs_enable_cmd_);
+  }
+  if (has_estop_) {
+    out.emplace_back("legs", "estop", &legs_estop_cmd_);
   }
   return out;
 }
@@ -168,15 +179,14 @@ hardware_interface::return_type VectorSystem::read(const rclcpp::Time &, const r
 
   int active = 0;
   for (auto st : leg_state_) {
-    active += st == 2;  // LEG_ACTIVE
+    active += st == vector::can::kActive;
   }
   legs_active_ = active == kLegs ? 1.0 : active == 0 ? 0.0 : 0.5;
 
   const auto now = Clock::now();
   for (int l = 0; l < kLegs; ++l) {
     if (now - last_rx_[l] > timeout_) {
-      RCLCPP_ERROR(log_, "leg %s silent for more than %ld ms", kLegNames[l],
-        static_cast<long>(timeout_.count()));
+      RCLCPP_ERROR(log_, "leg %s silent for more than %ld ms", kLegNames[l], timeout_.count());
       return hardware_interface::return_type::ERROR;
     }
   }
@@ -185,14 +195,17 @@ hardware_interface::return_type VectorSystem::read(const rclcpp::Time &, const r
 
 hardware_interface::return_type VectorSystem::write(const rclcpp::Time &, const rclcpp::Duration &)
 {
-  // NaN until the power controller has said anything: keep the legs on
-  send_all(std::isnan(legs_enable_cmd_) || legs_enable_cmd_ >= 0.5);
+  // NaN until the power controller has said anything: keep the legs on, no e-stop.
+  // An e-stop also drops enable, so releasing it leaves the legs off until they are
+  // switched on again (the gait node's ~/wake).
+  const bool estop = !std::isnan(legs_estop_cmd_) && legs_estop_cmd_ >= 0.5;
+  send_all(!estop && (std::isnan(legs_enable_cmd_) || legs_enable_cmd_ >= 0.5), estop);
   return hardware_interface::return_type::OK;
 }
 
-void VectorSystem::send_all(bool enable)
+void VectorSystem::send_all(bool enable, bool estop)
 {
-  bus_.send(vector::can::encode_sync(sync_counter_++, vector::can::Mode::Walk, false));
+  bus_.send(vector::can::encode_sync(sync_counter_++, vector::can::Mode::Walk, estop));
   for (int l = 0; l < kLegs; ++l) {
     vector::can::LegCmd c;
     c.coxa = cmd_[l * 3 + 0] / kDeg;

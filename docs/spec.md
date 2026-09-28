@@ -15,7 +15,7 @@ Three designs, four boards:
 | Board | Qty | Layers | Main parts |
 |---|---|---|---|
 | Side board | 2 | 4 | 3 leg cells, each with STM32C092, TCAN332DR, TPS56A37 6 V buck |
-| Power & BMS | 1 | 4, 2 oz | BQ76952, BQ25798, 2× LM5069, 5 V / 6 A buck, STM32C092 |
+| Power & BMS | 1 | 4, 2 oz | BQ76942, BQ25798, 2× LM5069, 5 V / 6 A buck, STM32C092 |
 | CM5 carrier | 1 | 4, impedance-controlled | CM5, M.2, EC25-EUX LTE, 2× GNSS, MCP251863, IMU, compass |
 
 ```
@@ -47,15 +47,17 @@ About 24 MCU pins in total: 3 PWM, 8 ADC, 3 CAN, 1–2 oscillator, 4 ToF, 3 SWD/
 
 ### Power & BMS board
 
-- **BQ76952 battery monitor:** high-side FETs, so every board keeps a common ground. It handles cell over- and undervoltage, overcurrent, temperature, balancing and coulomb counting. It works with the DIY pack or a store-bought 4S LiPo through the balance lead.
-- **BQ25798 charger:** two inputs, GX-12 DC (12–24 V) and USB-C PD (STUSB4500 or CH224K, asking for 20 V). About 60 W of charging, charge-only. The robot's load does not go through it.
-- **2× LM5069 hot-swap controllers, one per side:** they soft-start the leg bus, limit current, and act as the hardware e-stop (a latching switch on EN). The CM5 stays powered when the e-stop is hit.
+- **BQ76942 battery monitor** (3–10 cells, the cheaper sibling of the BQ76952, same commands): high-side FETs, so every board keeps a common ground. It handles cell over- and undervoltage, overcurrent, temperature, balancing and coulomb counting. It works with the DIY pack or a store-bought 4S LiPo through the balance lead.
+- **BQ25798 charger:** two inputs through its own input FET pairs, GX-12 DC (12–20 V, e.g. a laptop brick; the charger is rated 30 V absolute) and USB-C PD (a CH224K asking for 20 V). About 60 W of charging, charge-only. The robot's load does not go through it. Plugging either input wakes the board.
+- **2× LM5069 hot-swap controllers, one per side:** they soft-start the leg bus, limit current, and act as the hardware e-stop (a latching switch on EN). The CM5 stays powered when the e-stop is hit. They stay on in Sentinel: the leg MCUs switch their own servo bucks off, so the side boards' MCUs, CAN and ToF keep running. The LM5069s only cut a side for e-stop, a fault or a full shutdown.
 - **5 V / 6 A buck:** powers the Pi 5 during development, and the carrier later.
+- **Soft power:** no switch in the 20 A path. Off means the BQ76942 is in SHUTDOWN (a few µA from the pack, safe for months). A short press on the power button (or plugging a charger) wakes it through TS2; its REG1 output enables the 3.3 V buck for the MCU, which configures the BMS, turns the FETs and the 5 V buck on. A long press, low battery or a command from ROS asks the CM5 to shut down over J-SYSCTL (`gpio-shutdown` overlay), waits for its "halted" line (`gpio-poweroff`, with a 30 s fallback), then cuts 5 V and puts the BMS back in SHUTDOWN. A clean halt matters with the CM5 on microSD.
+- **E-stop:** a latching mushroom button with a normally closed contact in series with the RUN net's pull-up, so pressing it or a broken wire means stop. A 74LVC3G07 (three open-drain buffers) turns RUN low into: ESTOP_N low on the CAN connectors (every leg MCU stops), and both LM5069 UVLO pins low (servo power on both sides gone within microseconds). No firmware in that path. The MCU can pull RUN low too, so a stop from ROS or ELRS takes the same hardware path, and it can cut one side alone for a fault. The CM5 stays powered. The side boards keep their ESTOP_N pull-ups: the power board only ever drives the line low.
 - **MCU:** an STM32C092 configures the BMS at boot (its config lives in RAM), runs the power states, and reports on CAN.
 
 ### CM5 carrier
 
-- **CM5:** use the 4 GB RAM version; 2 GB is tight for ROS, inference and video together.
+- **CM5:** CM5 Lite, 2 GB, Wi-Fi, booting from a microSD socket on the carrier (more space than eMMC). 2 GB is tight for ROS, inference and video together, so inference goes to the Hailo and the memory budget gets checked early.
 - **M.2 M-key 2242 on the single PCIe lane:** for a Hailo accelerator later. Left empty at first, and the software falls back to the CPU.
 - **CAN:** MCP251863 (MCP2518FD plus transceiver in one package), which shows up as `can0` through the mainline `mcp251xfd` driver. The bus passes through the carrier, with no termination on it.
 - **LTE:** Quectel EC25-EUX in an mPCIe socket (USB 2.0 lines only), with a nano-SIM and a 3.8 V / 3 A buck.
@@ -65,7 +67,8 @@ About 24 MCU pins in total: 3 PWM, 8 ADC, 3 CAN, 1–2 oscillator, 4 ToF, 3 SWD/
 - **IMU:** ICM-42688-P.
 - **Other connectors:**
   - 2× USB-A behind current-limit switches
-  - CSI camera
+  - CSI camera (the main camera)
+  - microSD socket (the CM5 Lite boots from it)
   - ELRS and lidar UARTs
   - gimbal PWM for 2× SG90 with a small 5 V buck
   - a USB-C port for rpiboot

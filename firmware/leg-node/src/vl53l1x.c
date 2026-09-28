@@ -165,9 +165,10 @@ bool vl53l1x_set_period(struct vl53l1x *d, uint16_t ms)
     return wr32(d, REG_INTERMEASUREMENT, (uint32_t)((pll & 0x3FF) * ms * 1.075f));
 }
 
-enum { S_PROBE, S_CONFIG, S_VHV, S_RANGING };
+enum { S_PROBE, S_BOOT, S_CONFIG, S_VHV, S_RANGING };
 
 #define PROBE_EVERY_MS 500
+#define BOOT_MS 2 /* from XSHUT high, 1.2 ms in the datasheet */
 #define VHV_TIMEOUT_MS 200
 #define SILENT_MS 1000 /* ranging but no range this long: the sensor was reset */
 #define CONFIG_CHUNK 23
@@ -191,6 +192,8 @@ static void restart(struct vl53l1x *d, uint32_t now)
     d->state = S_PROBE;
     d->tried = true;
     d->t = now;
+    if (d->shutdown)
+        d->shutdown(d->ctx, true);
 }
 
 static int read_range(struct vl53l1x *d, uint16_t *mm, uint8_t *status)
@@ -217,9 +220,18 @@ int vl53l1x_run(struct vl53l1x *d, uint32_t now, uint16_t *mm, uint8_t *status)
     case S_PROBE:
         if (d->tried && now - d->t < PROBE_EVERY_MS)
             return -1;
-        restart(d, now);
-        if (!rd8(d, REG_BOOT_STATE, &v) || !(v & 1) || !rd16(d, REG_MODEL_ID, &id) || id != MODEL_ID)
+        if (d->shutdown)
+            d->shutdown(d->ctx, false);
+        d->state = S_BOOT;
+        d->t = now;
+        return -1;
+    case S_BOOT:
+        if (now - d->t < BOOT_MS)
             return -1;
+        if (!rd8(d, REG_BOOT_STATE, &v) || !(v & 1) || !rd16(d, REG_MODEL_ID, &id) || id != MODEL_ID) {
+            restart(d, now);
+            return -1;
+        }
         d->state = S_CONFIG;
         d->step = 0;
         return -1;
@@ -269,7 +281,9 @@ int vl53l1x_run(struct vl53l1x *d, uint32_t now, uint16_t *mm, uint8_t *status)
             r = -1;
         else if (ready)
             r = read_range(d, mm, status);
-        if (r < 0 && ++d->errors >= MAX_ERRORS) {
+        if (r >= 0)
+            d->errors = 0; /* only failures in a row count */
+        else if (++d->errors >= MAX_ERRORS) {
             restart(d, now);
             return -1;
         }

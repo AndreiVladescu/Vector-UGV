@@ -5,6 +5,7 @@
 #include <array>
 #include <cstdint>
 #include <optional>
+#include <string>
 
 namespace vector::can
 {
@@ -54,8 +55,18 @@ struct LegStatus
   uint16_t tof_mm = 0, vbat_mv = 0, rail_mv = 0;  // vbat and rail travel in 10 mV steps
   int8_t temperature = 0;
   uint8_t faults = 0;
-  uint8_t state = 0;  // 0 off, 1 wake, 2 active, 3 crouch, 4 calibrate, 5 fault
+  uint8_t state = 0;  // see state_name()
 };
+
+enum LegStateId : uint8_t { kOff, kWake, kActive, kCrouch, kCalibrate, kFault, kTest };
+// Fault bits, low to high: watchdog, estop, wake, uncalibrated, buck, overload, cal, config.
+constexpr uint8_t kFaultWatchdog = 0x01, kFaultEstop = 0x02, kFaultWake = 0x04, kFaultUncalibrated = 0x08,
+  kFaultBuck = 0x10, kFaultOverload = 0x20, kFaultCal = 0x40, kFaultConfig = 0x80;
+
+const char * state_name(uint8_t state);
+std::string fault_names(uint8_t faults);  // "overload, buck"; empty for none
+// LEG_STATUS ToF field in metres: +inf for nothing in range (REP 117), NaN for no reading.
+double tof_range_m(uint16_t mm);
 
 Frame encode_sync(uint16_t counter, Mode mode, bool estop);
 Frame encode_leg_cmd(int leg, const LegCmd & cmd);

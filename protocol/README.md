@@ -39,6 +39,8 @@ Config ops: 0 read, 1 write, 2 save to flash, 3 calibrate (value 0 full, 1 limit
 | 20, 21 | leg: VBAT / 6V0 divider correction, 0.8–1.2 | ×10⁴ |
 | 22 | leg: current amp zero, mA, measured while off (read only) | |
 
+Joint writes, save and defaults answer busy unless the leg is off or faulted (servos unpowered); the leg-wide corrections can be written any time. An e-stop (pin or SYNC flag) also ends a calibration or self-test, which then replies done, as failed.
+
 Reply status: 0 ok, 1 bad key, 2 bad value, 3 busy, 4 calibration result (one per key: mid, slope, fit error), 5 calibration failed, 6 calibration done, 7 test pass, 8 test fail, 9 test done (value = failures).
 
 Self-test (leg off; about 350 ms): buck off, then on for 200 ms with no pulses. One pass/fail reply per item, key = item, value = reading: 1 current zero (mA, < 100), 2 6V0 with the buck off (mV, < 500), 3 VBAT (mV, 9–26 V), 4 temperature (°C, 0–60), 5 power good, 6 6V0 with the buck on (mV, 5.7–6.3 V), 7 current with the buck on (mA, < 1500), 8 ToF (mm, not 0), 9–11 wipers (mV, 100–3200: a servo is plugged in). `leg_config.py` in `vector_hw` wraps all of this.

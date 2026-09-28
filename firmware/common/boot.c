@@ -77,6 +77,11 @@ static uint8_t done(struct boot *b, const struct can_frame_t *f)
 {
     if (f->len < 5 || b->written == 0)
         return BOOT_BAD_OP;
+    if (b->erased == 0) {
+        /* already committed, the host is repeating DONE because our reply got lost */
+        uint32_t crc = boot_crc32(0, b->io->image, b->written);
+        return crc != get32(&f->data[1]) ? BOOT_BAD_CRC : boot_image_valid(b->io) ? BOOT_OK : BOOT_NO_IMAGE;
+    }
     if (b->written & 7) {
         memset(&b->acc[b->written & 7], 0xff, 8 - (b->written & 7));
         b->written = (b->written + 7) & ~7u; /* pad, then the CRC covers the padding too */

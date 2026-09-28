@@ -13,7 +13,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
-from launch.substitutions import Command, LaunchConfiguration
+from launch.substitutions import Command, LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
@@ -59,6 +59,13 @@ def generate_launch_description():
             parameters=[
                 os.path.join(gait, 'config', 'gait.yaml'),
                 geometry_params(os.path.join(desc, 'config', 'legs.yaml'))]),
+
+        # faults, supplies and ToF from the legs: /diagnostics and legs/<leg>/tof
+        Node(
+            package='vector_hw',
+            executable='leg_monitor',
+            parameters=[{'can_interface': LaunchConfiguration('can_interface')}],
+            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('hardware'), "' == 'can'"]))),
 
         Node(
             package='rviz2',

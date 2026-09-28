@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iterator>
+#include <limits>
 
 namespace vector::can
 {
@@ -70,6 +72,32 @@ std::optional<LegState> decode_leg_state(const Frame & f)
   }
   return LegState{from_centideg(get16(f, 0)), from_centideg(get16(f, 2)), from_centideg(get16(f, 4)),
     get16(f, 6)};
+}
+
+const char * state_name(uint8_t state)
+{
+  static const char * names[] = {"off", "wake", "active", "crouch", "calibrate", "fault", "test"};
+  return state < std::size(names) ? names[state] : "unknown";
+}
+
+std::string fault_names(uint8_t faults)
+{
+  static const char * names[] = {"watchdog", "estop", "wake", "uncalibrated", "buck", "overload", "cal", "config"};
+  std::string out;
+  for (int i = 0; i < 8; ++i) {
+    if (faults & (1 << i)) {
+      out += (out.empty() ? "" : ", ") + std::string(names[i]);
+    }
+  }
+  return out;
+}
+
+double tof_range_m(uint16_t mm)
+{
+  if (mm == 0) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  return mm == 0xFFFF ? std::numeric_limits<double>::infinity() : mm / 1000.0;
 }
 
 std::optional<LegStatus> decode_leg_status(const Frame & f)

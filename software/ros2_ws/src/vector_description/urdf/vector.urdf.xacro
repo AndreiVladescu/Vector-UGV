@@ -120,6 +120,14 @@
       <child link="${name}_foot"/>
       <origin xyz="${lt} 0 0"/>
     </joint>
+
+    <!-- ToF sensor frame, x along the beam (sensor_msgs/Range on legs/${name}/tof) -->
+    <link name="${name}_tof"/>
+    <joint name="${name}_tof_joint" type="fixed">
+      <parent link="${name}_coxa_link"/>
+      <child link="${name}_tof"/>
+      <origin xyz="${g['tof']['x']} 0 ${g['tof']['z']}" rpy="0 ${g['tof']['pitch']} 0"/>
+    </joint>
   </xacro:macro>
 
   <xacro:leg name="L1"/>
@@ -164,10 +172,12 @@
     <xacro:leg_if name="R1"/>
     <xacro:leg_if name="R2"/>
     <xacro:leg_if name="R3"/>
-    <!-- leg power: command 1/0 switches the legs on/off, state is 1 once all six are active -->
+    <!-- leg power: command 1/0 switches the legs on/off, state is 1 once all six are active;
+         estop 1 sets the e-stop flag in SYNC and holds the legs off -->
     <xacro:unless value="${gazebo}">
       <gpio name="legs">
         <command_interface name="enable"/>
+        <command_interface name="estop"/>
         <state_interface name="enable"><param name="initial_value">1.0</param></state_interface>
       </gpio>
     </xacro:unless>

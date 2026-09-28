@@ -13,6 +13,7 @@
 #define I2C_TIMING_400K 0x50330309u /* RM table for a 48 MHz I2C clock */
 #define TOF_POLL_MS 5
 #define TOF_STALE_MS 200
+#define TXQ_LEN 16
 
 static ADC_HandleTypeDef hadc;
 static DMA_HandleTypeDef hdma;
@@ -23,9 +24,12 @@ static I2C_HandleTypeDef hi2c;
 static struct vl53l1x tof;
 static uint16_t tof_last_mm;
 static uint32_t tof_last_t;
-static volatile uint16_t adc_buf[ADC_ROUNDS * ADC_CH];
+static volatile uint16_t adc_buf[ADC_ROUNDS * ADC_CH] __attribute__((aligned(4)));
 static struct leg leg;
 static uint32_t can_tx_dropped, can_bus_off;
+/* the controller holds 3 frames; a self-test or calibration result comes as a burst of up to 8 */
+static struct can_frame_t txq[TXQ_LEN];
+static uint8_t txq_head, txq_n;
 
 void SysTick_Handler(void) { HAL_IncTick(); }
 
@@ -72,12 +76,12 @@ static void pwm_timer(void)
     htim.Init.CounterMode = TIM_COUNTERMODE_UP;
     htim.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     if (HAL_TIM_PWM_Init(&htim) != HAL_OK)
-        board_fail();
+        mcu_fail();
     TIM_OC_InitTypeDef oc = {.OCMode = TIM_OCMODE_PWM1, .Pulse = 0, .OCPolarity = TIM_OCPOLARITY_HIGH};
     const uint32_t ch[3] = {TIM_CHANNEL_1, TIM_CHANNEL_2, TIM_CHANNEL_3};
     for (int i = 0; i < 3; i++)
         if (HAL_TIM_PWM_ConfigChannel(&htim, &oc, ch[i]) != HAL_OK || HAL_TIM_PWM_Start(&htim, ch[i]) != HAL_OK)
-            board_fail();
+            mcu_fail();
 }
 
 static void adc(void)
@@ -95,7 +99,7 @@ static void adc(void)
     hdma.Init.Mode = DMA_CIRCULAR;
     hdma.Init.Priority = DMA_PRIORITY_LOW;
     if (HAL_DMA_Init(&hdma) != HAL_OK)
-        board_fail();
+        mcu_fail();
     __HAL_LINKDMA(&hadc, DMA_Handle, hdma);
 
     /* 24 MHz ADC clock, 160.5 + 12.5 cycles per sample: one pass over all channels ~50 us,
@@ -112,26 +116,26 @@ static void adc(void)
     hadc.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
     hadc.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_160CYCLES_5;
     if (HAL_ADC_Init(&hadc) != HAL_OK)
-        board_fail();
+        mcu_fail();
 
     const uint32_t pots[] = POT_CHANNELS;
     ADC_ChannelConfTypeDef ch = {.Rank = ADC_RANK_CHANNEL_NUMBER, .SamplingTime = ADC_SAMPLINGTIME_COMMON_1};
     for (int i = 0; i < 3; i++) {
         ch.Channel = pots[i];
         if (HAL_ADC_ConfigChannel(&hadc, &ch) != HAL_OK)
-            board_fail();
+            mcu_fail();
     }
 #if ADC_EXTRA_CHANNELS
     const uint32_t extra[] = EXTRA_CHANNELS;
     for (int i = 0; i < ADC_EXTRA_CHANNELS; i++) {
         ch.Channel = extra[i];
         if (HAL_ADC_ConfigChannel(&hadc, &ch) != HAL_OK)
-            board_fail();
+            mcu_fail();
     }
 #endif
     if (HAL_ADCEx_Calibration_Start(&hadc) != HAL_OK ||
-        HAL_ADC_Start_DMA(&hadc, (uint32_t *)adc_buf, ADC_ROUNDS * ADC_CH) != HAL_OK)
-        board_fail();
+        HAL_ADC_Start_DMA(&hadc, (uint32_t *)(uintptr_t)adc_buf, ADC_ROUNDS * ADC_CH) != HAL_OK)
+        mcu_fail();
 }
 
 static bool tof_write(void *ctx, uint16_t reg, const uint8_t *data, int n)
@@ -146,6 +150,16 @@ static bool tof_read(void *ctx, uint16_t reg, uint8_t *data, int n)
     return HAL_I2C_Mem_Read(&hi2c, VL53L1X_ADDR << 1, reg, I2C_MEMADD_SIZE_16BIT, data, n, 3) == HAL_OK;
 }
 
+/* XSHUT low resets the sensor, which lets go of a bus it was holding; the I2C block
+   gets a fresh start with it */
+static void tof_shutdown(void *ctx, bool off)
+{
+    (void)ctx;
+    HAL_GPIO_WritePin(TOF_PORT, TOF_XSHUT_PIN, off ? GPIO_PIN_RESET : GPIO_PIN_SET);
+    if (off && (HAL_I2C_DeInit(&hi2c) != HAL_OK || HAL_I2C_Init(&hi2c) != HAL_OK))
+        mcu_fail();
+}
+
 static void tof_start(void)
 {
     __HAL_RCC_I2C1_CLK_ENABLE();
@@ -156,9 +170,8 @@ static void tof_start(void)
     hi2c.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
     hi2c.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
     if (HAL_I2C_Init(&hi2c) != HAL_OK)
-        board_fail();
-    HAL_GPIO_WritePin(TOF_PORT, TOF_XSHUT_PIN, GPIO_PIN_SET);
-    tof = (struct vl53l1x){.write = tof_write, .read = tof_read};
+        mcu_fail();
+    tof = (struct vl53l1x){.write = tof_write, .read = tof_read, .shutdown = tof_shutdown};
     vl53l1x_begin(&tof, VL53L1X_SHORT, 20, 25);
 }
 
@@ -180,7 +193,7 @@ static void watchdog(void)
     hiwdg.Init.Reload = 100;                  /* 100 ms: a hung loop resets, the buck enable drops */
     hiwdg.Init.Window = IWDG_WINDOW_DISABLE;
     if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
-        board_fail();
+        mcu_fail();
 }
 
 /* ---- leg_hal ---- */
@@ -205,10 +218,9 @@ static void hal_adc(void *ctx, int ch, uint16_t *out, int n)
             out[i] = v;
         return;
     }
-    if (n > ADC_ROUNDS)
-        n = ADC_ROUNDS;
+    /* more than the buffer holds repeats it, which leaves the median where it was */
     for (int i = 0; i < n; i++)
-        out[i] = (uint16_t)(adc_buf[i * ADC_CH + slot] * 3300u / 4095u);
+        out[i] = (uint16_t)(adc_buf[(i % ADC_ROUNDS) * ADC_CH + slot] * 3300u / 4095u);
 }
 
 static void hal_buck(void *ctx, bool on)
@@ -241,7 +253,7 @@ static bool hal_estop(void *ctx)
 #endif
 }
 
-static uint8_t hal_leg_id(void *ctx) { (void)ctx; return board_leg_id(); }
+static uint8_t hal_leg_id(void *ctx) { (void)ctx; return board_node_id(); }
 
 /* 0 = no sensor or no fresh reading, 0xffff = nothing in range */
 static uint16_t hal_tof(void *ctx)
@@ -250,11 +262,25 @@ static uint16_t hal_tof(void *ctx)
     return vl53l1x_ranging(&tof) && HAL_GetTick() - tof_last_t < TOF_STALE_MS ? tof_last_mm : 0;
 }
 
+static void can_flush(void)
+{
+    while (txq_n && mcu_can_send(&hcan, &txq[txq_head])) {
+        txq_head = (txq_head + 1) % TXQ_LEN;
+        txq_n--;
+    }
+}
+
 static void hal_send(void *ctx, const struct can_frame_t *f)
 {
     (void)ctx;
-    if (!board_can_send(&hcan, f))
+    can_flush();
+    if (txq_n == 0 && mcu_can_send(&hcan, f))
+        return;
+    if (txq_n == TXQ_LEN) {
         can_tx_dropped++;
+        return;
+    }
+    txq[(txq_head + txq_n++) % TXQ_LEN] = *f;
 }
 
 static bool hal_save(void *ctx, int slot, const void *data, int len)
@@ -295,7 +321,7 @@ static const struct leg_hal hal = {
     NULL, hal_now, hal_pwm, hal_adc, hal_buck, hal_buck_good, hal_estop, hal_leg_id, hal_tof, hal_send, hal_save, hal_diag,
 };
 
-static void boot_send(void *ctx, const struct can_frame_t *f) { (void)ctx; board_can_send(&hcan, f); }
+static void boot_send(void *ctx, const struct can_frame_t *f) { (void)ctx; mcu_can_send(&hcan, f); }
 
 static void enter_bootloader(void)
 {
@@ -314,7 +340,7 @@ static void enter_bootloader(void)
 static void can_poll(void)
 {
     struct can_frame_t f;
-    while (board_can_recv(&hcan, &f)) {
+    while (mcu_can_recv(&hcan, &f)) {
         if (boot_is_enter(&f, leg.node))
             enter_bootloader();
         else
@@ -347,13 +373,13 @@ static void led(uint32_t t)
 int main(void)
 {
     HAL_Init();
-    board_clocks();
+    mcu_clocks();
     gpio();
     pwm_timer();
     adc();
-    board_can(&hcan, board_leg_id());
+    mcu_can(&hcan, board_node_id());
     tof_start();
-    HAL_Delay(2); /* the DMA fills the ADC buffer once, the sensor boots */
+    HAL_Delay(2); /* the DMA fills the ADC buffer once */
 
     leg_init(&leg, &hal, (const struct leg_config *)CONFIG_ADDR,
              (const struct leg_config *)(CONFIG_ADDR + FLASH_PAGE_SIZE));
@@ -361,8 +387,9 @@ int main(void)
 
     uint32_t last = HAL_GetTick();
     for (;;) {
-        if (board_can_recover(&hcan))
+        if (mcu_can_recover(&hcan))
             can_bus_off++;
+        can_flush();
         can_poll();
         uint32_t t = HAL_GetTick();
         if (t != last) {

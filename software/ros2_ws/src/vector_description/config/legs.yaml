@@ -37,3 +37,7 @@ mass:
   tibia_link: 0.030
 
 foot_friction: 0.9   # TPU on dirt/wood, rough guess
+
+# VL53L1X on the coxa link, in the coxa link frame (x outward along the link, z up);
+# pitch > 0 tips it down. Placeholder until the bracket is drawn.
+tof: {x: 0.025, z: -0.015, pitch: 0.35}

@@ -17,7 +17,9 @@ REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), *['..'] * 5))
 
 @pytest.mark.launch_test
 def generate_test_description():
-    actions = [ExecuteProcess(cmd=[os.path.join(LIB, 'sim_legs'), 'vcan0'], output='screen')] if HAVE_VCAN else []
+    # without vcan0 the launch still needs something running, or the skipped tests count as failed
+    actions = [ExecuteProcess(cmd=[os.path.join(LIB, 'sim_legs'), 'vcan0'], output='screen') if HAVE_VCAN else
+               ExecuteProcess(cmd=['sleep', '60'])]
     return launch.LaunchDescription(actions + [launch_testing.actions.ReadyToTest()])
 
 

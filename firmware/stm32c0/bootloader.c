@@ -1,4 +1,5 @@
-/* CAN bootloader for the leg node, 16 KB at the start of flash.
+/* CAN bootloader for every STM32C092 node, 16 KB at the start of flash. The node's board.c
+   gives the pins (board_gpio) and the node ID.
 
    After reset: if the application asked for it (BOOT_FLAG_ENTER) or there's no valid
    image, stay and take commands. Otherwise listen 200 ms for an ENTER, so a broken
@@ -18,7 +19,7 @@ static void send(void *ctx, const struct can_frame_t *f)
 {
     (void)ctx;
     uint32_t t = HAL_GetTick();
-    while (!board_can_send(&hcan, f) && HAL_GetTick() - t < 10) {
+    while (!mcu_can_send(&hcan, f) && HAL_GetTick() - t < 10) {
     }
 }
 
@@ -78,17 +79,17 @@ int main(void)
     uint32_t flag = BOOT_FLAG;
     BOOT_FLAG = 0;
     if (flag != BOOT_FLAG_RUN) /* the reset we do ourselves to start the application doesn't count */
-        BOOT_RESET_CAUSE = board_reset_cause();
+        BOOT_RESET_CAUSE = mcu_reset_cause();
     if (flag == BOOT_FLAG_RUN && boot_image_valid(&io))
         jump();
 
     HAL_Init();
-    board_clocks();
+    mcu_clocks();
     board_gpio();
-    board_can(&hcan, board_leg_id());
+    mcu_can(&hcan, board_node_id());
 
     struct boot b;
-    boot_init(&b, &io, board_leg_id());
+    boot_init(&b, &io, board_node_id());
     bool stay = flag == BOOT_FLAG_ENTER || !boot_image_valid(&io);
     if (stay)
         boot_reply(&io, b.node, BOOT_ENTER, BOOT_OK,
@@ -97,8 +98,8 @@ int main(void)
     uint32_t t0 = HAL_GetTick();
     for (;;) {
         struct can_frame_t f;
-        board_can_recover(&hcan);
-        if (board_can_recv(&hcan, &f)) {
+        mcu_can_recover(&hcan);
+        if (mcu_can_recv(&hcan, &f)) {
             if (!stay && boot_is_enter(&f, b.node))
                 stay = true;
             if (stay && boot_frame(&b, &f))

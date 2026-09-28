@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "boot.h"
@@ -24,7 +23,8 @@ static uint32_t arg(void) { return last.data[2] | last.data[3] << 8 | last.data[
 static bool send(uint8_t op, const uint8_t *payload, int n)
 {
     struct can_frame_t f = {.id = CAN_BOOT | 3, .len = (uint8_t)(1 + n), .data = {op}};
-    memcpy(&f.data[1], payload, n);
+    if (n)
+        memcpy(&f.data[1], payload, n);
     return boot_frame(&b, &f);
 }
 
@@ -39,16 +39,18 @@ static void make_image(uint8_t *img, int len)
 {
     for (int i = 0; i < len; i++)
         img[i] = (uint8_t)(i * 7 + 3);
-    const uint32_t sp = 0x200077F0u, reset = FLASH_SIM_ADDR + 0x101;
+    const uint32_t sp = 0x200077F0u, entry = FLASH_SIM_ADDR + 0x101;
     memcpy(img, &sp, 4);
-    memcpy(img + 4, &reset, 4);
+    memcpy(img + 4, &entry, 4);
 }
+
+static uint32_t last_crc;
 
 /* host side, as leg_config.py does it: pad to 8, 6 bytes per frame */
 static int upload(const uint8_t *img, int len, bool corrupt)
 {
     int padded = (len + 7) & ~7;
-    uint8_t *p = malloc(padded);
+    static uint8_t p[64 * 1024];
     memset(p, 0xff, padded);
     memcpy(p, img, len);
     if (send32(BOOT_ERASE, padded) != BOOT_OK)
@@ -64,9 +66,8 @@ static int upload(const uint8_t *img, int len, bool corrupt)
         if (last.data[1] != BOOT_OK)
             return -2;
     }
-    uint32_t crc = boot_crc32(0, p, padded);
-    free(p);
-    return send32(BOOT_DONE, crc);
+    last_crc = boot_crc32(0, p, padded);
+    return send32(BOOT_DONE, last_crc);
 }
 
 static void reset(void)
@@ -110,6 +111,12 @@ int main(void)
     CHECK(send(BOOT_RUN, NULL, 0) && last.data[1] == BOOT_OK);
     send(BOOT_INFO, NULL, 0);
     CHECK(arg() & 0x100);
+
+    printf("done repeated after a lost reply\n");
+    int programs = flash.programs;
+    CHECK(send32(BOOT_DONE, last_crc) == BOOT_OK && flash.programs == programs);
+    CHECK(send32(BOOT_DONE, last_crc ^ 1) == BOOT_BAD_CRC);
+    CHECK(boot_image_valid(&flash.io));
 
     printf("bad crc leaves no runnable image\n");
     CHECK(upload(img, sizeof(img), true) == BOOT_BAD_CRC);
