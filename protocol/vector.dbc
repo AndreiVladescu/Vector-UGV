@@ -1,4 +1,4 @@
-VERSION "0.2"
+VERSION "0.4"
 
 NS_ :
 
@@ -46,6 +46,15 @@ BO_ 97 LEG_L1_REPLY: 8 LEG_L1
  SG_ seq : 48|8@1+ (1,0) [0|255] "" CM5
  SG_ status : 56|8@1+ (1,0) [0|255] "" CM5
 
+BO_ 113 BOOT_L1: 8 CM5
+ SG_ op : 0|8@1+ (1,0) [0|255] "" LEG_L1
+ SG_ payload : 8|56@1+ (1,0) [0|0] "" LEG_L1
+
+BO_ 129 BOOT_L1_REPLY: 8 LEG_L1
+ SG_ op : 0|8@1+ (1,0) [0|255] "" CM5
+ SG_ status : 8|8@1+ (1,0) [0|255] "" CM5
+ SG_ arg : 16|32@1+ (1,0) [0|4294967295] "" CM5
+
 BO_ 18 LEG_L2_CMD: 8 CM5
  SG_ coxa_target : 0|16@1- (0.01,0) [-180|180] "deg" LEG_L2
  SG_ femur_target : 16|16@1- (0.01,0) [-180|180] "deg" LEG_L2
@@ -80,6 +89,15 @@ BO_ 98 LEG_L2_REPLY: 8 LEG_L2
  SG_ value : 16|32@1- (1,0) [-2147483648|2147483647] "" CM5
  SG_ seq : 48|8@1+ (1,0) [0|255] "" CM5
  SG_ status : 56|8@1+ (1,0) [0|255] "" CM5
+
+BO_ 114 BOOT_L2: 8 CM5
+ SG_ op : 0|8@1+ (1,0) [0|255] "" LEG_L2
+ SG_ payload : 8|56@1+ (1,0) [0|0] "" LEG_L2
+
+BO_ 130 BOOT_L2_REPLY: 8 LEG_L2
+ SG_ op : 0|8@1+ (1,0) [0|255] "" CM5
+ SG_ status : 8|8@1+ (1,0) [0|255] "" CM5
+ SG_ arg : 16|32@1+ (1,0) [0|4294967295] "" CM5
 
 BO_ 19 LEG_L3_CMD: 8 CM5
  SG_ coxa_target : 0|16@1- (0.01,0) [-180|180] "deg" LEG_L3
@@ -116,6 +134,15 @@ BO_ 99 LEG_L3_REPLY: 8 LEG_L3
  SG_ seq : 48|8@1+ (1,0) [0|255] "" CM5
  SG_ status : 56|8@1+ (1,0) [0|255] "" CM5
 
+BO_ 115 BOOT_L3: 8 CM5
+ SG_ op : 0|8@1+ (1,0) [0|255] "" LEG_L3
+ SG_ payload : 8|56@1+ (1,0) [0|0] "" LEG_L3
+
+BO_ 131 BOOT_L3_REPLY: 8 LEG_L3
+ SG_ op : 0|8@1+ (1,0) [0|255] "" CM5
+ SG_ status : 8|8@1+ (1,0) [0|255] "" CM5
+ SG_ arg : 16|32@1+ (1,0) [0|4294967295] "" CM5
+
 BO_ 20 LEG_R1_CMD: 8 CM5
  SG_ coxa_target : 0|16@1- (0.01,0) [-180|180] "deg" LEG_R1
  SG_ femur_target : 16|16@1- (0.01,0) [-180|180] "deg" LEG_R1
@@ -150,6 +177,15 @@ BO_ 100 LEG_R1_REPLY: 8 LEG_R1
  SG_ value : 16|32@1- (1,0) [-2147483648|2147483647] "" CM5
  SG_ seq : 48|8@1+ (1,0) [0|255] "" CM5
  SG_ status : 56|8@1+ (1,0) [0|255] "" CM5
+
+BO_ 116 BOOT_R1: 8 CM5
+ SG_ op : 0|8@1+ (1,0) [0|255] "" LEG_R1
+ SG_ payload : 8|56@1+ (1,0) [0|0] "" LEG_R1
+
+BO_ 132 BOOT_R1_REPLY: 8 LEG_R1
+ SG_ op : 0|8@1+ (1,0) [0|255] "" CM5
+ SG_ status : 8|8@1+ (1,0) [0|255] "" CM5
+ SG_ arg : 16|32@1+ (1,0) [0|4294967295] "" CM5
 
 BO_ 21 LEG_R2_CMD: 8 CM5
  SG_ coxa_target : 0|16@1- (0.01,0) [-180|180] "deg" LEG_R2
@@ -186,6 +222,15 @@ BO_ 101 LEG_R2_REPLY: 8 LEG_R2
  SG_ seq : 48|8@1+ (1,0) [0|255] "" CM5
  SG_ status : 56|8@1+ (1,0) [0|255] "" CM5
 
+BO_ 117 BOOT_R2: 8 CM5
+ SG_ op : 0|8@1+ (1,0) [0|255] "" LEG_R2
+ SG_ payload : 8|56@1+ (1,0) [0|0] "" LEG_R2
+
+BO_ 133 BOOT_R2_REPLY: 8 LEG_R2
+ SG_ op : 0|8@1+ (1,0) [0|255] "" CM5
+ SG_ status : 8|8@1+ (1,0) [0|255] "" CM5
+ SG_ arg : 16|32@1+ (1,0) [0|4294967295] "" CM5
+
 BO_ 22 LEG_R3_CMD: 8 CM5
  SG_ coxa_target : 0|16@1- (0.01,0) [-180|180] "deg" LEG_R3
  SG_ femur_target : 16|16@1- (0.01,0) [-180|180] "deg" LEG_R3
@@ -221,6 +266,15 @@ BO_ 102 LEG_R3_REPLY: 8 LEG_R3
  SG_ seq : 48|8@1+ (1,0) [0|255] "" CM5
  SG_ status : 56|8@1+ (1,0) [0|255] "" CM5
 
+BO_ 118 BOOT_R3: 8 CM5
+ SG_ op : 0|8@1+ (1,0) [0|255] "" LEG_R3
+ SG_ payload : 8|56@1+ (1,0) [0|0] "" LEG_R3
+
+BO_ 134 BOOT_R3_REPLY: 8 LEG_R3
+ SG_ op : 0|8@1+ (1,0) [0|255] "" CM5
+ SG_ status : 8|8@1+ (1,0) [0|255] "" CM5
+ SG_ arg : 16|32@1+ (1,0) [0|4294967295] "" CM5
+
 BO_ 71 POWER_STATE: 8 POWER
  SG_ pack_voltage : 0|16@1+ (1,0) [0|65535] "mV" CM5
  SG_ pack_current : 16|16@1- (10,0) [-327680|327670] "mA" CM5
@@ -231,21 +285,33 @@ BO_ 71 POWER_STATE: 8 POWER
 
 CM_ "V.E.C.T.O.R. leg bus, classic CAN 1 Mbit/s. ID = (function << 4) | node.";
 VAL_ 0 mode 0 "IDLE" 1 "STAND" 2 "WALK" 3 "SENTINEL" 4 "WAKE" 15 "FAULT" ;
-VAL_ 49 state 0 "OFF" 1 "WAKE" 2 "ACTIVE" 3 "CROUCH" 4 "CALIBRATE" 5 "FAULT" ;
-VAL_ 81 op 0 "READ" 1 "WRITE" 2 "SAVE" 3 "CALIBRATE" 4 "DEFAULTS" ;
-VAL_ 97 status 0 "OK" 1 "BAD_KEY" 2 "BAD_VALUE" 3 "BUSY" 4 "CAL_RESULT" 5 "CAL_FAILED" 6 "CAL_DONE" ;
-VAL_ 50 state 0 "OFF" 1 "WAKE" 2 "ACTIVE" 3 "CROUCH" 4 "CALIBRATE" 5 "FAULT" ;
-VAL_ 82 op 0 "READ" 1 "WRITE" 2 "SAVE" 3 "CALIBRATE" 4 "DEFAULTS" ;
-VAL_ 98 status 0 "OK" 1 "BAD_KEY" 2 "BAD_VALUE" 3 "BUSY" 4 "CAL_RESULT" 5 "CAL_FAILED" 6 "CAL_DONE" ;
-VAL_ 51 state 0 "OFF" 1 "WAKE" 2 "ACTIVE" 3 "CROUCH" 4 "CALIBRATE" 5 "FAULT" ;
-VAL_ 83 op 0 "READ" 1 "WRITE" 2 "SAVE" 3 "CALIBRATE" 4 "DEFAULTS" ;
-VAL_ 99 status 0 "OK" 1 "BAD_KEY" 2 "BAD_VALUE" 3 "BUSY" 4 "CAL_RESULT" 5 "CAL_FAILED" 6 "CAL_DONE" ;
-VAL_ 52 state 0 "OFF" 1 "WAKE" 2 "ACTIVE" 3 "CROUCH" 4 "CALIBRATE" 5 "FAULT" ;
-VAL_ 84 op 0 "READ" 1 "WRITE" 2 "SAVE" 3 "CALIBRATE" 4 "DEFAULTS" ;
-VAL_ 100 status 0 "OK" 1 "BAD_KEY" 2 "BAD_VALUE" 3 "BUSY" 4 "CAL_RESULT" 5 "CAL_FAILED" 6 "CAL_DONE" ;
-VAL_ 53 state 0 "OFF" 1 "WAKE" 2 "ACTIVE" 3 "CROUCH" 4 "CALIBRATE" 5 "FAULT" ;
-VAL_ 85 op 0 "READ" 1 "WRITE" 2 "SAVE" 3 "CALIBRATE" 4 "DEFAULTS" ;
-VAL_ 101 status 0 "OK" 1 "BAD_KEY" 2 "BAD_VALUE" 3 "BUSY" 4 "CAL_RESULT" 5 "CAL_FAILED" 6 "CAL_DONE" ;
-VAL_ 54 state 0 "OFF" 1 "WAKE" 2 "ACTIVE" 3 "CROUCH" 4 "CALIBRATE" 5 "FAULT" ;
-VAL_ 86 op 0 "READ" 1 "WRITE" 2 "SAVE" 3 "CALIBRATE" 4 "DEFAULTS" ;
-VAL_ 102 status 0 "OK" 1 "BAD_KEY" 2 "BAD_VALUE" 3 "BUSY" 4 "CAL_RESULT" 5 "CAL_FAILED" 6 "CAL_DONE" ;
+VAL_ 49 state 0 "OFF" 1 "WAKE" 2 "ACTIVE" 3 "CROUCH" 4 "CALIBRATE" 5 "FAULT" 6 "TEST" ;
+VAL_ 81 op 0 "READ" 1 "WRITE" 2 "SAVE" 3 "CALIBRATE" 4 "DEFAULTS" 5 "SELFTEST" ;
+VAL_ 97 status 0 "OK" 1 "BAD_KEY" 2 "BAD_VALUE" 3 "BUSY" 4 "CAL_RESULT" 5 "CAL_FAILED" 6 "CAL_DONE" 7 "TEST_PASS" 8 "TEST_FAIL" 9 "TEST_DONE" ;
+VAL_ 50 state 0 "OFF" 1 "WAKE" 2 "ACTIVE" 3 "CROUCH" 4 "CALIBRATE" 5 "FAULT" 6 "TEST" ;
+VAL_ 82 op 0 "READ" 1 "WRITE" 2 "SAVE" 3 "CALIBRATE" 4 "DEFAULTS" 5 "SELFTEST" ;
+VAL_ 98 status 0 "OK" 1 "BAD_KEY" 2 "BAD_VALUE" 3 "BUSY" 4 "CAL_RESULT" 5 "CAL_FAILED" 6 "CAL_DONE" 7 "TEST_PASS" 8 "TEST_FAIL" 9 "TEST_DONE" ;
+VAL_ 51 state 0 "OFF" 1 "WAKE" 2 "ACTIVE" 3 "CROUCH" 4 "CALIBRATE" 5 "FAULT" 6 "TEST" ;
+VAL_ 83 op 0 "READ" 1 "WRITE" 2 "SAVE" 3 "CALIBRATE" 4 "DEFAULTS" 5 "SELFTEST" ;
+VAL_ 99 status 0 "OK" 1 "BAD_KEY" 2 "BAD_VALUE" 3 "BUSY" 4 "CAL_RESULT" 5 "CAL_FAILED" 6 "CAL_DONE" 7 "TEST_PASS" 8 "TEST_FAIL" 9 "TEST_DONE" ;
+VAL_ 52 state 0 "OFF" 1 "WAKE" 2 "ACTIVE" 3 "CROUCH" 4 "CALIBRATE" 5 "FAULT" 6 "TEST" ;
+VAL_ 84 op 0 "READ" 1 "WRITE" 2 "SAVE" 3 "CALIBRATE" 4 "DEFAULTS" 5 "SELFTEST" ;
+VAL_ 100 status 0 "OK" 1 "BAD_KEY" 2 "BAD_VALUE" 3 "BUSY" 4 "CAL_RESULT" 5 "CAL_FAILED" 6 "CAL_DONE" 7 "TEST_PASS" 8 "TEST_FAIL" 9 "TEST_DONE" ;
+VAL_ 53 state 0 "OFF" 1 "WAKE" 2 "ACTIVE" 3 "CROUCH" 4 "CALIBRATE" 5 "FAULT" 6 "TEST" ;
+VAL_ 85 op 0 "READ" 1 "WRITE" 2 "SAVE" 3 "CALIBRATE" 4 "DEFAULTS" 5 "SELFTEST" ;
+VAL_ 101 status 0 "OK" 1 "BAD_KEY" 2 "BAD_VALUE" 3 "BUSY" 4 "CAL_RESULT" 5 "CAL_FAILED" 6 "CAL_DONE" 7 "TEST_PASS" 8 "TEST_FAIL" 9 "TEST_DONE" ;
+VAL_ 54 state 0 "OFF" 1 "WAKE" 2 "ACTIVE" 3 "CROUCH" 4 "CALIBRATE" 5 "FAULT" 6 "TEST" ;
+VAL_ 86 op 0 "READ" 1 "WRITE" 2 "SAVE" 3 "CALIBRATE" 4 "DEFAULTS" 5 "SELFTEST" ;
+VAL_ 102 status 0 "OK" 1 "BAD_KEY" 2 "BAD_VALUE" 3 "BUSY" 4 "CAL_RESULT" 5 "CAL_FAILED" 6 "CAL_DONE" 7 "TEST_PASS" 8 "TEST_FAIL" 9 "TEST_DONE" ;
+VAL_ 113 op 1 "ENTER" 2 "INFO" 3 "ERASE" 4 "DATA" 5 "DONE" 6 "RUN" ;
+VAL_ 129 status 0 "OK" 1 "BAD_OP" 2 "BAD_SEQ" 3 "FLASH_ERR" 4 "BAD_CRC" 5 "TOO_BIG" 6 "NO_IMAGE" 7 "BUSY" ;
+VAL_ 114 op 1 "ENTER" 2 "INFO" 3 "ERASE" 4 "DATA" 5 "DONE" 6 "RUN" ;
+VAL_ 130 status 0 "OK" 1 "BAD_OP" 2 "BAD_SEQ" 3 "FLASH_ERR" 4 "BAD_CRC" 5 "TOO_BIG" 6 "NO_IMAGE" 7 "BUSY" ;
+VAL_ 115 op 1 "ENTER" 2 "INFO" 3 "ERASE" 4 "DATA" 5 "DONE" 6 "RUN" ;
+VAL_ 131 status 0 "OK" 1 "BAD_OP" 2 "BAD_SEQ" 3 "FLASH_ERR" 4 "BAD_CRC" 5 "TOO_BIG" 6 "NO_IMAGE" 7 "BUSY" ;
+VAL_ 116 op 1 "ENTER" 2 "INFO" 3 "ERASE" 4 "DATA" 5 "DONE" 6 "RUN" ;
+VAL_ 132 status 0 "OK" 1 "BAD_OP" 2 "BAD_SEQ" 3 "FLASH_ERR" 4 "BAD_CRC" 5 "TOO_BIG" 6 "NO_IMAGE" 7 "BUSY" ;
+VAL_ 117 op 1 "ENTER" 2 "INFO" 3 "ERASE" 4 "DATA" 5 "DONE" 6 "RUN" ;
+VAL_ 133 status 0 "OK" 1 "BAD_OP" 2 "BAD_SEQ" 3 "FLASH_ERR" 4 "BAD_CRC" 5 "TOO_BIG" 6 "NO_IMAGE" 7 "BUSY" ;
+VAL_ 118 op 1 "ENTER" 2 "INFO" 3 "ERASE" 4 "DATA" 5 "DONE" 6 "RUN" ;
+VAL_ 134 status 0 "OK" 1 "BAD_OP" 2 "BAD_SEQ" 3 "FLASH_ERR" 4 "BAD_CRC" 5 "TOO_BIG" 6 "NO_IMAGE" 7 "BUSY" ;

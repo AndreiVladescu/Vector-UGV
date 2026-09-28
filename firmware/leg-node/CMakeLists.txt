@@ -9,11 +9,11 @@ add_compile_options(-Wall -Wextra -Werror=implicit-function-declaration)
 
 add_library(leg_core STATIC
   src/leg.c src/joint.c src/filter.c src/config.c src/vl53l1x.c
-  ../common/vector_can.c)
+  ../common/vector_can.c ../common/boot.c)
 target_include_directories(leg_core PUBLIC src ../common)
 target_link_libraries(leg_core PUBLIC m)
 
-add_library(leg_sim STATIC sim/servo_sim.c sim/leg_sim.c sim/tof_sim.c)
+add_library(leg_sim STATIC sim/servo_sim.c sim/leg_sim.c sim/tof_sim.c sim/flash_sim.c)
 target_include_directories(leg_sim PUBLIC sim)
 target_link_libraries(leg_sim PUBLIC leg_core)
 
@@ -21,6 +21,9 @@ enable_testing()
 add_executable(test_leg test/test_leg.c)
 target_link_libraries(test_leg leg_sim)
 add_test(NAME test_leg COMMAND test_leg)
+add_executable(test_boot test/test_boot.c)
+target_link_libraries(test_boot leg_sim)
+add_test(NAME test_boot COMMAND test_boot)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   add_executable(sim_legs sim/sim_legs.c)

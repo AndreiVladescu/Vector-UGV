@@ -165,57 +165,122 @@ bool vl53l1x_set_period(struct vl53l1x *d, uint16_t ms)
     return wr32(d, REG_INTERMEASUREMENT, (uint32_t)((pll & 0x3FF) * ms * 1.075f));
 }
 
-bool vl53l1x_init(struct vl53l1x *d, enum vl53l1x_mode mode, uint16_t budget_ms, uint16_t period_ms)
+enum { S_PROBE, S_CONFIG, S_VHV, S_RANGING };
+
+#define PROBE_EVERY_MS 500
+#define VHV_TIMEOUT_MS 200
+#define SILENT_MS 1000 /* ranging but no range this long: the sensor was reset */
+#define CONFIG_CHUNK 23
+#define MAX_ERRORS 3
+
+void vl53l1x_begin(struct vl53l1x *d, enum vl53l1x_mode mode, uint16_t budget_ms, uint16_t period_ms)
 {
-    uint16_t id;
-    uint8_t v = 0;
-    for (int i = 0; i < 10 && !(v & 1); i++) {
-        if (i)
-            d->delay_ms(d->ctx, 1);
-        if (!rd8(d, REG_BOOT_STATE, &v))
-            v = 0;
-    }
-    if (!(v & 1) || !rd16(d, REG_MODEL_ID, &id) || id != MODEL_ID)
-        return false;
-
-    if (!d->write(d->ctx, CONFIG_FIRST, default_config, sizeof(default_config)) ||
-        !rd8(d, REG_GPIO_HV_MUX, &v))
-        return false;
-    d->ready_level = !(v & 0x10);
-
-    /* one throwaway measurement runs the VHV calibration; the default period is ~100 ms */
-    bool ready = false;
-    if (!vl53l1x_start(d))
-        return false;
-    for (int t = 0; !ready; t++) {
-        if (t > 150 || !data_ready(d, &ready))
-            return false;
-        if (!ready)
-            d->delay_ms(d->ctx, 1);
-    }
-    if (!wr8(d, REG_INT_CLEAR, 0x01) || !vl53l1x_stop(d) || !wr8(d, REG_VHV_LOOP_BOUND, 0x09) ||
-        !wr8(d, REG_VHV_INIT, 0))
-        return false;
-
-    return vl53l1x_set_mode(d, mode) && vl53l1x_set_budget(d, budget_ms) &&
-           vl53l1x_set_period(d, period_ms < budget_ms ? budget_ms : period_ms) && vl53l1x_start(d);
+    d->mode = mode;
+    d->budget_ms = budget_ms;
+    d->period_ms = period_ms < budget_ms ? budget_ms : period_ms;
+    d->state = S_PROBE;
+    d->step = d->errors = 0;
+    d->tried = false;
+    d->starts = 0;
 }
 
-int vl53l1x_poll(struct vl53l1x *d, uint16_t *mm, uint8_t *status)
+bool vl53l1x_ranging(const struct vl53l1x *d) { return d->state == S_RANGING; }
+
+static void restart(struct vl53l1x *d, uint32_t now)
+{
+    d->state = S_PROBE;
+    d->tried = true;
+    d->t = now;
+}
+
+static int read_range(struct vl53l1x *d, uint16_t *mm, uint8_t *status)
 {
     static const uint8_t st_map[24] = {
         255, 255, 255, 5, 2, 4, 1, 7, 3, 0, 255, 255, 9, 13, 255, 255, 255, 255, 10, 6, 255, 255, 11, 12,
     };
-    bool ready;
     uint8_t r[15];
-    if (!data_ready(d, &ready))
-        return -1;
-    if (!ready)
-        return 0;
     if (!d->read(d->ctx, REG_RESULT, r, sizeof(r)) || !wr8(d, REG_INT_CLEAR, 0x01))
         return -1;
     uint8_t raw = r[0] & 0x1F;
     *status = raw < sizeof(st_map) ? st_map[raw] : 255;
     *mm = *status == 0 ? (uint16_t)(r[13] << 8 | r[14]) : VL53L1X_NO_TARGET;
     return 1;
+}
+
+int vl53l1x_run(struct vl53l1x *d, uint32_t now, uint16_t *mm, uint8_t *status)
+{
+    bool ready;
+    uint8_t v;
+    uint16_t id;
+
+    switch (d->state) {
+    case S_PROBE:
+        if (d->tried && now - d->t < PROBE_EVERY_MS)
+            return -1;
+        restart(d, now);
+        if (!rd8(d, REG_BOOT_STATE, &v) || !(v & 1) || !rd16(d, REG_MODEL_ID, &id) || id != MODEL_ID)
+            return -1;
+        d->state = S_CONFIG;
+        d->step = 0;
+        return -1;
+    case S_CONFIG: {
+        int off = d->step * CONFIG_CHUNK, n = (int)sizeof(default_config) - off;
+        if (n > CONFIG_CHUNK)
+            n = CONFIG_CHUNK;
+        if (!d->write(d->ctx, CONFIG_FIRST + off, &default_config[off], n)) {
+            restart(d, now);
+            return -1;
+        }
+        if (off + n < (int)sizeof(default_config)) {
+            d->step++;
+            return -1;
+        }
+        /* one throwaway measurement runs the VHV calibration */
+        if (!rd8(d, REG_GPIO_HV_MUX, &v) || !vl53l1x_start(d)) {
+            restart(d, now);
+            return -1;
+        }
+        d->ready_level = !(v & 0x10);
+        d->state = S_VHV;
+        d->t = now;
+        return -1;
+    }
+    case S_VHV:
+        if (!data_ready(d, &ready) || (!ready && now - d->t > VHV_TIMEOUT_MS)) {
+            restart(d, now);
+            return -1;
+        }
+        if (!ready)
+            return -1;
+        if (!wr8(d, REG_INT_CLEAR, 0x01) || !vl53l1x_stop(d) || !wr8(d, REG_VHV_LOOP_BOUND, 0x09) ||
+            !wr8(d, REG_VHV_INIT, 0) || !vl53l1x_set_mode(d, d->mode) || !vl53l1x_set_budget(d, d->budget_ms) ||
+            !vl53l1x_set_period(d, d->period_ms) || !vl53l1x_start(d)) {
+            restart(d, now);
+            return -1;
+        }
+        d->state = S_RANGING;
+        d->starts++;
+        d->errors = 0;
+        d->t = now;
+        return 0;
+    default: {
+        int r = 0;
+        if (!data_ready(d, &ready))
+            r = -1;
+        else if (ready)
+            r = read_range(d, mm, status);
+        if (r < 0 && ++d->errors >= MAX_ERRORS) {
+            restart(d, now);
+            return -1;
+        }
+        if (r > 0) {
+            d->errors = 0;
+            d->t = now;
+        } else if (now - d->t > SILENT_MS) {
+            restart(d, now);
+            return -1;
+        }
+        return r < 0 ? 0 : r;
+    }
+    }
 }

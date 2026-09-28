@@ -6,6 +6,9 @@
  *   sim_legs vcan0 --calibrated    legs already know their servos
  *   --limits c0,c1,f0,f1,t0,t1     joint limits in degrees (from legs.yaml); each joint's
  *                                  centre is set so the middle of its range is at 1500 us
+ *
+ * Each leg also answers the bootloader protocol with a RAM flash, so leg_config.py flash
+ * can be tried out. After RUN the leg restarts with its saved config.
  */
 #define _GNU_SOURCE
 #include <errno.h>
@@ -21,6 +24,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "boot.h"
+#include "flash_sim.h"
 #include "leg_sim.h"
 
 #define LEGS 6
@@ -87,6 +92,10 @@ int main(int argc, char **argv)
     signal(SIGTERM, stop);
 
     static struct leg_sim legs[LEGS];
+    static struct leg_config start_cfg[LEGS];
+    static struct flash_sim flash[LEGS];
+    static struct boot boot[LEGS];
+    bool in_boot[LEGS] = {0};
     unsigned seed = 7;
     for (int n = 0; n < LEGS; n++) {
         struct servo_sim servo[JOINTS];
@@ -105,6 +114,9 @@ int main(int argc, char **argv)
             }
         }
         config_seal(&cfg);
+        start_cfg[n] = cfg;
+        flash_sim_init(&flash[n]);
+        flash[n].tx = tx;
         leg_sim_init(&legs[n], n + 1, &cfg);
         memcpy(legs[n].servo, servo, sizeof(servo));
         legs[n].tx = tx;
@@ -123,16 +135,53 @@ int main(int argc, char **argv)
             struct can_frame_t f = {.id = cf.can_id & CAN_SFF_MASK, .len = cf.len};
             memcpy(f.data, cf.data, cf.len);
             rx_count++;
-            for (int n = 0; n < LEGS; n++)
-                leg_frame(&legs[n].leg, &f);
+            for (int n = 0; n < LEGS; n++) {
+                struct leg_sim *l = &legs[n];
+                if (in_boot[n]) {
+                    if (boot_frame(&boot[n], &f)) {
+                        struct servo_sim servo[JOINTS];
+                        memcpy(servo, l->servo, sizeof(servo));
+                        struct leg_config flash_copy[2];
+                        memcpy(flash_copy, l->flash, sizeof(flash_copy));
+                        bool saved = l->flash_written;
+                        const struct leg_config *stored = saved ? config_newest(&flash_copy[0], &flash_copy[1]) : NULL;
+                        leg_sim_init(l, n + 1, stored ? stored : &start_cfg[n]);
+                        memcpy(l->servo, servo, sizeof(servo));
+                        memcpy(l->flash, flash_copy, sizeof(flash_copy));
+                        l->flash_written = saved;
+                        l->tx = tx;
+                        in_boot[n] = false;
+                    }
+                } else if (boot_is_enter(&f, n + 1)) {
+                    bool idle = l->leg.state == LEG_OFF || l->leg.state == LEG_FAULT;
+                    if (idle) {
+                        boot_init(&boot[n], &flash[n].io, n + 1);
+                        in_boot[n] = true;
+                    }
+                    boot_reply(&flash[n].io, n + 1, BOOT_ENTER, idle ? BOOT_OK : BOOT_BUSY,
+                               BOOT_VERSION | (boot_image_valid(&flash[n].io) ? 0x100 : 0) | (FLASH_SIM_SIZE / 1024) << 16);
+                } else {
+                    leg_frame(&l->leg, &f);
+                }
+            }
         }
-        for (int n = 0; n < LEGS; n++)
-            leg_sim_tick(&legs[n]);
+        for (int n = 0; n < LEGS; n++) {
+            if (in_boot[n]) {
+                legs[n].t_ms++;
+                for (int j = 0; j < JOINTS; j++)
+                    servo_sim_step(&legs[n].servo[j], 0.001f);
+            } else {
+                leg_sim_tick(&legs[n]);
+            }
+        }
 
         if (++ticks % 2000 == 0) {
             printf("rx %4lu/s tx %4lu/s  states", rx_count / 2, tx_count / 2);
             for (int n = 0; n < LEGS; n++)
-                printf(" %d:%d/%02x", n + 1, legs[n].leg.state, legs[n].leg.faults);
+                if (in_boot[n])
+                    printf(" %d:boot", n + 1);
+                else
+                    printf(" %d:%d/%02x", n + 1, legs[n].leg.state, legs[n].leg.faults);
             printf("\n");
             fflush(stdout);
             rx_count = tx_count = 0;

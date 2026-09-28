@@ -20,7 +20,8 @@ struct leg_hal {
     uint8_t (*leg_id)(void *ctx);
     uint16_t (*tof_mm)(void *ctx);
     void (*send)(void *ctx, const struct can_frame_t *f);
-    bool (*save)(void *ctx, const void *data, int len);
+    bool (*save)(void *ctx, int slot, const void *data, int len); /* slot 0 or 1 */
+    uint32_t (*diag)(void *ctx, uint8_t key); /* KEY_VERSION, KEY_RESET_CAUSE, KEY_CAN_ERRORS, KEY_ID_STRAPS */
 };
 
 #endif

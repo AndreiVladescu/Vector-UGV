@@ -14,9 +14,11 @@ enum {
     CAN_POWER_STATE = 0x040,
     CAN_LEG_CONFIG = 0x050,
     CAN_LEG_REPLY = 0x060,
+    CAN_BOOT = 0x070,
+    CAN_BOOT_REPLY = 0x080,
 };
 
-enum leg_state { LEG_OFF, LEG_WAKE, LEG_ACTIVE, LEG_CROUCH, LEG_CALIBRATE, LEG_FAULT };
+enum leg_state { LEG_OFF, LEG_WAKE, LEG_ACTIVE, LEG_CROUCH, LEG_CALIBRATE, LEG_FAULT, LEG_TEST };
 
 enum {
     FAULT_WATCHDOG = 1 << 0,
@@ -24,12 +26,12 @@ enum {
     FAULT_WAKE = 1 << 2,
     FAULT_UNCALIBRATED = 1 << 3,
     FAULT_BUCK = 1 << 4,
-    FAULT_OVERTEMP = 1 << 5,
+    FAULT_OVERLOAD = 1 << 5, /* overcurrent or overtemperature */
     FAULT_CAL = 1 << 6,
     FAULT_CONFIG = 1 << 7,
 };
 
-enum cfg_op { OP_READ, OP_WRITE, OP_SAVE, OP_CALIBRATE, OP_DEFAULTS };
+enum cfg_op { OP_READ, OP_WRITE, OP_SAVE, OP_CALIBRATE, OP_DEFAULTS, OP_SELFTEST };
 
 enum cfg_key {
     KEY_WIPER_MID = 1,   /* 0.1 mV at 1500 us */
@@ -41,9 +43,31 @@ enum cfg_key {
     KEY_MAX_DEG,         /* 0.01 deg */
     KEY_FIT_ERR,         /* 0.1 mV, read only */
     KEY_CALIBRATED,      /* 0 / 1, read only */
+
+    /* leg-wide, joint 0xff */
+    KEY_VERSION = 16,    /* firmware build, read only */
+    KEY_RESET_CAUSE,     /* RESET_* bits of the last reset, read only */
+    KEY_CAN_ERRORS,      /* bus-off count << 16 | dropped tx frames, read only */
+    KEY_UPTIME,          /* s, read only */
+    KEY_VBAT_GAIN,       /* 1e-4, divider correction */
+    KEY_RAIL_GAIN,       /* 1e-4 */
+    KEY_I_ZERO,          /* mA, current amp offset measured while off, read only */
+    KEY_ID_STRAPS,       /* leg ID jumpers, side << 2 | position, read only */
 };
 
-enum cfg_status { ST_OK, ST_BAD_KEY, ST_BAD_VALUE, ST_BUSY, ST_CAL_RESULT, ST_CAL_FAILED, ST_CAL_DONE };
+enum { RESET_POWER = 1, RESET_PIN = 2, RESET_WATCHDOG = 4, RESET_SOFTWARE = 8, RESET_OTHER = 16 };
+
+enum cfg_status {
+    ST_OK, ST_BAD_KEY, ST_BAD_VALUE, ST_BUSY, ST_CAL_RESULT, ST_CAL_FAILED, ST_CAL_DONE,
+    ST_TEST_PASS, ST_TEST_FAIL, ST_TEST_DONE,
+};
+
+/* self-test items, the key of each TEST_PASS / TEST_FAIL reply */
+enum test_item {
+    TEST_I_ZERO = 1, TEST_RAIL_OFF, TEST_VBAT, TEST_TEMP, /* buck off, mA / mV / mV / C */
+    TEST_POWER_GOOD, TEST_RAIL_ON, TEST_I_ON,             /* buck on, 0/1 / mV / mA */
+    TEST_TOF, TEST_POT0, TEST_POT1, TEST_POT2,            /* mm, wiper mV (pass: a servo is there) */
+};
 
 enum cal_mode { CAL_FULL, CAL_LIMITS };
 

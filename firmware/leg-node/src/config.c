@@ -27,6 +27,7 @@ void config_defaults(struct leg_config *c)
             .min_deg = -80.0f, .max_deg = 80.0f,
         };
     }
+    c->vbat_gain = c->rail_gain = 1.0f;
     config_seal(c);
 }
 
@@ -46,4 +47,12 @@ bool config_calibrated(const struct leg_config *c)
         if (!c->joint[j].calibrated)
             return false;
     return true;
+}
+
+const struct leg_config *config_newest(const struct leg_config *a, const struct leg_config *b)
+{
+    bool va = a && config_valid(a), vb = b && config_valid(b);
+    if (va && vb)
+        return (int32_t)(a->seq - b->seq) >= 0 ? a : b;
+    return va ? a : vb ? b : NULL;
 }

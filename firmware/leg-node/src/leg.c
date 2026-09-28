@@ -22,6 +22,14 @@
 #define CAL_SETTLE_MS 400
 #define CAL_MAX_ERR_MV 60.0f
 #define CAL_MIN_SPAN_MV 200.0f
+#define OVERLOAD_MA 5000   /* three MG996Rs stalled draw ~7.5 A */
+#define OVERLOAD_MS 500
+#define HOT_C 85           /* NTC by the buck inductor */
+#define COOL_C 70
+#define PG_LOSS_MS 20
+#define I_ZERO_AFTER_MS 100 /* after the buck turns off, before the amp output counts as zero */
+#define TEST_OFF_MS 150
+#define TEST_ON_MS 200
 
 static const float crouch_deg[JOINTS] = {0.0f, 40.0f, -110.0f};
 
@@ -41,6 +49,8 @@ static void power(struct leg *l, bool on)
 {
     if (on && !l->powered)
         l->power_t = now(l);
+    if (!on && l->powered)
+        l->off_t = now(l);
     l->powered = on;
     l->hal->buck(l->hal->ctx, on);
 }
@@ -90,9 +100,13 @@ static void read_inputs(struct leg *l)
         if (pots_live)
             l->pos_deg[j] = joint_us_to_deg(c, joint_mv_to_us(c, l->mv[j]));
     }
-    l->current_ma = (uint16_t)(sample(l, ADC_I_LEG, 5) * 1000.0f / (INA_GAIN * SHUNT_MOHM));
-    l->vbat_mv = (uint16_t)(sample(l, ADC_VBAT, 5) * VBAT_RATIO);
-    l->rail_mv = (uint16_t)(sample(l, ADC_6V0, 5) * V6_RATIO);
+    /* the amp's output offset is whatever it reads with the buck off, tracked all the time */
+    float i_mv = sample(l, ADC_I_LEG, 5);
+    if (!l->powered && now(l) - l->off_t >= I_ZERO_AFTER_MS)
+        l->i_zero_mv += (i_mv - l->i_zero_mv) * 0.05f;
+    l->current_ma = (uint16_t)(fmaxf(0.0f, i_mv - l->i_zero_mv) * 1000.0f / (INA_GAIN * SHUNT_MOHM));
+    l->vbat_mv = (uint16_t)(sample(l, ADC_VBAT, 5) * VBAT_RATIO * l->cfg.vbat_gain);
+    l->rail_mv = (uint16_t)(sample(l, ADC_6V0, 5) * V6_RATIO * l->cfg.rail_gain);
 
     float v = sample(l, ADC_NTC, 5);
     if (v > 1.0f && v < VDDA_MV - 1.0f) {
@@ -118,11 +132,12 @@ static void send_state(struct leg *l, bool status)
     l->hal->send(l->hal->ctx, &f);
 }
 
-void leg_init(struct leg *l, const struct leg_hal *hal, const struct leg_config *stored)
+void leg_init(struct leg *l, const struct leg_hal *hal, const struct leg_config *slot0, const struct leg_config *slot1)
 {
     memset(l, 0, sizeof(*l));
     l->hal = hal;
-    if (stored && config_valid(stored))
+    const struct leg_config *stored = config_newest(slot0, slot1);
+    if (stored)
         l->cfg = *stored;
     else
         config_defaults(&l->cfg);
@@ -321,7 +336,93 @@ static void cal_tick(struct leg *l)
     }
 }
 
+/* ---- self-test: supplies and sensors, for a fresh board, servos optional ---- */
+
+static void test_item(struct leg *l, uint8_t item, int32_t v, bool ok)
+{
+    if (!ok)
+        l->test.failed++;
+    reply(l, 0xff, item, v, 0, ok ? ST_TEST_PASS : ST_TEST_FAIL);
+}
+
+static void test_start(struct leg *l, uint8_t seq)
+{
+    if (l->state != LEG_OFF && l->state != LEG_FAULT) {
+        reply(l, 0xff, 0, 0, seq, ST_BUSY);
+        return;
+    }
+    memset(&l->test, 0, sizeof(l->test));
+    all_off(l);
+    reply(l, 0xff, 0, 0, seq, ST_OK);
+    enter(l, LEG_TEST);
+}
+
+static void test_done(struct leg *l)
+{
+    power(l, false);
+    reply(l, 0xff, 0, l->test.failed, 0, ST_TEST_DONE);
+    enter(l, LEG_OFF);
+}
+
+static void test_tick(struct leg *l)
+{
+    struct test *ts = &l->test;
+    uint32_t t = now(l);
+
+    if (ts->phase == 0) {
+        if (t - l->entered < TEST_OFF_MS)
+            return;
+        int32_t i_zero = lroundf(l->i_zero_mv * 1000.0f / (INA_GAIN * SHUNT_MOHM));
+        test_item(l, TEST_I_ZERO, i_zero, i_zero < 100);
+        test_item(l, TEST_RAIL_OFF, l->rail_mv, l->rail_mv < 500);
+        test_item(l, TEST_VBAT, l->vbat_mv, l->vbat_mv > 9000 && l->vbat_mv < 26000);
+        test_item(l, TEST_TEMP, l->temp_c, l->temp_c > 0 && l->temp_c < 60);
+        power(l, true);
+        ts->t = t;
+        ts->phase = 1;
+    } else if (t - ts->t >= TEST_ON_MS) {
+        test_item(l, TEST_POWER_GOOD, l->hal->buck_good(l->hal->ctx), l->hal->buck_good(l->hal->ctx));
+        test_item(l, TEST_RAIL_ON, l->rail_mv, l->rail_mv > 5700 && l->rail_mv < 6300);
+        test_item(l, TEST_I_ON, l->current_ma, l->current_ma < 1500);
+        uint16_t tof = l->hal->tof_mm ? l->hal->tof_mm(l->hal->ctx) : 0;
+        test_item(l, TEST_TOF, tof, tof != 0);
+        for (int j = 0; j < JOINTS; j++)
+            test_item(l, TEST_POT0 + j, lroundf(l->mv[j]), l->mv[j] > 100 && l->mv[j] < 3200);
+        test_done(l);
+    }
+}
+
 /* ---- config over CAN ---- */
+
+static bool leg_key_get(struct leg *l, uint8_t key, int32_t *v)
+{
+    switch (key) {
+    case KEY_VERSION:
+    case KEY_RESET_CAUSE:
+    case KEY_CAN_ERRORS:
+    case KEY_ID_STRAPS:
+        *v = l->hal->diag ? (int32_t)l->hal->diag(l->hal->ctx, key) : 0;
+        return true;
+    case KEY_UPTIME: *v = (int32_t)(now(l) / 1000); return true;
+    case KEY_VBAT_GAIN: *v = lroundf(l->cfg.vbat_gain * 1e4f); return true;
+    case KEY_RAIL_GAIN: *v = lroundf(l->cfg.rail_gain * 1e4f); return true;
+    case KEY_I_ZERO: *v = lroundf(l->i_zero_mv * 1000.0f / (INA_GAIN * SHUNT_MOHM)); return true;
+    }
+    return false;
+}
+
+static uint8_t leg_key_set(struct leg_config *c, uint8_t key, int32_t v)
+{
+    if (key != KEY_VBAT_GAIN && key != KEY_RAIL_GAIN)
+        return ST_BAD_KEY;
+    if (v < 8000 || v > 12000) /* +-20 %: more than that is a wrong part, not tolerance */
+        return ST_BAD_VALUE;
+    if (key == KEY_VBAT_GAIN)
+        c->vbat_gain = v / 1e4f;
+    else
+        c->rail_gain = v / 1e4f;
+    return ST_OK;
+}
 
 static bool key_get(const struct joint_cfg *c, uint8_t key, int32_t *v)
 {
@@ -375,12 +476,13 @@ static uint8_t key_set(struct joint_cfg *c, uint8_t key, int32_t v)
 
 static void config_frame(struct leg *l, const struct leg_cfg_msg *m)
 {
-    bool busy = l->state == LEG_CALIBRATE || l->state == LEG_WAKE;
+    bool busy = l->state == LEG_CALIBRATE || l->state == LEG_WAKE || l->state == LEG_TEST;
     int32_t v = 0;
 
     switch (m->op) {
     case OP_READ:
-        if (m->joint >= JOINTS || !key_get(&l->cfg.joint[m->joint], m->key, &v))
+        if (m->joint == 0xff ? !leg_key_get(l, m->key, &v)
+                             : m->joint >= JOINTS || !key_get(&l->cfg.joint[m->joint], m->key, &v))
             reply(l, m->joint, m->key, 0, m->seq, ST_BAD_KEY);
         else
             reply(l, m->joint, m->key, v, m->seq, ST_OK);
@@ -388,6 +490,10 @@ static void config_frame(struct leg *l, const struct leg_cfg_msg *m)
     case OP_WRITE:
         if (busy) {
             reply(l, m->joint, m->key, m->value, m->seq, ST_BUSY);
+        } else if (m->joint == 0xff) {
+            uint8_t st = leg_key_set(&l->cfg, m->key, m->value);
+            config_seal(&l->cfg);
+            reply(l, m->joint, m->key, m->value, m->seq, st);
         } else if (m->joint >= JOINTS) {
             reply(l, m->joint, m->key, m->value, m->seq, ST_BAD_KEY);
         } else {
@@ -398,16 +504,26 @@ static void config_frame(struct leg *l, const struct leg_cfg_msg *m)
             reply(l, m->joint, m->key, m->value, m->seq, st);
         }
         break;
-    case OP_SAVE:
+    case OP_SAVE: {
+        /* write over the older slot; the other keeps the last good copy if power drops now */
+        l->cfg.seq++;
         config_seal(&l->cfg);
-        reply(l, m->joint, 0, 0, m->seq,
-              l->hal->save(l->hal->ctx, &l->cfg, sizeof(l->cfg)) ? ST_OK : ST_BAD_VALUE);
+        bool ok = l->hal->save(l->hal->ctx, l->cfg.seq & 1, &l->cfg, sizeof(l->cfg));
+        if (!ok) {
+            l->cfg.seq--; /* retry the same slot, never the good one */
+            config_seal(&l->cfg);
+        }
+        reply(l, m->joint, 0, 0, m->seq, ok ? ST_OK : ST_BAD_VALUE);
         break;
+    }
     case OP_CALIBRATE:
         if (m->joint >= JOINTS && m->joint != 0xff)
             reply(l, m->joint, 0, m->value, m->seq, ST_BAD_KEY);
         else
             cal_start(l, m->joint, m->value == CAL_LIMITS ? CAL_LIMITS : CAL_FULL, m->seq);
+        break;
+    case OP_SELFTEST:
+        test_start(l, m->seq);
         break;
     case OP_DEFAULTS:
         if (busy) {
@@ -443,7 +559,7 @@ void leg_frame(struct leg *l, const struct can_frame_t *f)
         return;
     if (can_unpack_leg_cmd(f, &c)) {
         if (c.enable && !l->enable)
-            l->faults &= ~(FAULT_WATCHDOG | FAULT_ESTOP | FAULT_WAKE | FAULT_BUCK);
+            l->faults &= ~(FAULT_WATCHDOG | FAULT_ESTOP | FAULT_WAKE | FAULT_BUCK | FAULT_OVERLOAD);
         l->enable = c.enable;
         if (l->state == LEG_ACTIVE)
             for (int j = 0; j < JOINTS; j++)
@@ -451,6 +567,44 @@ void leg_frame(struct leg *l, const struct can_frame_t *f)
     } else if (can_function(f->id) == CAN_LEG_CONFIG && can_unpack_leg_cfg(f, &m)) {
         config_frame(l, &m);
     }
+}
+
+/* Stalled servos, a hot buck or a lost power-good: everything off. The overload fault
+   clears on the next enable, but a hot board can't wake until it has cooled down. */
+static bool protect(struct leg *l)
+{
+    if (l->temp_c >= HOT_C)
+        l->hot = true;
+    else if (l->temp_c < COOL_C)
+        l->hot = false;
+    if (l->hot)
+        l->faults |= FAULT_OVERLOAD;
+    if (!l->powered) {
+        l->over_ms = l->pg_bad_ms = 0;
+        return false;
+    }
+    if (l->current_ma > OVERLOAD_MA)
+        l->over_ms++;
+    else if (l->over_ms > 0)
+        l->over_ms--; /* leaky, so a short dip doesn't reset a real stall */
+    /* the self-test reports power-good itself instead of tripping on it */
+    bool pg = l->state == LEG_TEST || now(l) - l->power_t < WAKE_BUCK_MS || l->hal->buck_good(l->hal->ctx);
+    l->pg_bad_ms = pg ? 0 : l->pg_bad_ms + 1;
+
+    uint8_t f = (l->hot || l->over_ms > OVERLOAD_MS ? FAULT_OVERLOAD : 0) | (l->pg_bad_ms > PG_LOSS_MS ? FAULT_BUCK : 0);
+    if (!f)
+        return false;
+    l->faults |= f;
+    if (l->state == LEG_CALIBRATE) {
+        l->faults |= FAULT_CAL;
+        reply(l, 0xff, 0, 0, 0, ST_CAL_DONE);
+    }
+    if (l->state == LEG_TEST) {
+        l->test.failed++;
+        reply(l, 0xff, 0, l->test.failed, 0, ST_TEST_DONE);
+    }
+    enter(l, LEG_FAULT);
+    return true;
 }
 
 static void follow(struct leg *l, float speed)
@@ -476,10 +630,12 @@ void leg_tick(struct leg *l)
         l->faults |= FAULT_ESTOP;
     bool sync_lost = !l->synced || t - l->last_sync > SYNC_TIMEOUT_MS;
     bool blocked = estop || (l->faults & (FAULT_CONFIG | FAULT_UNCALIBRATED));
+    protect(l);
 
     switch (l->state) {
     case LEG_OFF:
-        if (l->enable && !sync_lost && !blocked && !(l->faults & (FAULT_ESTOP | FAULT_WAKE | FAULT_BUCK)))
+        if (l->enable && !sync_lost && !blocked &&
+            !(l->faults & (FAULT_ESTOP | FAULT_WAKE | FAULT_BUCK | FAULT_OVERLOAD)))
             enter(l, LEG_WAKE);
         break;
     case LEG_WAKE:
@@ -521,6 +677,12 @@ void leg_tick(struct leg *l)
     case LEG_FAULT:
         if (!l->enable)
             enter(l, LEG_OFF);
+        break;
+    case LEG_TEST:
+        if (estop)
+            test_done(l);
+        else
+            test_tick(l);
         break;
     }
 

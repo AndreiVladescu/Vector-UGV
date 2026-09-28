@@ -29,8 +29,9 @@ install(DIRECTORY include/ DESTINATION include)
 set(LEG_FW ${CMAKE_CURRENT_SOURCE_DIR}/../../../../firmware)
 add_executable(sim_legs
   ${LEG_FW}/leg-node/sim/sim_legs.c ${LEG_FW}/leg-node/sim/leg_sim.c ${LEG_FW}/leg-node/sim/servo_sim.c
-  ${LEG_FW}/leg-node/src/leg.c ${LEG_FW}/leg-node/src/joint.c ${LEG_FW}/leg-node/src/filter.c
-  ${LEG_FW}/leg-node/src/config.c ${LEG_FW}/common/vector_can.c)
+  ${LEG_FW}/leg-node/sim/flash_sim.c ${LEG_FW}/leg-node/src/leg.c ${LEG_FW}/leg-node/src/joint.c
+  ${LEG_FW}/leg-node/src/filter.c ${LEG_FW}/leg-node/src/config.c ${LEG_FW}/common/vector_can.c
+  ${LEG_FW}/common/boot.c)
 target_include_directories(sim_legs PRIVATE ${LEG_FW}/leg-node/src ${LEG_FW}/leg-node/sim ${LEG_FW}/common)
 set_target_properties(sim_legs PROPERTIES C_STANDARD 11)
 target_link_libraries(sim_legs m)

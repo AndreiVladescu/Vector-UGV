@@ -12,9 +12,11 @@ struct leg_sim {
     struct servo_sim servo[JOINTS];
     uint32_t t_ms;
     uint8_t id;
-    bool buck, estop;
-    struct leg_config flash;
-    bool flash_written;
+    bool buck, estop, pg_fail;
+    uint16_t load_ma, ntc_mv;       /* leg current while the buck is on, NTC voltage */
+    uint16_t i_offset_mv, vbat_adc_mv, tof;
+    struct leg_config flash[2];
+    bool flash_written, flash_fail; /* flash_fail: the next save dies half way */
     void (*tx)(void *user, const struct can_frame_t *f);
     void *user;
 };

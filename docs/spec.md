@@ -94,7 +94,7 @@ CAN was picked over RS-485 for its hardware CRC, retransmit and arbitration. A b
 Every leg has a heartbeat watchdog. If the bus goes quiet, it crouches under control and then cuts its servos. A second bus wouldn't help: losing a side stops the walking anyway.
 
 All MCUs get flashed from the CM5:
-1. **Normal:** a bootloader based on ST OpenBootloader, with CAN IDs tied to the leg ID. A small python-can script flashes one leg or all of them.
+1. **Normal:** our own 7 KB CAN bootloader (CAN IDs from the leg ID, CRC-checked image, 200 ms listen window after reset); `leg_config.py flash` does one leg or all of them. ST's OpenBootloader was dropped: it's larger and doesn't know the leg ID.
 2. **Fallback:** the factory FDCAN ROM bootloader (AN2606/AN5405), one node at a time.
 3. **Recovery:** SWD through OpenOCD's `linuxgpiod` driver on CM5 GPIOs. No ST-LINK needed.
 

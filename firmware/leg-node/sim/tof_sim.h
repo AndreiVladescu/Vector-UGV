@@ -11,12 +11,12 @@ struct tof_sim {
     uint32_t t_ms, next_ms;
     uint16_t distance_mm;
     uint8_t raw_status; /* as the sensor reports it, 9 = valid */
+    int max_write, failed_reads;
 };
 
 void tof_sim_init(struct tof_sim *s);
 void tof_sim_step(struct tof_sim *s, uint32_t ms);
 bool tof_sim_write(void *ctx, uint16_t reg, const uint8_t *data, int n);
 bool tof_sim_read(void *ctx, uint16_t reg, uint8_t *data, int n);
-void tof_sim_delay(void *ctx, uint32_t ms);
 
 #endif

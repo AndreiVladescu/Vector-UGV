@@ -47,14 +47,19 @@
 #define BUCK_PG_PIN GPIO_PIN_1
 #define ESTOP_PORT GPIOB
 #define ESTOP_PIN GPIO_PIN_2
-#define ID_PORT GPIOB /* jumpers to GND, read with pull-ups */
-#define ID_B0 GPIO_PIN_3
-#define ID_B1 GPIO_PIN_8
-#define ID_B2 GPIO_PIN_9
+/* Leg ID: jumpers to 3V3, read with pull-downs. Two per cell give its position on the
+   board (1 = nearest the CAN-in end, 3 = the outer end), one per board gives the side
+   (open = left, bridged = right). Node = position + 3 * side; position 0 = not set. */
+#define ID_PORT GPIOB
+#define ID_POS0 GPIO_PIN_3
+#define ID_POS1 GPIO_PIN_8
+#define ID_SIDE GPIO_PIN_9
 
 #endif
 
 /* same on both boards */
+#define DBG_PORT GPIOA /* scope pad: high while the 1 ms tick's work runs */
+#define DBG_PIN GPIO_PIN_7
 #define PWM_PORT GPIOA
 #define PWM_PINS (GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10)
 

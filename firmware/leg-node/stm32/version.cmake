@@ -1,0 +1,15 @@
+execute_process(COMMAND git rev-parse --short=7 HEAD WORKING_DIRECTORY ${SRC}
+  OUTPUT_VARIABLE hash OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+execute_process(COMMAND git diff --quiet HEAD -- . ../common WORKING_DIRECTORY ${SRC}
+  RESULT_VARIABLE dirty ERROR_QUIET)
+if(NOT hash)
+  set(hash 0)
+  set(dirty 0)
+endif()
+set(bit 0)
+if(dirty)
+  set(bit 0x10000000)
+endif()
+math(EXPR version "0x${hash} | ${bit}" OUTPUT_FORMAT HEXADECIMAL)
+file(WRITE ${OUT}.tmp "#define FW_VERSION ${version}u\n")
+configure_file(${OUT}.tmp ${OUT} COPYONLY)

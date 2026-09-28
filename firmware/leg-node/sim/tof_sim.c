@@ -49,6 +49,8 @@ bool tof_sim_write(void *ctx, uint16_t reg, const uint8_t *data, int n)
     struct tof_sim *s = ctx;
     if (!s->present || reg + n > (int)sizeof(s->reg))
         return false;
+    if (n > s->max_write)
+        s->max_write = n;
     memcpy(&s->reg[reg], data, n);
     for (int i = 0; i < n; i++) {
         if (reg + i == 0x0086 && (data[i] & 1))
@@ -65,10 +67,10 @@ bool tof_sim_write(void *ctx, uint16_t reg, const uint8_t *data, int n)
 bool tof_sim_read(void *ctx, uint16_t reg, uint8_t *data, int n)
 {
     struct tof_sim *s = ctx;
-    if (!s->present || reg + n > (int)sizeof(s->reg))
+    if (!s->present || reg + n > (int)sizeof(s->reg)) {
+        s->failed_reads++;
         return false;
+    }
     memcpy(data, &s->reg[reg], n);
     return true;
 }
-
-void tof_sim_delay(void *ctx, uint32_t ms) { tof_sim_step(ctx, ms); }

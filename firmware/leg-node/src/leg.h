@@ -14,6 +14,11 @@ struct wake {
     float start_us, test_us, before_us;
 };
 
+struct test {
+    uint8_t phase, failed;
+    uint32_t t;
+};
+
 struct cal {
     uint8_t mask, joint, phase, point;
     enum cal_mode mode;
@@ -42,13 +47,18 @@ struct leg {
 
     uint16_t current_ma, vbat_mv, rail_mv;
     int8_t temp_c;
+    bool hot;
+    uint16_t over_ms, pg_bad_ms;
+    float i_zero_mv;
+    uint32_t off_t;
 
     struct wake wake;
     struct cal cal;
+    struct test test;
 };
 
-/* stored may be NULL or invalid, then defaults are used. */
-void leg_init(struct leg *l, const struct leg_hal *hal, const struct leg_config *stored);
+/* The two config slots from flash; NULL or invalid ones are skipped, defaults if neither is good. */
+void leg_init(struct leg *l, const struct leg_hal *hal, const struct leg_config *slot0, const struct leg_config *slot1);
 void leg_frame(struct leg *l, const struct can_frame_t *f);
 /* Call every millisecond. */
 void leg_tick(struct leg *l);

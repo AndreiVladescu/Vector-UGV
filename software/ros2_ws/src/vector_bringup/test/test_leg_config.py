@@ -57,3 +57,26 @@ class TestLegConfig(unittest.TestCase):
         self.assertEqual(r.stdout.count('saved'), 6, r.stdout)
         out = leg_config('status').stdout
         self.assertNotIn('uncalibrated', out)
+
+    def test_5_flash(self):
+        # any bytes with a plausible stack pointer and reset vector pass as an image
+        image = (0x200077F0).to_bytes(4, 'little') + (0x08004101).to_bytes(4, 'little') + os.urandom(20000)
+        path = os.path.join(os.environ.get('TMPDIR', '/tmp'), f'leg_image_{os.getpid()}.bin')
+        with open(path, 'wb') as f:
+            f.write(image)
+        try:
+            r = leg_config('flash', 'L3', path)
+        finally:
+            os.remove(path)
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertIn('L3: running', r.stdout)
+        out = leg_config('status').stdout
+        self.assertNotIn('no answer', out)
+        self.assertNotIn('uncalibrated', out)  # the saved config survived the restart
+
+    def test_6_selftest(self):
+        r = leg_config('selftest', 'R2')
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertIn('pass', r.stdout)
+        out = leg_config('read', 'R2').stdout
+        self.assertIn('last reset power', out)

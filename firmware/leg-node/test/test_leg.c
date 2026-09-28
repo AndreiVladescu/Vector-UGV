@@ -325,21 +325,242 @@ static void test_config(void)
     CHECK(replies(ST_OK, &m) == 1 && m.value == 15930);
 
     config(&s, OP_SAVE, 0, 0, 0);
-    CHECK(s.flash_written && config_valid(&s.flash));
+    CHECK(s.flash_written && config_valid(&s.flash[1]) && s.flash[1].seq == 1);
     struct leg_sim again;
-    leg_sim_init(&again, 4, &s.flash);
+    leg_sim_init(&again, 4, &s.flash[1]);
     CHECK_NEAR(again.leg.cfg.joint[1].mid_mv, 1593, 1e-3);
     CHECK(!(again.leg.faults & FAULT_UNCALIBRATED));
+
+    /* saves alternate between the slots; a save that dies half way keeps the older copy */
+    config(&s, OP_WRITE, 0, KEY_WIPER_MID, 16000);
+    config(&s, OP_SAVE, 0, 0, 0);
+    CHECK(config_valid(&s.flash[0]) && s.flash[0].seq == 2 && s.flash[1].seq == 1);
+    CHECK(config_newest(&s.flash[0], &s.flash[1]) == &s.flash[0]);
+    config(&s, OP_WRITE, 0, KEY_WIPER_MID, 16100);
+    s.flash_fail = true;
+    nrx = 0;
+    config(&s, OP_SAVE, 0, 0, 0);
+    CHECK(replies(ST_BAD_VALUE, NULL) == 1);
+    CHECK(!config_valid(&s.flash[1]) && config_newest(&s.flash[0], &s.flash[1]) == &s.flash[0]);
+    config(&s, OP_SAVE, 0, 0, 0); /* the retry goes to the same, broken slot */
+    CHECK(config_valid(&s.flash[0]) && s.flash[0].seq == 2);
+    CHECK(config_valid(&s.flash[1]) && s.flash[1].seq == 3);
+    leg_init(&again.leg, &again.hal, &s.flash[0], &s.flash[1]);
+    CHECK_NEAR(again.leg.cfg.joint[0].mid_mv, 1610, 1e-3);
+    struct leg_config wrap_a = s.flash[0], wrap_b = s.flash[0];
+    wrap_a.seq = 0xffffffffu;
+    wrap_b.seq = 0;
+    config_seal(&wrap_a);
+    config_seal(&wrap_b);
+    CHECK(config_newest(&wrap_a, &wrap_b) == &wrap_b);
+    CHECK(config_newest(NULL, NULL) == NULL);
+}
+
+static void active_leg(struct leg_sim *s, struct host *h)
+{
+    struct leg_config c;
+    struct servo_sim ref[JOINTS];
+    for (int j = 0; j < JOINTS; j++)
+        servo_sim_init(&ref[j], 1560, 1.433f, 1500);
+    calibrated_config(&c, ref);
+    setup(s, &c);
+    *h = (struct host){.sync = true, .enable = true};
+    run(s, h, 2000);
+}
+
+static void test_overcurrent(void)
+{
+    struct leg_sim s;
+    struct host h;
+    active_leg(&s, &h);
+    CHECK(s.leg.state == LEG_ACTIVE);
+
+    s.load_ma = 6500; /* a hard step, not a stall */
+    run(&s, &h, 300);
+    s.load_ma = 1500;
+    run(&s, &h, 1000);
+    CHECK(s.leg.state == LEG_ACTIVE && !(s.leg.faults & FAULT_OVERLOAD));
+
+    s.load_ma = 7500; /* stalled */
+    run(&s, &h, 450);
+    CHECK(s.leg.state == LEG_ACTIVE);
+    run(&s, &h, 100);
+    CHECK(s.leg.state == LEG_FAULT && (s.leg.faults & FAULT_OVERLOAD) && !s.buck);
+
+    s.load_ma = 500;
+    h.enable = false;
+    run(&s, &h, 50);
+    h.enable = true;
+    run(&s, &h, 2000);
+    CHECK(s.leg.state == LEG_ACTIVE && !(s.leg.faults & FAULT_OVERLOAD));
+}
+
+static void test_overtemp(void)
+{
+    struct leg_sim s;
+    struct host h;
+    active_leg(&s, &h);
+    s.ntc_mv = 383; /* 90 C */
+    run(&s, &h, 5);
+    CHECK(s.leg.state == LEG_FAULT && (s.leg.faults & FAULT_OVERLOAD) && !s.buck);
+    CHECK(s.leg.temp_c >= 89 && s.leg.temp_c <= 91);
+
+    s.ntc_mv = 600; /* ~70-75 C: cooler, but not cool enough */
+    h.enable = false;
+    run(&s, &h, 50);
+    h.enable = true;
+    run(&s, &h, 500);
+    CHECK(s.leg.state == LEG_OFF && (s.leg.faults & FAULT_OVERLOAD));
+
+    s.ntc_mv = 769; /* 60 C */
+    h.enable = false;
+    run(&s, &h, 50);
+    h.enable = true;
+    run(&s, &h, 2000);
+    CHECK(s.leg.state == LEG_ACTIVE && !(s.leg.faults & FAULT_OVERLOAD));
+}
+
+static void test_power_good_lost(void)
+{
+    struct leg_sim s;
+    struct host h;
+    active_leg(&s, &h);
+    s.pg_fail = true;
+    run(&s, &h, 15);
+    CHECK(s.leg.state == LEG_ACTIVE);
+    run(&s, &h, 10);
+    CHECK(s.leg.state == LEG_FAULT && (s.leg.faults & FAULT_BUCK) && !s.buck);
+}
+
+static int test_replies(uint8_t status, uint8_t item, int32_t *value)
+{
+    int n = 0;
+    struct leg_cfg_msg m;
+    for (int i = 0; i < nrx; i++)
+        if (can_function(rx[i].id) == CAN_LEG_REPLY && can_unpack_leg_cfg(&rx[i], &m) && m.op == status &&
+            (!item || m.key == item)) {
+            n++;
+            if (value)
+                *value = m.value;
+        }
+    return n;
+}
+
+static void test_selftest(void)
+{
+    struct leg_sim s;
+    struct leg_config c;
+    struct servo_sim ref[JOINTS];
+    for (int j = 0; j < JOINTS; j++)
+        servo_sim_init(&ref[j], 1560, 1.433f, 1500);
+    calibrated_config(&c, ref);
+    setup(&s, &c);
+    int32_t v = 0;
+
+    run(&s, NULL, 300);
+    nrx = 0;
+    config(&s, OP_SELFTEST, 0xff, 0, 0);
+    CHECK(s.leg.state == LEG_TEST && replies(ST_OK, NULL) == 1);
+    run(&s, NULL, 100);
+    CHECK(!s.buck);
+    run(&s, NULL, 400);
+    CHECK(s.leg.state == LEG_OFF && !s.buck);
+    CHECK(test_replies(ST_TEST_PASS, 0, NULL) == 11 && test_replies(ST_TEST_FAIL, 0, NULL) == 0);
+    CHECK(test_replies(ST_TEST_DONE, 0, &v) == 1 && v == 0);
+    CHECK(test_replies(ST_TEST_PASS, TEST_RAIL_ON, &v) == 1 && v > 5900 && v < 6100);
+    CHECK(test_replies(ST_TEST_PASS, TEST_VBAT, &v) == 1 && v > 15200 && v < 15400);
+
+    /* no power-good and no ToF: two failures, and power-good doesn't trip the leg */
+    s.pg_fail = true;
+    s.tof = 0;
+    nrx = 0;
+    config(&s, OP_SELFTEST, 0xff, 0, 0);
+    run(&s, NULL, 500);
+    CHECK(test_replies(ST_TEST_FAIL, TEST_POWER_GOOD, NULL) == 1 && test_replies(ST_TEST_FAIL, TEST_TOF, NULL) == 1);
+    CHECK(test_replies(ST_TEST_DONE, 0, &v) == 1 && v == 2);
+    CHECK(s.leg.state == LEG_OFF);
+
+    /* busy while walking */
+    struct host h;
+    active_leg(&s, &h);
+    nrx = 0;
+    config(&s, OP_SELFTEST, 0xff, 0, 0);
+    CHECK(replies(ST_BUSY, NULL) == 1 && s.leg.state == LEG_ACTIVE);
+
+    /* e-stop ends it early */
+    setup(&s, &c);
+    config(&s, OP_SELFTEST, 0xff, 0, 0);
+    run(&s, NULL, 200);
+    s.estop = true;
+    run(&s, NULL, 2);
+    CHECK(s.leg.state == LEG_OFF && !s.buck && test_replies(ST_TEST_DONE, 0, NULL) == 1);
+}
+
+static void test_leg_keys(void)
+{
+    struct leg_sim s;
+    struct host h;
+    struct leg_cfg_msg m;
+    active_leg(&s, &h);
+
+    nrx = 0;
+    config(&s, OP_READ, 0xff, KEY_VERSION, 0);
+    CHECK(replies(ST_OK, &m) == 1 && (uint32_t)m.value == 0x0abcdefu);
+    config(&s, OP_READ, 0xff, KEY_UPTIME, 0);
+    CHECK(replies(ST_OK, &m) == 2 && m.value == 2);
+    config(&s, OP_READ, 0xff, KEY_WIPER_MID, 0);
+    CHECK(replies(ST_BAD_KEY, NULL) == 1);
+
+    /* current amp offset: learned while off, subtracted while on */
+    setup(&s, NULL);
+    active_leg(&s, &h);
+    s.i_offset_mv = 15;
+    h.enable = false;
+    run(&s, &h, 400);
+    nrx = 0;
+    config(&s, OP_READ, 0xff, KEY_I_ZERO, 0);
+    CHECK(replies(ST_OK, &m) == 1 && m.value == 75);
+    h.enable = true;
+    run(&s, &h, 2000);
+    CHECK(s.leg.state == LEG_ACTIVE);
+    CHECK_NEAR(s.leg.current_ma, 500, 5);
+
+    /* divider correction */
+    uint16_t before = s.leg.vbat_mv;
+    config(&s, OP_WRITE, 0xff, KEY_VBAT_GAIN, 10100);
+    run(&s, &h, 2);
+    CHECK_NEAR(s.leg.vbat_mv, before * 1.01, 2);
+    nrx = 0;
+    config(&s, OP_WRITE, 0xff, KEY_RAIL_GAIN, 13000);
+    config(&s, OP_WRITE, 0xff, KEY_UPTIME, 5);
+    CHECK(replies(ST_BAD_VALUE, NULL) == 1 && replies(ST_BAD_KEY, NULL) == 1);
+    config(&s, OP_SAVE, 0, 0, 0);
+    struct leg_sim again;
+    leg_sim_init(&again, 4, config_newest(&s.flash[0], &s.flash[1]));
+    CHECK_NEAR(again.leg.cfg.vbat_gain, 1.01, 1e-4);
 }
 
 /* ---- VL53L1X, against the registers the SparkFun/ST driver writes ---- */
 
 static uint16_t be16(const struct tof_sim *t, uint16_t reg) { return (uint16_t)(t->reg[reg] << 8 | t->reg[reg + 1]); }
 
-static void tof_setup(struct tof_sim *t, struct vl53l1x *d)
+static void tof_setup(struct tof_sim *t, struct vl53l1x *d, enum vl53l1x_mode mode, uint16_t budget, uint16_t period)
 {
     tof_sim_init(t);
-    *d = (struct vl53l1x){t, tof_sim_write, tof_sim_read, tof_sim_delay, 0};
+    *d = (struct vl53l1x){.ctx = t, .write = tof_sim_write, .read = tof_sim_read};
+    vl53l1x_begin(d, mode, budget, period);
+}
+
+/* the leg firmware's loop: the sensor model runs every ms, the driver every 5 ms */
+static int tof_run(struct tof_sim *t, struct vl53l1x *d, int ms, uint16_t *mm, uint8_t *st)
+{
+    int ranges = 0;
+    for (int i = 0; i < ms; i++) {
+        tof_sim_step(t, 1);
+        if (t->t_ms % 5 == 0 && vl53l1x_run(d, t->t_ms, mm, st) == 1)
+            ranges++;
+    }
+    return ranges;
 }
 
 static void test_tof(void)
@@ -349,49 +570,71 @@ static void test_tof(void)
     uint16_t mm = 0;
     uint8_t st = 0;
 
-    tof_setup(&t, &d);
-    CHECK(vl53l1x_init(&d, VL53L1X_SHORT, 20, 25));
-    CHECK(t.t_ms > 0 && t.t_ms < 150); /* waited for the throwaway first measurement */
+    tof_setup(&t, &d, VL53L1X_SHORT, 20, 25);
+    tof_run(&t, &d, 150, &mm, &st);
+    CHECK(vl53l1x_ranging(&d) && d.starts == 1);
+    CHECK(t.max_write <= 23); /* the config goes over in pieces */
     CHECK(t.reg[0x4B] == 0x14 && t.reg[0x60] == 0x07 && t.reg[0x63] == 0x05 && t.reg[0x69] == 0x38);
     CHECK(be16(&t, 0x78) == 0x0705 && be16(&t, 0x7A) == 0x0606);
     CHECK(be16(&t, 0x5E) == 0x0051 && be16(&t, 0x61) == 0x006E);
     CHECK(t.reg[0x08] == 0x09 && t.reg[0x0B] == 0x00 && t.reg[0x2E] == 0x01);
     CHECK((uint32_t)(be16(&t, 0x6C) << 16 | be16(&t, 0x6E)) == (uint32_t)(0x01A8 * 25 * 1.075f));
-    CHECK(t.ranging);
 
-    CHECK(vl53l1x_poll(&d, &mm, &st) == 0);
     t.distance_mm = 1234;
-    tof_sim_step(&t, 25);
-    CHECK(vl53l1x_poll(&d, &mm, &st) == 1 && mm == 1234 && st == 0);
-    CHECK(vl53l1x_poll(&d, &mm, &st) == 0);
+    int n = tof_run(&t, &d, 1000, &mm, &st);
+    CHECK(n >= 38 && n <= 41 && mm == 1234 && st == 0); /* one every 25 ms */
     t.raw_status = 4; /* signal fail: nothing in range */
-    tof_sim_step(&t, 25);
-    CHECK(vl53l1x_poll(&d, &mm, &st) == 1 && mm == VL53L1X_NO_TARGET && st == 2);
+    CHECK(tof_run(&t, &d, 30, &mm, &st) >= 1 && mm == VL53L1X_NO_TARGET && st == 2);
     t.raw_status = 7;
-    tof_sim_step(&t, 25);
-    CHECK(vl53l1x_poll(&d, &mm, &st) == 1 && mm == VL53L1X_NO_TARGET && st == 7);
+    CHECK(tof_run(&t, &d, 30, &mm, &st) >= 1 && mm == VL53L1X_NO_TARGET && st == 7);
+    t.raw_status = 9;
+
+    /* unplugged, plugged back in (a fresh sensor) */
+    t.present = false;
+    tof_run(&t, &d, 20, &mm, &st);
+    CHECK(!vl53l1x_ranging(&d));
+    CHECK(tof_run(&t, &d, 2000, &mm, &st) == 0);
+    uint32_t now = t.t_ms;
+    tof_sim_init(&t);
+    t.t_ms = now;
+    tof_run(&t, &d, 700, &mm, &st);
+    CHECK(vl53l1x_ranging(&d) && d.starts == 2);
+    CHECK(tof_run(&t, &d, 100, &mm, &st) >= 3 && mm == 400);
+
+    /* reset behind our back (a brown-out): answers, but never has a range again */
+    now = t.t_ms;
+    tof_sim_init(&t);
+    t.t_ms = now;
+    tof_run(&t, &d, 1800, &mm, &st);
+    CHECK(vl53l1x_ranging(&d) && d.starts == 3);
 
     /* switching mode keeps the budget, as SetDistanceMode does */
     CHECK(vl53l1x_set_budget(&d, 33) && vl53l1x_set_mode(&d, VL53L1X_LONG));
     CHECK(t.reg[0x4B] == 0x0A && be16(&t, 0x78) == 0x0F0D && be16(&t, 0x5E) == 0x0060 && be16(&t, 0x61) == 0x006E);
     CHECK(!vl53l1x_set_budget(&d, 15)); /* short mode only */
 
-    tof_setup(&t, &d);
-    CHECK(vl53l1x_init(&d, VL53L1X_LONG, 50, 50));
-    CHECK(t.reg[0x4B] == 0x0A && be16(&t, 0x5E) == 0x00AD && be16(&t, 0x61) == 0x00C6);
+    tof_setup(&t, &d, VL53L1X_LONG, 50, 50);
+    tof_run(&t, &d, 200, &mm, &st);
+    CHECK(vl53l1x_ranging(&d) && t.reg[0x4B] == 0x0A && be16(&t, 0x5E) == 0x00AD && be16(&t, 0x61) == 0x00C6);
 
-    tof_setup(&t, &d);
+    /* no sensor at all: tried every 500 ms, nothing else */
+    tof_setup(&t, &d, VL53L1X_SHORT, 20, 25);
     t.present = false;
-    CHECK(!vl53l1x_init(&d, VL53L1X_SHORT, 20, 25));
-    CHECK(vl53l1x_poll(&d, &mm, &st) == -1);
+    CHECK(tof_run(&t, &d, 2000, &mm, &st) == 0 && !vl53l1x_ranging(&d));
+    CHECK(t.failed_reads >= 4 && t.failed_reads <= 5);
+    t.present = true;
+    tof_run(&t, &d, 700, &mm, &st);
+    CHECK(vl53l1x_ranging(&d));
 
-    tof_setup(&t, &d);
+    tof_setup(&t, &d, VL53L1X_SHORT, 20, 25);
     t.reg[0x0110] = 0xCD; /* some other ST part answering at 0x29 */
-    CHECK(!vl53l1x_init(&d, VL53L1X_SHORT, 20, 25));
+    tof_run(&t, &d, 2000, &mm, &st);
+    CHECK(!vl53l1x_ranging(&d));
 
-    tof_setup(&t, &d);
+    tof_setup(&t, &d, VL53L1X_SHORT, 20, 25);
     t.reg[0x00E5] = 0; /* never finishes booting */
-    CHECK(!vl53l1x_init(&d, VL53L1X_SHORT, 20, 25));
+    tof_run(&t, &d, 2000, &mm, &st);
+    CHECK(!vl53l1x_ranging(&d));
 }
 
 int main(void)
@@ -405,6 +648,11 @@ int main(void)
         {"watchdog", test_watchdog},
         {"estop", test_estop},
         {"config", test_config},
+        {"overcurrent", test_overcurrent},
+        {"overtemp", test_overtemp},
+        {"power_good_lost", test_power_good_lost},
+        {"selftest", test_selftest},
+        {"leg_keys", test_leg_keys},
         {"tof", test_tof},
     };
     for (unsigned i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
