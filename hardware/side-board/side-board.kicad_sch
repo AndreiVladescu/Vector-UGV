@@ -1011,6 +1011,145 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "power:+3V3"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "+3V3"
+				(at 0 3.556 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"+3V3\""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "+3V3_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "+3V3_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "power:GND"
 			(power global)
 			(pin_numbers
@@ -1612,10 +1751,28 @@
 		(uuid "ac602aec-355c-4a39-8ce6-bb0153e2b8bb")
 	)
 	(junction
+		(at 205.74 59.055)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "4888a1ab-9639-48c7-b307-4f4fd00fd1d7")
+	)
+	(junction
 		(at 38.735 90.805)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "60d54cc8-c4b7-4cff-90f0-57a61de768a1")
+	)
+	(junction
+		(at 154.94 85.725)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "6d9df01b-b1a0-430d-945a-49238dae0829")
+	)
+	(junction
+		(at 205.105 115.57)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "908b26c1-d246-467a-9b43-678460cb0063")
 	)
 	(junction
 		(at 50.8 90.805)
@@ -1635,6 +1792,12 @@
 		(color 0 0 0 0)
 		(uuid "bef9cead-9644-4032-b417-fe8f07748986")
 	)
+	(junction
+		(at 205.105 87.63)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "c9cb1b98-eba4-4c1e-aba5-05ab5bea79c4")
+	)
 	(wire
 		(pts
 			(xy 140.335 106.045) (xy 140.335 104.775)
@@ -1647,6 +1810,16 @@
 	)
 	(wire
 		(pts
+			(xy 205.105 87.63) (xy 205.105 90.17)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "05f06962-51b8-4f67-af50-c1e1932b0481")
+	)
+	(wire
+		(pts
 			(xy 38.735 90.805) (xy 50.8 90.805)
 		)
 		(stroke
@@ -1654,6 +1827,16 @@
 			(type default)
 		)
 		(uuid "0b9835dc-251d-491e-bb5c-e60a65f0eee3")
+	)
+	(wire
+		(pts
+			(xy 205.74 56.515) (xy 205.74 59.055)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0f582973-0b98-4bcc-8e31-b491d1f84030")
 	)
 	(wire
 		(pts
@@ -1717,6 +1900,26 @@
 	)
 	(wire
 		(pts
+			(xy 205.105 115.57) (xy 205.105 118.11)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "24252d22-84f2-4f91-afc7-78fa704c6e29")
+	)
+	(wire
+		(pts
+			(xy 205.105 87.63) (xy 209.55 87.63)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2bea1b24-18d7-45b3-a4c4-ac937ca7a1c4")
+	)
+	(wire
+		(pts
 			(xy 219.71 87.63) (xy 235.585 87.63)
 		)
 		(stroke
@@ -1727,6 +1930,26 @@
 	)
 	(wire
 		(pts
+			(xy 154.94 83.82) (xy 154.94 85.725)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "30e80b64-7c70-4a29-b771-4ee47dfbedea")
+	)
+	(wire
+		(pts
+			(xy 210.185 30.48) (xy 210.185 31.75)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "31f1113b-df9b-4feb-a737-116cfd21b037")
+	)
+	(wire
+		(pts
 			(xy 114.3 90.805) (xy 102.235 90.805)
 		)
 		(stroke
@@ -1734,6 +1957,16 @@
 			(type default)
 		)
 		(uuid "44404f66-8f6c-4f82-b62f-697d707c1b01")
+	)
+	(wire
+		(pts
+			(xy 205.105 113.03) (xy 205.105 115.57)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4523df0c-36d7-4c86-a7b6-8d8f0e67c5d4")
 	)
 	(wire
 		(pts
@@ -1777,6 +2010,26 @@
 	)
 	(wire
 		(pts
+			(xy 205.74 59.055) (xy 210.185 59.055)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "618be5ef-dc1d-4eb7-af0f-c4a8542f0b17")
+	)
+	(wire
+		(pts
+			(xy 106.68 154.94) (xy 106.68 153.035)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6b9bc092-b5b6-4c90-80bd-b24bbfba5a25")
+	)
+	(wire
+		(pts
 			(xy 231.14 85.09) (xy 235.585 85.09)
 		)
 		(stroke
@@ -1817,6 +2070,16 @@
 	)
 	(wire
 		(pts
+			(xy 205.105 115.57) (xy 209.55 115.57)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "770abedf-6cf6-405f-acd7-43bb20adec52")
+	)
+	(wire
+		(pts
 			(xy 231.14 107.95) (xy 235.585 107.95)
 		)
 		(stroke
@@ -1834,6 +2097,26 @@
 			(type default)
 		)
 		(uuid "7a9c0f86-3f6a-459e-b9a8-16f56374c9d8")
+	)
+	(wire
+		(pts
+			(xy 78.74 153.035) (xy 78.74 154.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "81347e7d-9915-49c2-8ec7-094bac37f8ca")
+	)
+	(wire
+		(pts
+			(xy 205.105 85.09) (xy 205.105 87.63)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "81696057-1b20-4473-bdca-228e66fab39b")
 	)
 	(wire
 		(pts
@@ -1867,6 +2150,16 @@
 	)
 	(wire
 		(pts
+			(xy 205.74 59.055) (xy 205.74 61.595)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8ed65967-5b41-4e22-8020-1f38b1dc68d3")
+	)
+	(wire
+		(pts
 			(xy 219.71 115.57) (xy 235.585 115.57)
 		)
 		(stroke
@@ -1887,6 +2180,16 @@
 	)
 	(wire
 		(pts
+			(xy 205.105 118.11) (xy 209.55 118.11)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a3520e91-68b0-4c9c-a3dc-9e70eaf33fee")
+	)
+	(wire
+		(pts
 			(xy 50.8 90.805) (xy 50.8 92.075)
 		)
 		(stroke
@@ -1894,6 +2197,26 @@
 			(type default)
 		)
 		(uuid "a5d71293-7705-4985-8c43-013c3acd3ff7")
+	)
+	(wire
+		(pts
+			(xy 135.89 154.94) (xy 135.89 153.67)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a985f434-e122-454c-909a-dd4d37ce4ca4")
+	)
+	(wire
+		(pts
+			(xy 205.74 61.595) (xy 210.185 61.595)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "abf51a26-236d-48b1-bb29-c145fd09861c")
 	)
 	(wire
 		(pts
@@ -1997,6 +2320,16 @@
 	)
 	(wire
 		(pts
+			(xy 72.39 88.265) (xy 76.835 88.265)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d9f16ceb-785e-4898-b7ec-b3e98c8e2e5c")
+	)
+	(wire
+		(pts
 			(xy 220.345 59.055) (xy 235.585 59.055)
 		)
 		(stroke
@@ -2017,6 +2350,16 @@
 	)
 	(wire
 		(pts
+			(xy 210.185 31.75) (xy 215.265 31.75)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e5b13515-0aef-425e-8fed-e3eb31bf521d")
+	)
+	(wire
+		(pts
 			(xy 154.94 85.725) (xy 140.335 85.725)
 		)
 		(stroke
@@ -2024,6 +2367,16 @@
 			(type default)
 		)
 		(uuid "eb2b3287-eb69-4152-b300-2de6fe590605")
+	)
+	(wire
+		(pts
+			(xy 59.69 88.265) (xy 62.23 88.265)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ec5ad349-fe76-4a9b-b743-6374ca34c1fa")
 	)
 	(wire
 		(pts
@@ -2067,13 +2420,23 @@
 	)
 	(wire
 		(pts
-			(xy 196.215 27.305) (xy 201.295 27.305)
+			(xy 229.235 31.75) (xy 225.425 31.75)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "fef91d9c-7cc6-44b3-9f13-47ee773c9c95")
+		(uuid "f97721bf-8183-4aaf-a039-f7cd4372ebbc")
+	)
+	(wire
+		(pts
+			(xy 205.105 90.17) (xy 209.55 90.17)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fb8055a0-69e8-4fcf-b7ab-e687dcf17a2c")
 	)
 	(label "PSU_FB"
 		(at 140.335 95.25 0)
@@ -2186,16 +2549,6 @@
 		(uuid "d1c71c16-0e13-4004-81ae-0f33b46ae386")
 	)
 	(label "SIDE_BIT"
-		(at 196.215 27.305 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "d3e188db-0837-4f41-8e26-c2c726611e06")
-	)
-	(label "SIDE_BIT"
 		(at 233.045 92.71 180)
 		(effects
 			(font
@@ -2224,6 +2577,16 @@
 			(justify right bottom)
 		)
 		(uuid "e9302230-2c90-4441-b155-6afe0793ec4d")
+	)
+	(label "SIDE_BIT"
+		(at 229.235 31.75 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "fe9eb72a-a93e-4c5e-b11d-2a295a85864f")
 	)
 	(hierarchical_label "VBAT"
 		(shape input)
@@ -2346,6 +2709,240 @@
 			(project "side-board"
 				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
 					(reference "C102")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 205.105 113.03 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "035e528a-6ac5-4113-b34a-232afdb90f07")
+		(property "Reference" "#PWR0110"
+			(at 205.105 116.84 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 205.105 107.95 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 205.105 113.03 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 205.105 113.03 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
+			(at 205.105 113.03 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "dd0de7cc-6d73-4eae-9ce0-b73419229bc4")
+		)
+		(instances
+			(project "side-board"
+				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
+					(reference "#PWR0110")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 106.68 154.94 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "0384578f-0c60-40a7-9cd3-f00b66e7825e")
+		(property "Reference" "#PWR0113"
+			(at 106.68 161.29 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 106.68 159.385 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 106.68 154.94 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 106.68 154.94 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 106.68 154.94 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "600e442c-8847-4542-bb57-eebc3579bf6b")
+		)
+		(instances
+			(project "side-board"
+				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
+					(reference "#PWR0113")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 205.105 85.09 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "09038905-bfcb-4c14-b5d7-0c7355b11845")
+		(property "Reference" "#PWR0109"
+			(at 205.105 88.9 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 205.105 80.01 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 205.105 85.09 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 205.105 85.09 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
+			(at 205.105 85.09 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "6a133c0e-c151-46d4-bfa0-68e35bc91310")
+		)
+		(instances
+			(project "side-board"
+				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
+					(reference "#PWR0109")
 					(unit 1)
 				)
 			)
@@ -3068,6 +3665,84 @@
 		)
 	)
 	(symbol
+		(lib_id "power:+3V3")
+		(at 210.185 30.48 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "5604a3c5-078c-45cc-b06a-daf5c6d14907")
+		(property "Reference" "#PWR0107"
+			(at 210.185 34.29 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 210.185 25.4 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 210.185 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 210.185 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
+			(at 210.185 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "4870da5a-4793-4b09-a5b0-4f914dadff4b")
+		)
+		(instances
+			(project "side-board"
+				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
+					(reference "#PWR0107")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Jumper:SolderJumper_2_Open")
 		(at 214.63 90.17 0)
 		(unit 1)
@@ -3228,7 +3903,7 @@
 	)
 	(symbol
 		(lib_id "side-board:NUP2105LT1G")
-		(at 100.33 152.4 90)
+		(at 106.68 127.635 270)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -3239,29 +3914,29 @@
 		(fields_autoplaced yes)
 		(uuid "6d564f84-88dc-4685-9aef-c955de7e6a7f")
 		(property "Reference" "IC103"
-			(at 106.68 138.4299 90)
+			(at 110.49 139.0649 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify right)
+				(justify left)
 			)
 		)
 		(property "Value" "NUP2105LT1G"
-			(at 106.68 140.9699 90)
+			(at 110.49 141.6049 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify right)
+				(justify left)
 			)
 		)
 		(property "Footprint" "side-board:SOT96P237X111-3N"
-			(at 195.25 130.81 0)
+			(at 11.76 149.225 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3273,7 +3948,7 @@
 			)
 		)
 		(property "Datasheet" "https://www.onsemi.com/pub/Collateral/NUP2105L-D.PDF"
-			(at 295.25 130.81 0)
+			(at -88.24 149.225 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3285,7 +3960,7 @@
 			)
 		)
 		(property "Description" "Low Capacitance High-Speed CAN Data Rates; SZ Prefix for Automotive and Other Applications Requiring Unique Site and Control Change Requirements; AECQ101 Qualified and PPAP Capable; SOT-23 pacakage allows two separate bi-directional configurations; 350 W Peak Power Dissipation per line (8x20 us waveform); Low reverse leakage current (< 100 nA); IEC-61000-4-2: Level 4 Compatible.; IEC-61000-4-4: 5/50 ns 50 A Max.; IEC-61000-4-5: 8.0 A (8x20 us); ISO 76372 Pulse 2a: Repetitive Load Switch Disconnect, 9.5 A;"
-			(at 100.33 152.4 0)
+			(at 106.68 127.635 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3296,7 +3971,7 @@
 			)
 		)
 		(property "Height" "1.11"
-			(at 495.25 130.81 0)
+			(at -288.24 149.225 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3308,7 +3983,7 @@
 			)
 		)
 		(property "Mouser Part Number" "863-NUP2105LT1G"
-			(at 595.25 130.81 0)
+			(at -388.24 149.225 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3320,7 +3995,7 @@
 			)
 		)
 		(property "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/onsemi/NUP2105LT1G?qs=ZXBb0xZ9WeDHmiHN%252BYKtYA%3D%3D"
-			(at 695.25 130.81 0)
+			(at -488.24 149.225 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3332,7 +4007,7 @@
 			)
 		)
 		(property "Manufacturer_Name" "onsemi"
-			(at 795.25 130.81 0)
+			(at -588.24 149.225 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3344,7 +4019,7 @@
 			)
 		)
 		(property "Manufacturer_Part_Number" "NUP2105LT1G"
-			(at 895.25 130.81 0)
+			(at -688.24 149.225 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3368,6 +4043,84 @@
 			(project "side-board"
 				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
 					(reference "IC103")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 135.89 154.94 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "7839b317-71ce-429d-ae2b-d2148a2a3beb")
+		(property "Reference" "#PWR0115"
+			(at 135.89 161.29 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 135.89 159.385 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 135.89 154.94 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 135.89 154.94 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 135.89 154.94 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "3e1b1777-6b33-4640-b5b7-c5f1f2fe2be1")
+		)
+		(instances
+			(project "side-board"
+				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
+					(reference "#PWR0115")
 					(unit 1)
 				)
 			)
@@ -3700,19 +4453,20 @@
 		)
 	)
 	(symbol
-		(lib_id "Jumper:SolderJumper_2_Open")
-		(at 206.375 27.305 0)
+		(lib_id "power:GND")
+		(at 78.74 154.94 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
-		(in_bom no)
+		(in_bom yes)
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "b08f7e59-8743-4df0-b051-2576c51994a5")
-		(property "Reference" "JP107"
-			(at 206.375 20.955 0)
+		(uuid "a6052609-3195-47dd-8682-7ebf071ed7de")
+		(property "Reference" "#PWR0114"
+			(at 78.74 161.29 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -3721,8 +4475,8 @@
 				)
 			)
 		)
-		(property "Value" "Jumper_Open"
-			(at 206.375 23.495 0)
+		(property "Value" "GND"
+			(at 78.74 159.385 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -3731,8 +4485,8 @@
 				)
 			)
 		)
-		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Open_Pad1.0x1.5mm"
-			(at 206.375 27.305 0)
+		(property "Footprint" ""
+			(at 78.74 154.94 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3743,7 +4497,84 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 206.375 34.925 0)
+			(at 78.74 154.94 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 78.74 154.94 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "a710cc3e-713b-4b1e-9b81-bc5a34194a7a")
+		)
+		(instances
+			(project "side-board"
+				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
+					(reference "#PWR0114")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Jumper:SolderJumper_2_Open")
+		(at 220.345 31.75 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "b08f7e59-8743-4df0-b051-2576c51994a5")
+		(property "Reference" "JP107"
+			(at 220.345 25.4 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Jumper_Open"
+			(at 220.345 27.94 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Open_Pad1.0x1.5mm"
+			(at 220.345 31.75 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 220.345 39.37 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3754,7 +4585,7 @@
 			)
 		)
 		(property "Description" "Solder Jumper, 2-pole, open"
-			(at 206.375 32.385 0)
+			(at 220.345 36.83 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3854,6 +4685,241 @@
 			(project "side-board"
 				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
 					(reference "JP105")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 154.94 83.82 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "b362d928-5277-4549-a8a2-538104da3bf4")
+		(property "Reference" "#PWR0112"
+			(at 154.94 87.63 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 154.94 78.74 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 154.94 83.82 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 154.94 83.82 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
+			(at 154.94 83.82 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "14a10fd8-62a0-4f85-b57f-49784243e958")
+		)
+		(instances
+			(project "side-board"
+				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
+					(reference "#PWR0112")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 59.69 88.265 270)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "b9d1b5ae-0678-486d-b28b-71db991352b0")
+		(property "Reference" "#PWR0111"
+			(at 53.34 88.265 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 56.515 88.2649 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" ""
+			(at 59.69 88.265 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 59.69 88.265 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 59.69 88.265 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "b18c0362-192f-43b7-9d36-20f1dbbdd5e5")
+		)
+		(instances
+			(project "side-board"
+				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
+					(reference "#PWR0111")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 205.74 56.515 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "ba2bd0a9-390e-4728-a7e8-46a87ac39da4")
+		(property "Reference" "#PWR0108"
+			(at 205.74 60.325 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 205.74 51.435 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 205.74 56.515 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 205.74 56.515 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
+			(at 205.74 56.515 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "97eb6ac3-69b9-4b2d-917f-6c431ac29cbc")
+		)
+		(instances
+			(project "side-board"
+				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
+					(reference "#PWR0108")
 					(unit 1)
 				)
 			)
@@ -4177,7 +5243,7 @@
 	)
 	(symbol
 		(lib_id "side-board:NUP2105LT1G")
-		(at 73.66 151.765 90)
+		(at 78.74 127.635 270)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -4188,29 +5254,29 @@
 		(fields_autoplaced yes)
 		(uuid "d679d69b-cfc3-4621-87af-d6e75a32d506")
 		(property "Reference" "IC102"
-			(at 80.01 137.7949 90)
+			(at 82.55 139.0649 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify right)
+				(justify left)
 			)
 		)
 		(property "Value" "NUP2105LT1G"
-			(at 80.01 140.3349 90)
+			(at 82.55 141.6049 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify right)
+				(justify left)
 			)
 		)
 		(property "Footprint" "side-board:SOT96P237X111-3N"
-			(at 168.58 130.175 0)
+			(at -16.18 149.225 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4222,7 +5288,7 @@
 			)
 		)
 		(property "Datasheet" "https://www.onsemi.com/pub/Collateral/NUP2105L-D.PDF"
-			(at 268.58 130.175 0)
+			(at -116.18 149.225 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4234,7 +5300,7 @@
 			)
 		)
 		(property "Description" "Low Capacitance High-Speed CAN Data Rates; SZ Prefix for Automotive and Other Applications Requiring Unique Site and Control Change Requirements; AECQ101 Qualified and PPAP Capable; SOT-23 pacakage allows two separate bi-directional configurations; 350 W Peak Power Dissipation per line (8x20 us waveform); Low reverse leakage current (< 100 nA); IEC-61000-4-2: Level 4 Compatible.; IEC-61000-4-4: 5/50 ns 50 A Max.; IEC-61000-4-5: 8.0 A (8x20 us); ISO 76372 Pulse 2a: Repetitive Load Switch Disconnect, 9.5 A;"
-			(at 73.66 151.765 0)
+			(at 78.74 127.635 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4245,7 +5311,7 @@
 			)
 		)
 		(property "Height" "1.11"
-			(at 468.58 130.175 0)
+			(at -316.18 149.225 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4257,7 +5323,7 @@
 			)
 		)
 		(property "Mouser Part Number" "863-NUP2105LT1G"
-			(at 568.58 130.175 0)
+			(at -416.18 149.225 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4269,7 +5335,7 @@
 			)
 		)
 		(property "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/onsemi/NUP2105LT1G?qs=ZXBb0xZ9WeDHmiHN%252BYKtYA%3D%3D"
-			(at 668.58 130.175 0)
+			(at -516.18 149.225 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4281,7 +5347,7 @@
 			)
 		)
 		(property "Manufacturer_Name" "onsemi"
-			(at 768.58 130.175 0)
+			(at -616.18 149.225 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4293,7 +5359,7 @@
 			)
 		)
 		(property "Manufacturer_Part_Number" "NUP2105LT1G"
-			(at 868.58 130.175 0)
+			(at -716.18 149.225 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4317,6 +5383,86 @@
 			(project "side-board"
 				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
 					(reference "IC102")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Jumper:SolderJumper_2_Open")
+		(at 67.31 88.265 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "d6b0c7ad-2651-4cff-90e2-3d34f1f00c7b")
+		(property "Reference" "JP108"
+			(at 67.31 81.915 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Jumper_Open"
+			(at 67.31 84.455 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Open_Pad1.0x1.5mm"
+			(at 67.31 88.265 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 67.31 95.885 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Solder Jumper, 2-pole, open"
+			(at 67.31 93.345 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "e5d93efa-d30b-40e5-8aca-0e454dc48be1")
+		)
+		(pin "2"
+			(uuid "15aaf4df-4311-4677-aa61-f63ca8df3fb5")
+		)
+		(instances
+			(project "side-board"
+				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
+					(reference "JP108")
 					(unit 1)
 				)
 			)
@@ -4402,7 +5548,7 @@
 	)
 	(symbol
 		(lib_id "Device:D_TVS")
-		(at 180.34 142.875 0)
+		(at 135.89 149.86 90)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -4413,27 +5559,29 @@
 		(fields_autoplaced yes)
 		(uuid "fe54c747-390c-4d9f-a06b-e581efad44d3")
 		(property "Reference" "D101"
-			(at 180.34 137.16 0)
+			(at 139.065 148.5899 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify right)
 			)
 		)
 		(property "Value" "SMBJ18A/TR13"
-			(at 180.34 139.7 0)
+			(at 139.065 151.1299 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify right)
 			)
 		)
 		(property "Footprint" "Diode_SMD:D_SMB"
-			(at 180.34 142.875 0)
+			(at 135.89 149.86 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4444,7 +5592,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 180.34 142.875 0)
+			(at 135.89 149.86 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4455,7 +5603,7 @@
 			)
 		)
 		(property "Description" "Bidirectional transient-voltage-suppression diode"
-			(at 180.34 142.875 0)
+			(at 135.89 149.86 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4466,7 +5614,7 @@
 			)
 		)
 		(property "MFR" "SMBJ18A/TR13"
-			(at 180.34 142.875 0)
+			(at 135.89 149.86 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
