@@ -77,8 +77,8 @@ class Yolo:
         return boxes_img, scores, classes, masks
 
 
-def draw(img, boxes, scores, classes, masks, names):
-    """Boxes, labels and a translucent mask per object, for the debug stream."""
+def draw(img, boxes, scores, classes, masks, names, dists=None):
+    """Boxes, labels (with the ToF distance when there is one) and a translucent mask per object."""
     out = img.copy()
     rng = np.random.default_rng(7)
     colors = rng.integers(60, 255, (len(names), 3))
@@ -87,10 +87,11 @@ def draw(img, boxes, scores, classes, masks, names):
         for m, c in zip(masks, classes):
             overlay[m] = colors[c]
         out = cv2.addWeighted(overlay, 0.4, out, 0.6, 0)
-    for (x1, y1, x2, y2), s, c in zip(boxes.astype(int), scores, classes):
+    dists = dists or [None] * len(boxes)
+    for (x1, y1, x2, y2), s, c, d in zip(boxes.astype(int), scores, classes, dists):
         color = tuple(int(v) for v in colors[c])
         cv2.rectangle(out, (x1, y1), (x2, y2), color, 2)
-        label = f'{names[int(c)]} {s:.2f}'
+        label = f'{names[int(c)]} {s:.2f}' + (f' {d:.1f} m' if d is not None else '')
         (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
         cv2.rectangle(out, (x1, y1 - th - 4), (x1 + tw + 2, y1), color, -1)
         cv2.putText(out, label, (x1 + 1, y1 - 3), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)

@@ -2,6 +2,7 @@
 # Host setup for the robot (CM5) and the Pi 5 test box, Pi OS. Idempotent: rerun after changes.
 #   sudo software/host/setup.sh                  # can0 (real bus), stack + vision
 #   sudo CAN=vcan0 PROFILES=sim,vision software/host/setup.sh   # test box: simulated legs
+#   GNSS=/dev/ttyAMA0 (default; "" = none), NAV=true for the EKFs and the waypoint follower
 # Installs: Docker (with a sane open-files limit), CAN bring-up, the camera service, the
 # stack as a systemd service, and the hardware watchdog. Images are built separately.
 set -euo pipefail
@@ -14,6 +15,8 @@ PROFILES=${PROFILES:-vision}
 CAMERA_WIDTH=${CAMERA_WIDTH:-1280}
 CAMERA_HEIGHT=${CAMERA_HEIGHT:-960}
 USER_NAME=${SUDO_USER:-pi}
+GNSS=${GNSS-/dev/ttyAMA0}
+NAV=${NAV:-false}
 
 command -v docker >/dev/null || apt-get install -y docker.io docker-compose
 usermod -aG docker "$USER_NAME"
@@ -21,20 +24,38 @@ usermod -aG docker "$USER_NAME"
 # Docker's default open-files limit (~2^30) makes LTTng, loaded by every ROS 2 process,
 # allocate 128 MB each. Fix it for every container, not just the ones in compose.yaml.
 mkdir -p /etc/docker
-cat > /etc/docker/daemon.json <<'J'
-{
+DAEMON='{
   "default-ulimits": { "nofile": { "Name": "nofile", "Soft": 65536, "Hard": 65536 } },
   "log-driver": "journald"
-}
-J
-systemctl restart docker
+}'
+# only when it changes: a restart under running containers can race the next compose up
+if [[ "$(cat /etc/docker/daemon.json 2>/dev/null)" != "$DAEMON" ]]; then
+    echo "$DAEMON" > /etc/docker/daemon.json
+    systemctl restart docker
+fi
 
 cat > /etc/vector.env <<E
 CAN_INTERFACE=$CAN
 COMPOSE_PROFILES=$PROFILES
 CAMERA_WIDTH=$CAMERA_WIDTH
 CAMERA_HEIGHT=$CAMERA_HEIGHT
+GNSS_PORT=$GNSS
+NAV=$NAV
 E
+
+# UART0 on GPIO14 (TX) / 15 (RX) for the GNSS receiver, /dev/ttyAMA0 after a reboot. The
+# Pi 5 / CM5 console lives on its own debug UART, so nothing else is on these pins.
+BOOT_CFG=/boot/firmware/config.txt
+if [[ -n $GNSS && -f $BOOT_CFG ]] && ! grep -q '^dtparam=uart0=on' "$BOOT_CFG"; then
+    echo 'dtparam=uart0=on' >> "$BOOT_CFG"
+    echo "UART0 enabled in $BOOT_CFG: reboot for /dev/ttyAMA0"
+fi
+# I2C1 (GPIO2/3) for the nose board (VL53L8CX, compass) at 400 kHz, as /dev/i2c-1
+if [[ -f $BOOT_CFG ]] && ! grep -q '^dtparam=i2c_arm=on' "$BOOT_CFG"; then
+    echo 'dtparam=i2c_arm=on,i2c_arm_baudrate=400000' >> "$BOOT_CFG"
+    echo "I2C enabled in $BOOT_CFG: reboot for /dev/i2c-1"
+fi
+echo i2c-dev > /etc/modules-load.d/i2c-dev.conf
 
 cat > /usr/local/bin/vector-can-up <<'S'
 #!/bin/bash
@@ -107,4 +128,4 @@ W
 systemctl daemon-reload
 systemctl daemon-reexec
 systemctl enable --now vector-can.service vector-camera.service vector-stack.service
-echo "done: CAN=$CAN, profiles=$PROFILES; status: systemctl status vector-stack"
+echo "done: CAN=$CAN, profiles=$PROFILES, GNSS=${GNSS:-none}, nav=$NAV; status: systemctl status vector-stack"

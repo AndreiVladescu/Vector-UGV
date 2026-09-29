@@ -21,8 +21,15 @@ services:
       memlock: -1
     environment:
       - CAN_INTERFACE=${CAN_INTERFACE:-can0}
+      - GNSS_PORT=${GNSS_PORT:-}
+      - NAV=${NAV:-false}
+    # the GNSS UART (ttyAMA*, major 204) and the nose board's I2C (i2c-*, 89), without
+    # failing when they aren't there
+    volumes: [/dev:/dev]
+    device_cgroup_rules: ['c 204:* rmw', 'c 89:* rmw']
     command: >
-      bash -c "ros2 launch vector_bringup robot.launch.py hardware:=can can_interface:=$${CAN_INTERFACE} rviz:=false"
+      bash -c "ros2 launch vector_bringup robot.launch.py hardware:=can can_interface:=$${CAN_INTERFACE}
+      $${GNSS_PORT:+gnss_port:=$${GNSS_PORT}} nav:=$${NAV} rviz:=false"
     restart: unless-stopped
 
   foxglove:

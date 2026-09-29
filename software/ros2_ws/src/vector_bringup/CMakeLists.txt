@@ -16,6 +16,7 @@ if(BUILD_TESTING)
   add_launch_test(test/test_sim_gazebo.py TIMEOUT 300 LABELS gazebo)
   add_launch_test(test/test_gazebo_slope.py TIMEOUT 300 LABELS gazebo)
   add_launch_test(test/test_gazebo_rough.py TIMEOUT 300 LABELS gazebo)
+  add_launch_test(test/test_gazebo_gnss.py TIMEOUT 400 LABELS gazebo)
 endif()
 
 ament_package()

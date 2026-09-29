@@ -33,7 +33,7 @@ def test_follower_goes_through_the_points():
     f.start([(5, 0), (5, 5)])
     x = y = yaw = 0.0
     for _ in range(3000):  # 0.1 s steps
-        vx, wz, status = f.update(x, y, yaw)
+        vx, _, wz, status = f.update(x, y, yaw)
         if not f.active:
             break
         yaw += wz * 0.1
@@ -46,3 +46,21 @@ def test_follower_goes_through_the_points():
 def test_ll_to_local():
     e, n = ll_to_local(44.4268 + 1e-4, 26.1025 + 1e-4, 44.4268, 26.1025)
     assert abs(n - 11.12) < 0.05 and abs(e - 7.94) < 0.05
+
+
+def test_stops_then_steps_around():
+    f = Follower(Limits())
+    f.start([(10, 0)])
+    vx, vy, wz, status = f.update(0, 0, 0, t=0.0, free=0.4, side=-1)
+    assert vx == vy == 0 and 'blocked' in status
+    vx, vy, _, status = f.update(0, 0, 0, t=2.5, free=0.4, side=-1)
+    assert vx == 0 and vy < 0 and 'right' in status
+    vx, vy, _, _ = f.update(0, 0, 0, t=3.0, free=2.0, side=-1)
+    assert vx > 0 and vy == 0
+
+
+def test_turning_in_place_ignores_what_is_ahead():
+    f = Follower(Limits())
+    f.start([(-10, 0)])
+    vx, vy, wz, _ = f.update(0, 0, 0, t=0.0, free=0.2)
+    assert vx == 0 and vy == 0 and wz != 0

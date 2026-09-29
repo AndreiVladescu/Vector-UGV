@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>vector_tof</name>
+  <version>0.1.0</version>
+  <description>VL53L8CX front ToF on the nose board, over Linux I2C with ST's ULD</description>
+  <maintainer email="avladescu2000@gmail.com">Andrei Vladescu</maintainer>
+  <license>TBD</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

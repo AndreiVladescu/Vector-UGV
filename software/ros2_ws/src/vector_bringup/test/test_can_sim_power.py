@@ -94,8 +94,7 @@ class TestCanSimPower(unittest.TestCase):
         self.assertTrue(self.spin_until(lambda: self.battery.capacity > 0, 5))
         self.assertAlmostEqual(self.battery.capacity, 8.0)
         board = self.diag['power: board']
-        # a fresh flash has no config saved: a warning, nothing worse
-        self.assertEqual(board.level, DiagnosticStatus.WARN, board.message)
+        self.assertEqual(board.level, DiagnosticStatus.OK, board.message)
         self.assertTrue(board.message.startswith('on'), board.message)
         self.assertEqual(self.diag['power: battery'].level, DiagnosticStatus.OK)
         self.assertEqual(self.diag['power: charger'].message, 'not plugged in')
@@ -123,7 +122,7 @@ class TestCanSimPower(unittest.TestCase):
         self.assertEqual(self.sentinel_calls, 0)
         write_key(38, 80, 201)  # SoC 8 %
         self.assertTrue(self.spin_until(lambda: self.sentinel_calls == 1, 3))
-        self.assertEqual(self.diag['power: battery'].level, DiagnosticStatus.WARN)
+        self.assertTrue(self.spin_until(lambda: self.diag['power: battery'].level == DiagnosticStatus.WARN, 2))
 
         res = self.call(Trigger, '/power/shutdown', Trigger.Request())
         self.assertTrue(res.success, res.message)

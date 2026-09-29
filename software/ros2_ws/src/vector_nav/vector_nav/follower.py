@@ -11,6 +11,9 @@ class Limits:
     k_w: float = 1.0            # 1/s
     k_v: float = 0.2            # 1/s, slows down over the last half metre
     arrive: float = 1.5         # m, GNSS is good to about that
+    stop: float = 0.6           # m of free space ahead below which it stops
+    sidestep_after: float = 2.0  # s blocked before it steps sideways (a hexapod can)
+    sidestep_v: float = 0.05    # m/s
 
 
 def wrap(a):
@@ -44,6 +47,7 @@ class Follower:
         self.lim = lim or Limits()
         self.points = []
         self.index = 0
+        self.blocked_since = None
 
     def start(self, points):
         self.points = list(points)
@@ -57,12 +61,23 @@ class Follower:
     def active(self):
         return self.index < len(self.points)
 
-    def update(self, x, y, yaw):
-        """(vx, wz, status); zeros once the last point is reached."""
+    def update(self, x, y, yaw, t=0.0, free=math.inf, side=1):
+        """(vx, vy, wz, status); zeros once the last point is reached. free is the room
+        straight ahead in metres, side the side with more room (+1 left, -1 right): with
+        something in the way it stops, and after a while steps sideways until it's clear."""
         while self.active:
             tx, ty = self.points[self.index]
             vx, wz, dist = steer(x, y, yaw, tx, ty, self.lim)
-            if dist > self.lim.arrive:
-                return vx, wz, f'waypoint {self.index + 1}/{len(self.points)}, {dist:.1f} m'
-            self.index += 1
-        return 0.0, 0.0, 'done' if self.points else 'idle'
+            if dist <= self.lim.arrive:
+                self.index += 1
+                continue
+            where = f'waypoint {self.index + 1}/{len(self.points)}, {dist:.1f} m'
+            if vx > 0 and free < self.lim.stop:
+                if self.blocked_since is None:
+                    self.blocked_since = t
+                if t - self.blocked_since < self.lim.sidestep_after:
+                    return 0.0, 0.0, 0.0, f'{where}, blocked at {free:.1f} m'
+                return 0.0, side * self.lim.sidestep_v, 0.0, f'{where}, stepping {"left" if side > 0 else "right"}'
+            self.blocked_since = None
+            return vx, 0.0, wz, where
+        return 0.0, 0.0, 0.0, 'done' if self.points else 'idle'

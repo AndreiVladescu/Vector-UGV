@@ -54,3 +54,13 @@ waypoint_follower:
     max_v: 0.10
     max_w: 0.4
     arrive_m: 1.5
+
+obstacles:
+  ros__parameters:
+    camera_frame: nose_tof   # the camera sits beside the ToF on the nose board
+    cam_hfov_deg: 53.5       # OV5647 at 4:3
+    cam_vfov_deg: 41.4
+    ground_z: 0.08           # base_link above the ground (legs.yaml stand height)
+    min_height: 0.05
+    keep_s: 3.0
+    half_width: 0.25         # the corridor it needs, a bit wider than the body

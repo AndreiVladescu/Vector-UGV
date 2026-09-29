@@ -3,6 +3,8 @@
   ros2 launch vector_bringup sim_gazebo.launch.py            # with the Gazebo window
   ros2 launch vector_bringup sim_gazebo.launch.py gui:=false # headless
   world:=flat|slope|rough, level:=true for IMU leveling, touchdown:=true for contact-aware steps
+  nav:=true: simulated GNSS, the EKFs and the waypoint follower (nav.launch.py); the ground
+  truth then goes to /ground_truth_tf instead of /tf
 """
 import os
 import subprocess
@@ -10,8 +12,9 @@ import sys
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import (DeclareLaunchArgument, EmitEvent, ExecuteProcess, LogInfo,
+from launch.actions import (DeclareLaunchArgument, EmitEvent, ExecuteProcess, IncludeLaunchDescription, LogInfo,
                             OpaqueFunction, RegisterEventHandler)
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.events import Shutdown
@@ -53,6 +56,22 @@ def gazebo(context):
     return actions
 
 
+def bridge(context):
+    nav = LaunchConfiguration('nav').perform(context) == 'true'
+    return [Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[
+            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+            '/model/vector/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+            '/model/vector/pose@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
+            '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
+            '/gnss/fix@sensor_msgs/msg/NavSatFix[gz.msgs.NavSat',
+        ],
+        remappings=[('/model/vector/pose', '/ground_truth_tf' if nav else '/tf'),
+                    ('/model/vector/odometry', '/ground_truth')])]
+
+
 def generate_launch_description():
     desc = get_package_share_directory('vector_description')
     bringup = get_package_share_directory('vector_bringup')
@@ -72,6 +91,7 @@ def generate_launch_description():
         DeclareLaunchArgument('world', default_value='flat'),
         DeclareLaunchArgument('level', default_value='false'),
         DeclareLaunchArgument('touchdown', default_value='false'),
+        DeclareLaunchArgument('nav', default_value='false'),
 
         OpaqueFunction(function=gazebo),
 
@@ -87,17 +107,12 @@ def generate_launch_description():
             arguments=['-topic', 'robot_description', '-name', 'vector',
                        '-z', str(legs['body_height'] + 0.01)]),
 
-        Node(
-            package='ros_gz_bridge',
-            executable='parameter_bridge',
-            arguments=[
-                '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-                '/model/vector/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry',
-                '/model/vector/pose@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
-                '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
-            ],
-            remappings=[('/model/vector/pose', '/tf'),
-                        ('/model/vector/odometry', '/ground_truth')]),
+        OpaqueFunction(function=bridge),
+
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(os.path.join(bringup, 'launch', 'nav.launch.py')),
+            launch_arguments={'use_sim_time': 'true', 'declination': '0.0'}.items(),
+            condition=IfCondition(LaunchConfiguration('nav'))),
 
         Node(
             package='controller_manager',
@@ -109,7 +124,7 @@ def generate_launch_description():
             package='vector_gait',
             executable='gait_node',
             parameters=[os.path.join(gait, 'config', 'gait.yaml'), legs, sim_time,
-                        {'publish_odom_tf': False,
+                        {'publish_odom_tf': False,  # the ground truth, or the EKF with nav
                          'level': ParameterValue(LaunchConfiguration('level'), value_type=bool),
                          'touchdown': ParameterValue(LaunchConfiguration('touchdown'), value_type=bool)}]),
 

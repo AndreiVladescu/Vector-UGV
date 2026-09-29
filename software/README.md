@@ -19,8 +19,8 @@ sudo dpkg -i /tmp/ros2-apt-source.deb
 sudo apt update
 sudo apt install ros-jazzy-desktop ros-jazzy-ros2-control ros-jazzy-ros2-controllers \
   ros-jazzy-xacro ros-jazzy-teleop-twist-keyboard ros-jazzy-plotjuggler-ros \
-  ros-jazzy-ros-gz ros-jazzy-gz-ros2-control python3-colcon-common-extensions \
-  python3-can can-utils
+  ros-jazzy-ros-gz ros-jazzy-gz-ros2-control ros-jazzy-robot-localization \
+  ros-jazzy-nmea-navsat-driver python3-colcon-common-extensions python3-can can-utils
 pip install --user --break-system-packages cantools
 ```
 
@@ -120,6 +120,39 @@ ros2 topic echo /legs/L1/tof          # sensor_msgs/Range in frame L1_tof (+inf:
 
 Fault changes also go to the log as they happen. The `<leg>_tof` frames sit on the coxa links at a placeholder pose (`tof` in `legs.yaml`) until the sensor bracket exists.
 
+## Power board
+
+`sim_power` runs the power board firmware (`firmware/power-node`) against models of the BQ76942 and BQ25798 and a 4S pack that drains with what is switched on. `power_monitor` (started with `hardware:=can`) turns its frames into ROS:
+
+```sh
+ros2 run vector_hw sim_power vcan0 --soc 40          # ends when the board switches itself off
+ros2 topic echo /battery                             # BatteryState at 10 Hz, current negative while discharging
+ros2 service call /power/legs std_srvs/srv/SetBool "{data: false}"   # both sides off
+ros2 service call /power/shutdown std_srvs/srv/Trigger              # the board asks the CM5 to halt
+ros2 run vector_hw leg_config.py --channel vcan0 power              # state, cells, charger, settings
+ros2 run vector_hw leg_config.py --channel vcan0 power set charge_ma 2500 --save
+```
+
+`power_monitor` also puts battery, board and charger entries in `/diagnostics` and a latched `power/estop`. When the board starts a shutdown, or the charge falls under `sentinel_soc` (10 %) while discharging, it calls `gait_node/sentinel` so the robot sits down before the power goes. `kill -USR1` / `-USR2` on `sim_power` press the power button and plug / unplug the charger.
+
+## GNSS and waypoints
+
+Position is GNSS first: `robot_localization` runs two EKFs (leg odometry `odom/legs` from `gait_node` plus the IMU for `odom -> base_link`; the same plus GNSS through `navsat_transform` for `map -> odom`), and `waypoints.py` walks GPS points. Config in `vector_nav/config/localization.yaml`.
+
+```sh
+ros2 launch vector_bringup robot.launch.py hardware:=can gnss_port:=/dev/ttyAMA0 nav:=true
+ros2 launch vector_bringup sim_gazebo.launch.py nav:=true                 # simulated GNSS, 0.5 m noise
+ros2 run vector_nav waypoints.py send 44.42690,26.10280 44.42700,26.10260
+ros2 topic echo /mission/status
+ros2 run vector_nav waypoints.py cancel
+```
+
+The receiver is any NMEA module on UART0 (GPIO14 TX, GPIO15 RX, 3.3 V), 115200 baud (`gnss_baud`); `setup.sh` enables the UART and passes `/dev/ttyAMA0` into the container (`GNSS=` and `NAV=` in `/etc/vector.env`). A mission is refused until there is a fix, and the robot stops while the fix or the filtered position is stale. It only sends `cmd_vel` while a mission runs, so teleop still works otherwise; the Gazebo world's origin is 44.4268 N, 26.1025 E.
+
+`obstacles.py` (also started by `nav.launch.py`) keeps what sticks out of the ground for 3 s in `odom`: where YOLO's objects meet the ground (the lowest mask pixel per column, projected from the camera pose on flat ground), the nose ToF zones and the six leg ToF rays more than 5 cm above the ground. It publishes `obstacles/grid` (OccupancyGrid, for Foxglove) and `obstacles/clearance` (free metres straight ahead, and the side with more room). The follower stops with less than 0.6 m free, and after 2 s steps sideways around it; without obstacle data it walks on GNSS alone.
+
+`navsat_transform` needs an absolute heading from the IMU (0 = east). Gazebo's IMU has one; on the robot it has to come from the compass on the nose board (MMC5983MA), so `nav:=true` only makes sense on the robot once that exists. Until then a UART module on the Pi shows `/gnss/fix` and `/gnss/vel` on their own.
+
 ## On the robot (Docker)
 
 The robot runs the same packages in one image (no Gazebo or rviz), built natively on the Pi / CM5 in about 2.5 minutes:
@@ -171,6 +204,8 @@ On the Pi 5 2 GB, CPU only, with the control stack running alongside (SYNC never
 | yolo26n, 480 px | 7.2 | 167 ms | 162 MB |
 
 The camera captures at 1280x960 (`CAMERA_WIDTH`/`CAMERA_HEIGHT` in `/etc/vector.env`); the model gets a 320 px copy and the masks and boxes are scaled back and drawn on the full frame, so the stream stays sharp. That costs about 1 fps over a 640x480 capture (9 vs 10 fps with the stream on), and the 1280x960 encode takes 16 % of one core.
+
+With the nose board fitted, `tof_front` (`vector_tof`, started with `hardware:=can`) runs the VL53L8CX through ST's ULD on `/dev/i2c-1`: `nose/tof/points` (a point per zone) and `nose/tof/depth` (8x8 metres, NaN = nothing). `yolo_node` takes the zones behind each box, uses a low percentile so the object wins over the background, prints the distance on the stream and publishes `~/detections_3d`. The ULD sources, with the sensor's firmware, are downloaded at build time from ST's X-CUBE-TOF1 (BSD-3-Clause), pinned by hash. The zone grid's orientation (`flip_x`, `flip_y`) needs a check on the bench: a hand in the top left corner should show in row 0, column 0 of the depth image.
 
 Ultralytics itself runs the same ONNX model at half the speed and needs 430 MB, most of it PyTorch. The YOLO26 weights are AGPL-3.0 (Ultralytics), fine for an open project.
 

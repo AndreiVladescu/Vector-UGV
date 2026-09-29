@@ -6,10 +6,12 @@
   waypoints.py cancel
 
 The follower takes a geographic_msgs/GeoPath on `mission`, turns each point into the map
-frame with navsat_transform's fromLL service, and drives cmd_vel from odometry/global
+frame with navsat_transform's fromLL service (only once there is a GNSS fix), and drives cmd_vel from odometry/global
 until each point is within arrive_m. It only publishes cmd_vel while a mission runs, so
 teleop works the rest of the time. It stops and waits when the position is stale (no
-filtered odometry for 1 s, no GNSS fix for 5 s). Progress goes to mission/status.
+filtered odometry for 1 s, no GNSS fix for 5 s). With obstacles/clearance (obstacles.py) it
+stops for something in the way and after 2 s steps sideways around it. Progress goes to
+mission/status.
 """
 import math
 import sys
@@ -23,7 +25,7 @@ from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile
 from robot_localization.srv import FromLL
 from sensor_msgs.msg import NavSatFix, NavSatStatus
-from std_msgs.msg import String
+from std_msgs.msg import Float32MultiArray, String
 from std_srvs.srv import Trigger
 
 from vector_nav.follower import Follower, Limits
@@ -49,6 +51,8 @@ class WaypointFollower(Node):
         self.create_subscription(Odometry, 'odometry/global', self.on_odom, 10)
         self.create_subscription(NavSatFix, 'gnss/fix', self.on_fix, 10)
         self.create_subscription(GeoPath, 'mission', self.on_mission, 10)
+        self.free, self.side, self.free_t = math.inf, 1, 0.0
+        self.create_subscription(Float32MultiArray, 'obstacles/clearance', self.on_clearance, 10)
         self.create_service(Trigger, 'mission/cancel', self.on_cancel)
         self.create_timer(1.0 / self.declare_parameter('rate', 10.0).value, self.tick)
         self.set_status('idle')
@@ -65,6 +69,10 @@ class WaypointFollower(Node):
         self.pose = (msg.pose.pose.position.x, msg.pose.pose.position.y, yaw)
         self.pose_t = time.monotonic()
 
+    def on_clearance(self, msg):
+        if len(msg.data) >= 2:
+            self.free, self.side, self.free_t = msg.data[0], 1 if msg.data[1] >= 0 else -1, time.monotonic()
+
     def on_fix(self, msg):
         if msg.status.status >= NavSatStatus.STATUS_FIX:
             self.fix_t = time.monotonic()
@@ -72,6 +80,9 @@ class WaypointFollower(Node):
     def on_mission(self, msg):
         if not msg.poses:
             return self.stop('idle')
+        if time.monotonic() - self.fix_t > 5.0:
+            # before the first fix navsat_transform has no datum and fromLL answers nonsense
+            return self.set_status('rejected: no GNSS fix yet')
         if not self.from_ll.wait_for_service(timeout_sec=1.0):
             return self.set_status('rejected: no fromLL service (navsat_transform not running)')
         self.set_status(f'converting {len(msg.poses)} waypoints')
@@ -113,9 +124,11 @@ class WaypointFollower(Node):
                 self.waiting = True
             return self.set_status('waiting for position')
         self.waiting = False
-        vx, wz, status = self.follower.update(*self.pose)
+        # no obstacle data for a second (no camera, no ToF): walk on what GNSS says
+        free = self.free if now - self.free_t < 1.0 else math.inf
+        vx, vy, wz, status = self.follower.update(*self.pose, t=now, free=free, side=self.side)
         t = Twist()
-        t.linear.x, t.angular.z = vx, wz
+        t.linear.x, t.linear.y, t.angular.z = vx, vy, wz
         self.cmd.publish(t)
         self.set_status(status)
 

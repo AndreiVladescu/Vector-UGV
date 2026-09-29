@@ -23,5 +23,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends ros-jazzy-visio
 RUN python3 -m venv --system-site-packages /opt/venv \
     && /opt/venv/bin/pip install --no-cache-dir "numpy<2" onnxruntime "opencv-python-headless<4.11"
 ENV PATH=/opt/venv/bin:$PATH
-COPY software/vision/yolo_node.py software/vision/yolo_onnx.py /ws/vision/
+COPY software/vision/yolo_node.py software/vision/yolo_onnx.py software/vision/fusion.py /ws/vision/
 WORKDIR /ws/vision
