@@ -25,6 +25,8 @@ Both ends of a cable use the same footprint and pin order.
 | J-ELRS | Carrier → receiver | JST-GH 4-pin | 5 V, GND, TX, RX |
 | J-LIDAR | Carrier → LD19 | JST-GH 4-pin | 5 V, GND, TX, RX |
 | J-GIMBAL (×2) | Carrier → SG90 | 2.54 mm 3-pin | 5 V, GND, PWM |
+| J-NOSE | Carrier → nose board | JST-GH 8-pin | see below |
+| J-CAM | Carrier → nose board camera | Pi camera FFC (22-pin on the carrier) | CSI, camera screwed to the nose board |
 
 ## CAN bus
 
@@ -53,6 +55,21 @@ J-CAN pinout (JST-GH 4-pin):
 | 4 | ESTOP_N | power → CM5 | input, so ROS sees the hardware stop |
 | 5 | 5V_PG | power → CM5 | 5 V rail good, optional |
 | 6 | spare | | |
+
+## J-NOSE pinout
+
+| Pin | Signal | Nose board side |
+|---|---|---|
+| 1 | 3V3 | VL53L8CX AVDD, 1.8 V LDO in, compass |
+| 2 | GND | |
+| 3 | SDA | 3.3 V side of the PCA9306; the compass sits on this side |
+| 4 | SCL | as SDA |
+| 5 | TOF_LPN | CM5 GPIO → BSS138 → LPn (sensor restart) |
+| 6 | TOF_INT | INT → BSS138 → CM5 GPIO |
+| 7 | MAG_INT | compass data ready, optional |
+| 8 | LED | status LED, optional |
+
+Keep the cable under ~30 cm for 1 MHz I2C.
 
 ## J-SERVO pinout
 

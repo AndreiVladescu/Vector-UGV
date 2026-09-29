@@ -30,8 +30,28 @@ services:
     command: ros2 launch foxglove_bridge foxglove_bridge_launch.xml
     restart: unless-stopped
 
+  # RTSP / WebRTC / HLS server: rtsp://<robot>:8554/<path>, http://<robot>:8889/<path> in a browser
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    network_mode: host
+    restart: unless-stopped
+
+  # YOLO on the camera; the camera itself runs on the host (vector-camera.service from
+  # software/host/setup.sh). Inference on a 320 px copy, masks and stream at the full size.
+  vision:
+    <<: *common
+    image: vector-vision
+    profiles: [vision]
+    # ONNX models in the models volume, made once by the export image (software/vision/Dockerfile)
+    command: python3 yolo_node.py --ros-args -p model:=models/${YOLO_MODEL:-yolo26n-seg-320.onnx} -p width:=${CAMERA_WIDTH:-640} -p height:=${CAMERA_HEIGHT:-480} -p stream:=rtsp://127.0.0.1:8554/yolo
+    volumes: [models:/ws/vision/models]
+    restart: unless-stopped
+
   # six simulated legs on vcan0, for testing without hardware: --profile sim
   sim_legs:
     <<: *common
     profiles: [sim]
     command: bash -c "/ws/install/vector_hw/lib/vector_hw/sim_legs vcan0 --calibrated --limits -45.8,45.8,-80.2,80.2,-149,17"
+
+volumes:
+  models:

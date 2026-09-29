@@ -10,13 +10,14 @@ Already on hand: CM5 (Wi-Fi, 8 GB eMMC), Pi 5 + AI HAT+ 2, 18× MG996R, AD9363 S
 
 ## Boards
 
-Three designs, four boards:
+Four designs, five boards:
 
 | Board | Qty | Layers | Main parts |
 |---|---|---|---|
 | Side board | 2 | 4 | 3 leg cells, each with STM32C092, TCAN332DR, TPS56A37 6 V buck |
 | Power & BMS | 1 | 4, 2 oz | BQ76942, BQ25798, 2× LM5069, 5 V / 6 A buck, STM32C092 |
-| CM5 carrier | 1 | 4, impedance-controlled | CM5, M.2, EC25-EUX LTE, 2× GNSS, MCP251863, IMU, compass |
+| CM5 carrier | 1 | 4, impedance-controlled | CM5, M.2, EC25-EUX LTE, 2× GNSS, MCP251863, IMU |
+| Nose board | 1 | 2 | VL53L8CX front ToF, MMC5983MA compass, Pi camera mount |
 
 ```
 [120Ω] L3 ─ L2 ─ L1 ── CM5 carrier ── R1 ─ R2 ─ R3 [120Ω]      one CAN bus, 1 Mbit/s
@@ -24,6 +25,7 @@ Three designs, four boards:
                        power board (stub)
 
 power board ──VBAT_L──► side L     ──VBAT_R──► side R     ──5V, VBAT_SYS──► carrier
+carrier ──J-NOSE (I2C, 3V3) + CSI ribbon──► nose board
 ```
 
 ### Side board (×2)
@@ -58,11 +60,11 @@ About 24 MCU pins in total: 3 PWM, 8 ADC, 3 CAN, 1–2 oscillator, 4 ToF, 3 SWD/
 ### CM5 carrier
 
 - **CM5:** CM5 Lite, 2 GB, Wi-Fi, booting from a microSD socket on the carrier (more space than eMMC). 2 GB is enough, measured on a Pi 5 2 GB: the control stack (ros2_control, gait, monitor, foxglove_bridge) in Docker uses 481 MB system-wide, leaving 1.5 GB for camera and inference; H.264 in software costs 20 % of a core at 640×360 / 15 fps.
-- **M.2 M-key 2242 on the single PCIe lane:** for a Hailo accelerator later. Left empty at first, and the software falls back to the CPU.
+- **M.2 M-key 2242 on the single PCIe lane:** kept only as an upgrade path for a Hailo accelerator. Not fitted on the prototype or the CM5 board; vision runs on the CPU.
 - **CAN:** MCP251863 (MCP2518FD plus transceiver in one package), which shows up as `can0` through the mainline `mcp251xfd` driver. The bus passes through the carrier, with no termination on it.
 - **LTE:** Quectel EC25-EUX in an mPCIe socket (USB 2.0 lines only), with a nano-SIM and a 3.8 V / 3 A buck.
 - **GNSS:** u-blox MAX-M10S plus Quectel LC76G, two vendors for real redundancy. Both use active antennas with a bias-tee each, plus a SAW filter, because LTE band 3 uplink sits close to GPS L1.
-- **Compass:** MMC5983MA on the front edge (details below), plus an I2C header for an external one.
+- **Nose board connector (J-NOSE):** 3V3 and I2C for the front sensors, plus the CSI connector for the camera ribbon. An I2C header for an external compass stays as a fallback.
 - **SDR:** RJ45 to the AD9363 over GbE. That gives far more bandwidth than its USB 2.0 port.
 - **IMU:** ICM-42688-P.
 - **Other connectors:**
@@ -78,6 +80,21 @@ About 24 MCU pins in total: 3 PWM, 8 ADC, 3 CAN, 1–2 oscillator, 4 ToF, 3 SWD/
 - **Antennas:** all go to a printed plate on top via U.FL pigtails, with GNSS as far from LTE as possible.
 
 CM5 UARTs are all taken: console, ELRS, GNSS1, GNSS2, lidar.
+
+### Nose board
+
+A small 2-layer board in the nose cone, looking forward through an opening in the shell. It carries the sensors that need to see ahead or stay away from the power wiring:
+
+- **VL53L8CX front ToF** (8×8 zones, up to ~4 m, 1–2 m in direct sun, 65° diagonal FoV), soldered directly: the chip is 35 RON against 150+ for a breakout. It gives measured distance to what the camera sees. The VL53L9CX (54×42 zones over MIPI CSI) was considered: far better data, but no Pi 5 / CM5 driver yet and about 8× the price, so it stays a possible upgrade.
+  - Supplies: AVDD 3.3 V from the carrier (43–50 mA ranging), CORE_1V8 and IOVDD from one 1.8 V LDO (TLV75518P class, ≥ 150 mA). IOVDD can't be 3.3 V.
+  - Level shifting to the CM5's 3.3 V: PCA9306 on SDA/SCL (2.2k to 1.8 V on the sensor side), a BSS138 each on LPn and INT.
+  - Straps for I2C: SPI_I2C_N and NCS 47k to GND, 47k pull-ups on INT, LPn and SYNC, MISO open, RSVD1–3 and the thermal pad to GND.
+  - LPn goes to a CM5 GPIO so the sensor can be restarted. Keep ST's protective film on the lens while soldering; no printed plastic in front of it, only an opening at least as wide as the exclusion cone.
+- **MMC5983MA compass,** moved here from the carrier: the nose is the point furthest from the servo, buck and LTE currents. Same I2C bus (0x30, the ToF is 0x29).
+- **Pi camera mount:** the camera module screws onto the nose board (standard Pi camera hole pattern), next to the ToF with parallel optical axes. That makes the camera–ToF transform fixed by the PCB instead of a printed part, so the ToF zones can be fused with the camera: each YOLO box takes its measured distance from the zones in its direction. The ribbon goes straight to the carrier's CSI connector.
+- A status LED (and room for a small buzzer, a "robot about to move" warning).
+
+The IMU stays on the carrier near the body's centre, where rotation doesn't add acceleration.
 
 **Compass placement.** A wire carrying 10 A makes about 40 µT at 5 cm, which is close to Earth's field here (~48 µT). Fixed iron calibrates out; changing currents don't. So:
 - keep it at least 5 cm from inductors, the LTE module and the fan
@@ -130,19 +147,14 @@ The leg loop runs at 1 kHz: PWM out, ADC in, soft-start, VL53L1X read, watchdog.
 
 **Remote access.** Tailscale on Wi-Fi and LTE. The UI is Foxglove through `foxglove_bridge`. Don't run DDS over LTE; if several hosts ever need ROS traffic, use `rmw_zenoh`.
 
-**Vision.** One GStreamer process splits the camera three ways:
-- inference on the Hailo or the CPU, publishing detections and segmentation into ROS
-- a throttled low-res copy into ROS, for debugging and for rosbag training data
-- H.264 into MediaMTX and WebRTC for the operator
+**Vision.** The camera (CSI) runs on the host and hands raw frames to the vision container. YOLO26n runs on the CPU from an ONNX export with ONNX Runtime (no PyTorch on the robot); measured on a Pi 5: segmentation at 320 px 12 fps, detection at 480 px 7 fps, about 150 MB. It publishes detections and the class mask into ROS, and the annotated video goes to MediaMTX as RTSP and WebRTC for the operator. The camera is for obstacle avoidance; position comes from GNSS.
 
-Only the operator stream stays out of ROS.
-
-**Trail navigation.**
-- A YOLO-seg model marks trail vs not-trail. Fine-tune it on RELLIS-3D, RUGD and my own footage.
-- The mask is projected onto the ground using the camera pose and the IMU tilt, and becomes a costmap layer.
-- YOLO obstacle boxes, the ToF rays and the optional LD19 lidar go into the same costmap.
-- First version: a reactive trail follower. Later: Nav2 with GNSS waypoints, driving the hexapod as a holonomic base through `cmd_vel`.
-- The robot walks at 5–15 cm/s, so 5–10 fps of perception is enough, and even CPU-only YOLO nano at 320 px works.
+**Navigation.** All testing happens outdoors, so GNSS (plus the compass) is the primary sensor, and there's no loop-closing SLAM.
+- Position: leg odometry and the IMU gyro fused with GNSS in `robot_localization` (`navsat_transform` for the GNSS side).
+- Missions: GPS waypoints sent over LTE; a small waypoint follower first, Nav2 only if memory allows.
+- Obstacles: a local costmap around the robot. The segmentation mask is projected onto the ground using the camera pose (leg angles plus IMU tilt); YOLO boxes give an object's distance from where their bottom edge meets the ground; the leg ToF rays add true 3D points near the feet; the nose board's VL53L8CX gives measured distance ahead, fused with the camera mounted on the same board.
+- A YOLO-seg model fine-tuned for trail vs not-trail (RELLIS-3D, RUGD, own footage) comes later; COCO classes cover people, vehicles and animals first.
+- The robot walks at 5–15 cm/s, so 5–10 fps of perception is enough.
 
 **ToF on the legs.** The pot feedback gives each sensor's exact pose, so as the legs swing the six rays sweep the ground ahead. That's good for spotting steps, gaps and obstacles before a foot lands. It's too sparse for SLAM and weak in direct sun; that's what the lidar is for.
 

@@ -135,6 +135,45 @@ Always run ROS containers with a normal open-files limit (`nofile: 65536`, set i
 
 Measured on a Pi 5 2 GB (`software/tools/`): the stack uses 481 MB system-wide, Docker itself 133 MB of that; SYNC runs at 5.00 ms with a worst gap of 8 ms idle and 15 ms with all four cores busy (the legs crouch after 100 ms); the control loop gets SCHED_FIFO 50.
 
+To make a fresh Pi OS install start everything on its own, run once from the repo root:
+
+```sh
+sudo software/host/setup.sh                                  # real legs on can0, vision on
+sudo CAN=vcan0 PROFILES=sim,vision software/host/setup.sh    # bench, with sim_legs
+```
+
+It installs Docker (default nofile 65536, logs to journald) and adds `vector-can` (can0 at 1 Mbit/s or vcan0), `vector-camera` (rpicam-vid) and `vector-stack` (`docker compose up -d`), and arms the hardware watchdog at 15 s. Settings live in `/etc/vector.env`. From power-on on the Pi 5 (NVMe): Linux ready in 10.7 s, legs active at 13.3 s, first YOLO result at about 18 s.
+
+## Camera and YOLO
+
+The camera stays on the host, where libcamera is native, and hands raw frames to the vision container over a local socket; nothing is encoded twice. YOLO runs from ONNX with ONNX Runtime (`software/vision/yolo_onnx.py`), no PyTorch on the robot; PyTorch and Ultralytics live only in an export image, used once:
+
+```sh
+docker build -f software/vision/Dockerfile --target export -t vector-yolo-export .
+SIZES="320 480" docker run --rm -e SIZES -v docker_models:/models vector-yolo-export    # yolo26n(-seg)-<size>.onnx
+docker build -f software/vision/Dockerfile -t vector-vision .
+docker compose -f software/docker/compose.yaml --profile vision up -d                    # YOLO + MediaMTX
+YOLO_MODEL=yolo26n-480.onnx docker compose -f software/docker/compose.yaml --profile vision up -d
+```
+
+`yolo_node.py` publishes `/yolo/detections` (vision_msgs), `/yolo/mask` (class id + 1 per pixel) and `/yolo/debug/compressed`, and streams the annotated video through MediaMTX:
+
+- VLC: `rtsp://<robot>:8554/yolo`
+- Firefox / any browser: `http://<robot>:8889/yolo` (WebRTC)
+
+On the Pi 5 2 GB, CPU only, with the control stack running alongside (SYNC never gaps more than 8 ms):
+
+| Model | fps | frame to result | node memory |
+|---|---|---|---|
+| yolo26n-seg, 320 px | 12.2 | 112 ms | 147 MB |
+| yolo26n-seg, 480 px | 5.2 | 225 ms | 182 MB |
+| yolo26n, 320 px | 14.4 (camera-limited) | 86 ms | 136 MB |
+| yolo26n, 480 px | 7.2 | 167 ms | 162 MB |
+
+The camera captures at 1280x960 (`CAMERA_WIDTH`/`CAMERA_HEIGHT` in `/etc/vector.env`); the model gets a 320 px copy and the masks and boxes are scaled back and drawn on the full frame, so the stream stays sharp. That costs about 1 fps over a 640x480 capture (9 vs 10 fps with the stream on), and the 1280x960 encode takes 16 % of one core.
+
+Ultralytics itself runs the same ONNX model at half the speed and needs 430 MB, most of it PyTorch. The YOLO26 weights are AGPL-3.0 (Ultralytics), fine for an open project.
+
 ## Checks
 
 ```sh
@@ -157,7 +196,7 @@ First numbers with the placeholder legs (coxa 50 / femur 80 / tibia 120 mm):
 
 So with these legs, 2.5 kg is too much for comfortable tripod walking on MG996Rs. Shorter femur reach or less mass is where to look. Wave gait also needs a longer period than 1 s (joints too fast).
 
-`tools/` holds bring-up scripts (python-can, cantools) and the CAN flasher.
+`tools/` holds bring-up scripts (python-can, cantools), the CAN flasher and the robot-side tests: `sync_jitter.py` (SYNC timing), `mem_report.py` (memory per process), `walk_test.py` (walk, turn, Sentinel and wake in a loop while watching the legs, run inside the robot container) and `soak.py` (a line a minute of memory, temperature, CPU, SYNC and YOLO rate).
 
 ## When the robot doesn't move
 
