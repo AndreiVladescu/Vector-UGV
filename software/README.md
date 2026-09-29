@@ -120,6 +120,21 @@ ros2 topic echo /legs/L1/tof          # sensor_msgs/Range in frame L1_tof (+inf:
 
 Fault changes also go to the log as they happen. The `<leg>_tof` frames sit on the coxa links at a placeholder pose (`tof` in `legs.yaml`) until the sensor bracket exists.
 
+## On the robot (Docker)
+
+The robot runs the same packages in one image (no Gazebo or rviz), built natively on the Pi / CM5 in about 2.5 minutes:
+
+```sh
+docker build -f software/docker/Dockerfile -t vector .                        # from the repo root
+docker build -f software/docker/Dockerfile --target build -t vector:build .   # with the tests
+CAN_INTERFACE=can0 docker compose -f software/docker/compose.yaml up -d      # robot + foxglove_bridge
+CAN_INTERFACE=vcan0 docker compose -f software/docker/compose.yaml --profile sim up -d   # with sim_legs
+```
+
+Always run ROS containers with a normal open-files limit (`nofile: 65536`, set in `compose.yaml`). Docker's default is about 2^30, and LTTng, which every ROS 2 process loads through `tracetools`, allocates a bitmap sized by it: 128 MB per process, 1.4 GB for this stack.
+
+Measured on a Pi 5 2 GB (`software/tools/`): the stack uses 481 MB system-wide, Docker itself 133 MB of that; SYNC runs at 5.00 ms with a worst gap of 8 ms idle and 15 ms with all four cores busy (the legs crouch after 100 ms); the control loop gets SCHED_FIFO 50.
+
 ## Checks
 
 ```sh

@@ -57,7 +57,7 @@ About 24 MCU pins in total: 3 PWM, 8 ADC, 3 CAN, 1–2 oscillator, 4 ToF, 3 SWD/
 
 ### CM5 carrier
 
-- **CM5:** CM5 Lite, 2 GB, Wi-Fi, booting from a microSD socket on the carrier (more space than eMMC). 2 GB is tight for ROS, inference and video together, so inference goes to the Hailo and the memory budget gets checked early.
+- **CM5:** CM5 Lite, 2 GB, Wi-Fi, booting from a microSD socket on the carrier (more space than eMMC). 2 GB is enough, measured on a Pi 5 2 GB: the control stack (ros2_control, gait, monitor, foxglove_bridge) in Docker uses 481 MB system-wide, leaving 1.5 GB for camera and inference; H.264 in software costs 20 % of a core at 640×360 / 15 fps.
 - **M.2 M-key 2242 on the single PCIe lane:** for a Hailo accelerator later. Left empty at first, and the software falls back to the CPU.
 - **CAN:** MCP251863 (MCP2518FD plus transceiver in one package), which shows up as `can0` through the mainline `mcp251xfd` driver. The bus passes through the carrier, with no termination on it.
 - **LTE:** Quectel EC25-EUX in an mPCIe socket (USB 2.0 lines only), with a nano-SIM and a 3.8 V / 3 A buck.
