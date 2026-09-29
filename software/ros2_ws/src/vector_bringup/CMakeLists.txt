@@ -11,6 +11,7 @@ if(BUILD_TESTING)
   # Needs a vcan0 interface, skips itself otherwise
   add_launch_test(test/test_can_sim_legs.py TIMEOUT 120 LABELS can)
   add_launch_test(test/test_leg_config.py TIMEOUT 180 LABELS can)
+  add_launch_test(test/test_can_sim_power.py TIMEOUT 120 LABELS can)
   # Needs Gazebo; slow, run with: colcon test --ctest-args -L gazebo
   add_launch_test(test/test_sim_gazebo.py TIMEOUT 300 LABELS gazebo)
   add_launch_test(test/test_gazebo_slope.py TIMEOUT 300 LABELS gazebo)

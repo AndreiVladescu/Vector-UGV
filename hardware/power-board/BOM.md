@@ -6,13 +6,13 @@ One board. Prices are single-unit (Mouser unless noted, 2026-09), rounded; passi
 
 | Qty | Part | Value / MPN | Package | ~€ | Notes |
 |---|---|---|---|---|---|
-| 1 | BMS | BQ76942PFBR | TQFP-48 | 3.50 | 3–10 cells; short each unused cell input to its neighbour (datasheet 10.1.2) and list the used ones in Vcell Mode |
+| 1 | BMS | BQ7694202PFBR | TQFP-48 | 4.50 | the 02 variant boots with REG1 on at 3.3 V, which starts the MCU (the plain BQ76942 has it off); I2C with CRC. Cells on VC1, VC2, VC3, VC10, VC4–VC9 shorted to VC3 |
 | 2 | Pack FETs (CHG, DSG) | BSC010N04LS (Infineon, 40 V, 1.0 mΩ) | SuperSO8 | 3.00 | high side, back to back; 20 A peak |
 | 1 | Pre-discharge FET + resistor | small P/N-FET per the EVM, ~100 Ω 2 W | SOT-23, 2512 | 0.50 | PDSG: charges the 5 V buck and carrier input caps before DSG closes |
 | 1 | Coulomb counter shunt | CSS2H-2512R-1L00F (Bourns, 1 mΩ 1 % 5 W) | 2512 | 0.50 | Kelvin-routed to SRP/SRN through 100 Ω each, 100 nF across |
 | 5 | Cell tap filters | 20 Ω + 100 nF per tap, per datasheet | 0603 | 0.10 | |
 | 1 | REG0 pass transistor | BCP56-16 (Nexperia NPN, 80 V) | SOT-223 | 0.20 | feeds REG1 (45 mA max, so not enough for the CAN transceiver); diode in its collector per datasheet |
-| 3 | NTC | NCP18XH103F03RB (10k B3380) | 0603 / on cable | 0.30 | 2 on the cells (J-NTC), 1 at the FETs, on TS1/TS3; never on TS2, it would stop SHUTDOWN (datasheet 13.5) |
+| 3 | NTC | NCP18XH103F03RB (10k B3380) | 0603 / on cable | 0.30 | cells on TS1 and HDQ (J-NTC), FETs on TS3; never on TS2, it would stop SHUTDOWN (datasheet 13.5) |
 
 The BQ76942 has no fuel-gauge algorithm, only a coulomb counter: the MCU works out the state of charge.
 
@@ -25,7 +25,7 @@ The BQ76942 has no fuel-gauge algorithm, only a coulomb counter: the MCU works o
 | 4 | Input FETs (ACFET/RBFET) | CSD17578Q3A (TI, 30 V, ~6 mΩ) | SON 3×3 | 2.00 | back to back, one pair per input, GX-12 and USB-C |
 | 1 | USB-PD sink | CH224K | ESSOP-10 | 0.30 | LCSC, asks for 20 V; STUSB4500 (~€2.50) if it has to come from Mouser |
 | 1 | USB-C receptacle | USB4125-GF-A (GCT, 6-pin power-only, 3 A) | SMD | 0.50 | CC lines to the CH224K |
-| 2 | Input TVS | SMBJ20A | SMB | 0.60 | the BQ25798 is rated 30 V absolute: this limits the DC input to 20 V (a laptop brick); VAC_OVP set to 22 V in firmware |
+| 2 | Input TVS | SMBJ20A | SMB | 0.60 | the BQ25798 is rated 30 V absolute: this limits the DC input to 20 V (a laptop brick); VAC_OVP stays at 26 V, the next step down is 18 V |
 | – | Input, charge, battery caps | per the EVM | 0805/1206 | 1.00 | |
 
 A 20 V source at 3 A gives about 60 W; with a weaker PD source the BQ25798's input voltage regulation (VINDPM) backs the current off on its own.
@@ -38,9 +38,10 @@ A 20 V source at 3 A gives about 60 W; with a weaker PD source the BQ25798's inp
 | 2 | Hot-swap FET | BSC010N04LS, if the LM5069 calculator's SOA check passes | SuperSO8 | 3.00 | it runs linear during soft-start; otherwise take a 40 V enhanced-SOA part the calculator suggests |
 | 2 | Sense resistor | CSS2H-2512K-3L00F (Bourns, 3 mΩ 1 %) | 2512 | 1.00 | ~55 mV threshold: about 18 A per side |
 | 1 | E-stop buffer | SN74LVC3G07DCUR (3× open-drain) | VSSOP-8 | 0.30 | RUN → ESTOP_N, UVLO_L, UVLO_R |
-| 2 | Side cut | small N-FET or open-drain GPIO | SOT-23 | 0.20 | MCU cuts one side alone |
+| 3 | Side cut, 5 V cut | 2N7002 with a 100k gate pull-down | SOT-23 | 0.20 | MCU pulls a LM5069 UVLO or the 5 V buck EN low; the pull-down keeps power on through an MCU reset |
 | 1 | E-stop button | latching mushroom, NC contact | panel | 5.00 | AliExpress |
 | 1 | Power button | momentary | panel | 0.50 | to BMS TS2 (wake) and through a diode to the MCU |
+| 1 | Button diode | BAT54J (Nexperia) | SOD-323F | 0.10 | cathode to the button, MCU pin PA0 with its pull-up on the anode |
 | 1 | Charger wake | small N-FET | SOT-23 | 0.10 | either charge input present pulls TS2 low |
 
 ## Supplies
@@ -62,6 +63,8 @@ A 20 V source at 3 A gives about 60 W; with a weaker PD source the BQ25798's inp
 | 1 | CAN transceiver | TCAN332DR | SOIC-8 | 2.15 | stub off the bus, no termination |
 | 1 | CAN ESD | NUP2105LT1G | SOT-23 | 0.15 | |
 | 2 | Sense dividers | 5 V rail, VBAT (independent of the BMS) | 0603 | 0.05 | |
+| 2 | I2C pull-ups | 2.2k to 3V3 | 0603 | 0.02 | one bus for the BQ7694202 and the BQ25798 |
+| 1 | HALTED pull-down | 100k | 0603 | 0.01 | J-SYSCTL pin 3 floats until the CM5 halts |
 | 1 | LED + resistor | | 0603 | 0.05 | |
 | – | SWD | TC2050 footprint, like the side board | PCB | – | |
 

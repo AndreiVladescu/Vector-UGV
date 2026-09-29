@@ -53,5 +53,11 @@ services:
     profiles: [sim]
     command: bash -c "/ws/install/vector_hw/lib/vector_hw/sim_legs vcan0 --calibrated --limits -45.8,45.8,-80.2,80.2,-149,17"
 
+  # the power board with a draining battery; ends when it switches itself off
+  sim_power:
+    <<: *common
+    profiles: [sim]
+    command: /ws/install/vector_hw/lib/vector_hw/sim_power vcan0
+
 volumes:
   models:

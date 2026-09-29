@@ -10,6 +10,10 @@
   leg_config.py selftest R1 --vbat 15.92 --save      also correct the VBAT reading to a meter's value
   leg_config.py flash R1 leg-node.bin                new firmware through the CAN bootloader
   leg_config.py flash all leg-node.bin
+  leg_config.py power                              power board: battery, charger, settings
+  leg_config.py power set charge_ma 2000 --save    change a power board setting
+  leg_config.py power bms 0x9304                   read a BQ76942 data memory setting back
+  leg_config.py flash power power-node.bin
 
 Calibration prints rows in the docs/servos.md format. Legs must be off (not walking),
 and the leg should hang free: every joint sweeps its whole range.
@@ -53,6 +57,17 @@ LEG_KEYS = {16: 'version', 17: 'reset_cause', 18: 'can_errors', 19: 'uptime_s', 
             22: 'i_zero_ma', 23: 'id_straps'}
 LEG_KEY = {name: k for k, name in LEG_KEYS.items()}
 RESETS = ['power', 'pin', 'watchdog', 'software', 'other']
+
+POWER = 7
+POWER_STATE, POWER_CELLS, POWER_DETAIL = 0x040, 0x090, 0x0A0
+POWER_STATES = ['boot', 'charge', 'on', 'halting', 'off', 'fault']
+POWER_FAULTS = ['bms', 'bms_comm', 'charger', '5v', 'low_cell', 'imbalance', 'config', 'hot']
+POWER_FLAGS = ['charger', 'charging', 'estop', 'low']
+# settings that can be written: name -> key
+POWER_KEYS = {'capacity_mah': 32, 'charge_ma': 33, 'charge_mv': 34, 'input_ma': 35, 'low_mv': 36, 'sides': 37,
+              'soc_permille': 38}
+PKEY_BMS_MEM = 39
+CHARGE_STATUS = ['not charging', 'trickle', 'pre-charge', 'fast', 'taper', '?', 'top-off', 'done']
 # self-test items: name, unit, what a failure usually means
 TESTS = {1: ('current zero', 'mA', 'INA181 or shunt'), 2: ('6V0 with buck off', 'mV', 'buck stuck on'),
          3: ('VBAT', 'mV', 'no supply or VBAT divider'), 4: ('temperature', 'C', 'NTC or its pull-up'),
@@ -279,13 +294,69 @@ def cmd_selftest(bus, args):
     sys.exit(0 if all(ok) else 1)
 
 
+def cmd_power(bus, args):
+    if args.action == 'set':
+        if args.key not in POWER_KEYS:
+            sys.exit(f'unknown setting {args.key}, one of {", ".join(POWER_KEYS)}')
+        status, _ = bus.request(POWER, LEG_WIDE, POWER_KEYS[args.key], int(args.value), OP_WRITE)
+        print(f'{args.key} = {args.value}: {STATUS_NAMES[status]}')
+        if status == ST_OK and args.save:
+            status, _ = bus.request(POWER, LEG_WIDE, 0, 0, OP_SAVE, timeout=1)
+            print('saved' if status == ST_OK else f'save failed: {STATUS_NAMES[status]}')
+        sys.exit(status != ST_OK)
+    if args.action == 'bms':
+        addr = int(args.key, 0)
+        status, v = bus.request(POWER, LEG_WIDE, PKEY_BMS_MEM, addr)
+        if status != ST_OK:
+            sys.exit(f'0x{addr:04x}: {STATUS_NAMES[status]}')
+        print(f'0x{addr:04x}: ' + ' '.join(f'{b:02x}' for b in (v & 0xffffffff).to_bytes(4, 'little')))
+        return
+
+    frames = {}
+    end = time.time() + 1.5
+    while time.time() < end and len(frames) < 3:
+        m = bus.bus.recv(timeout=0.2)
+        if m and m.arbitration_id in (POWER_STATE | POWER, POWER_CELLS | POWER, POWER_DETAIL | POWER):
+            frames[m.arbitration_id & 0x7f0] = m.data
+    d = frames.get(POWER_STATE)
+    if d is None:
+        sys.exit('power board: no answer')
+    state = d[6] & 0xf
+    flags = [f for i, f in enumerate(POWER_FLAGS) if d[6] >> 4 & (1 << i)]
+    faults = [f for i, f in enumerate(POWER_FAULTS) if d[7] & (1 << i)]
+    current = int.from_bytes(d[2:4], 'little', signed=True) * 10
+    print(f'power board: {POWER_STATES[state] if state < len(POWER_STATES) else state}, '
+          f'{d[4] / 2:.1f} %, {int.from_bytes(d[0:2], "little") / 1000:.2f} V, {current / 1000:+.2f} A, '
+          f'warmest cell {int.from_bytes(d[5:6], "little", signed=True)} C')
+    print(f'  flags {",".join(flags) or "-"}  faults {",".join(faults) or "-"}')
+    if POWER_CELLS in frames:
+        c = frames[POWER_CELLS]
+        print('  cells ' + ' '.join(f'{int.from_bytes(c[i:i + 2], "little") / 1000:.3f}' for i in range(0, 8, 2)) + ' V')
+    if POWER_DETAIL in frames:
+        x = frames[POWER_DETAIL]
+        inputs = [n for i, n in enumerate(['DC', 'USB-C']) if x[3] >> 6 & (1 << i)]
+        print(f'  BMS safety {x[0]:02x} {x[1]:02x} {x[2]:02x}, FETs {"CHG " if x[3] & 1 else ""}'
+              f'{"DSG" if x[3] & 4 else ""}, sides {"L" if x[3] & 0x10 else "-"}{"R" if x[3] & 0x20 else "-"}, '
+              f'charger {"+".join(inputs) or "unplugged"} {x[6] / 10:.1f} V {CHARGE_STATUS[x[4] & 7]}')
+    info = leg_info(bus, POWER)
+    v = info['version']
+    rc = info['reset_cause'] or 0
+    print(f'  firmware {"?" if v is None else f"{v & 0xfffffff:07x}"}, last reset '
+          f'{",".join(r for i, r in enumerate(RESETS) if rc & (1 << i)) or "?"}, up {info["uptime_s"]} s')
+    settings = []
+    for name, k in POWER_KEYS.items():
+        status, val = bus.request(POWER, LEG_WIDE, k)
+        settings.append(f'{name} {val if status == ST_OK else "?"}')
+    print('  ' + ', '.join(settings))
+
+
 def flash_leg(bus, name, image):
-    node = LEGS[name]
+    node = POWER if name == 'power' else LEGS[name]
     # the application resets into the bootloader, which then answers; right after power-up
     # the bootloader also listens for 200 ms, which rescues a leg with broken firmware
     st, info = bus.boot(node, bytes([B_ENTER]) + b'boot', timeout=0.1, tries=30)
     if st == B_BUSY:
-        raise RuntimeError(f'{name}: leg is powered, turn the legs off first')
+        raise RuntimeError(f'{name}: shutting down' if node == POWER else f'{name}: leg is powered, turn the legs off first')
     size_max = (info >> 16) * 1024
     print(f'{name}: bootloader v{info & 0xff}, image {"valid" if info & 0x100 else "missing"}')
     data = image + b'\xff' * (-len(image) % 8)
@@ -316,7 +387,7 @@ def flash_leg(bus, name, image):
     end = time.time() + 2
     while time.time() < end:
         m = bus.bus.recv(timeout=0.2)
-        if m and m.arbitration_id == LEG_STATUS | node:
+        if m and m.arbitration_id == (POWER_STATE if node == POWER else LEG_STATUS) | node:
             print(f'{name}: running')
             return
     raise RuntimeError(f'{name}: no status after the restart')
@@ -355,14 +426,19 @@ def main():
     p.add_argument('--vbat', type=float, help='battery voltage from a meter, V: corrects the VBAT divider')
     p.add_argument('--save', action='store_true', help='store the correction in the leg flash')
     p = sub.add_parser('flash')
-    p.add_argument('leg', choices=list(LEGS) + ['all'])
+    p.add_argument('leg', choices=list(LEGS) + ['all', 'power'])
     p.add_argument('image', help='leg-node.bin from the STM32 build')
+    p = sub.add_parser('power')
+    p.add_argument('action', nargs='?', choices=['show', 'set', 'bms'], default='show')
+    p.add_argument('key', nargs='?', help='setting name for set, data memory address for bms')
+    p.add_argument('value', nargs='?')
+    p.add_argument('--save', action='store_true', help='store the setting in the power board flash')
     args = ap.parse_args()
 
     bus = Bus(args.channel)
     try:
         {'status': cmd_status, 'read': cmd_read, 'push': cmd_push, 'calibrate': cmd_calibrate,
-         'selftest': cmd_selftest, 'flash': cmd_flash}[args.cmd](bus, args)
+         'selftest': cmd_selftest, 'flash': cmd_flash, 'power': cmd_power}[args.cmd](bus, args)
     finally:
         bus.bus.shutdown()
 

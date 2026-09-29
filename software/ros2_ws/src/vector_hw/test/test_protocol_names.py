@@ -123,3 +123,21 @@ def test_bootloader():
         assert DBC[(fid, 'status')] == status
     for fid in range(0x71, 0x77):
         assert DBC[(fid, 'op')] == {C['BOOT_' + n]: n for n in ('ENTER', 'INFO', 'ERASE', 'DATA', 'DONE', 'RUN')}
+
+
+def test_power():
+    cpp = open(os.path.join(REPO, 'software', 'ros2_ws', 'src', 'vector_hw', 'src', 'protocol.cpp')).read()
+    states = {v: k[len('POWER_'):].lower() for k, v in C.items() if k.startswith('POWER_')}
+    assert [states[i] for i in range(len(states))] == LC.POWER_STATES
+    assert {k: v.lower() for k, v in DBC[(0x47, 'state')].items()} == dict(enumerate(LC.POWER_STATES))
+    assert re.findall(r'"(\w+)"', re.search(r'power_state_name.*?\{(.*?)\}', cpp, re.S).group(1)) == LC.POWER_STATES
+    faults = {v.bit_length() - 1: k[len('PWR_FAULT_'):].lower() for k, v in C.items() if k.startswith('PWR_FAULT_')}
+    assert [faults[i] for i in range(8)] == LC.POWER_FAULTS
+    assert re.findall(r'"(\w+)"', re.search(r'power_fault_names.*?\{(.*?)\}', cpp, re.S).group(1)) == LC.POWER_FAULTS
+    assert int(re.search(r'#define POWER_NODE (\d+)', open(os.path.join(FW, 'vector_can.h')).read()).group(1)) == LC.POWER
+    keys = {'capacity_mah': 'CAPACITY', 'charge_ma': 'CHARGE_MA', 'charge_mv': 'CHARGE_MV', 'input_ma': 'INPUT_MA',
+            'low_mv': 'LOW_MV', 'sides': 'SIDES', 'soc_permille': 'SOC'}
+    assert {k: C['PKEY_' + v] for k, v in keys.items()} == LC.POWER_KEYS
+    assert LC.PKEY_BMS_MEM == C['PKEY_BMS_MEM']
+    assert (LC.POWER_STATE, LC.POWER_CELLS, LC.POWER_DETAIL) == (
+        C['CAN_POWER_STATE'], C['CAN_POWER_CELLS'], C['CAN_POWER_DETAIL'])

@@ -7,7 +7,8 @@ FROM ros:jazzy-ros-base AS base
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ros-jazzy-controller-manager ros-jazzy-forward-command-controller ros-jazzy-gpio-controllers \
       ros-jazzy-joint-state-broadcaster ros-jazzy-robot-state-publisher ros-jazzy-xacro \
-      ros-jazzy-foxglove-bridge python3-can python3-yaml can-utils \
+      ros-jazzy-foxglove-bridge ros-jazzy-robot-localization ros-jazzy-nmea-navsat-driver \
+      python3-can python3-yaml can-utils \
     && rm -rf /var/lib/apt/lists/*
 
 FROM base AS build
@@ -18,6 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # the repo layout matters: vector_hw builds sim_legs from ../../../../firmware
 COPY firmware/common /ws/firmware/common
 COPY firmware/leg-node /ws/firmware/leg-node
+COPY firmware/power-node /ws/firmware/power-node
 COPY protocol /ws/protocol
 COPY docs/servos.md /ws/docs/servos.md
 COPY software/ros2_ws/src /ws/software/ros2_ws/src

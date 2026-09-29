@@ -1,0 +1,56 @@
+# Two EKFs and navsat_transform (robot_localization), the usual GNSS setup:
+#   ekf_odom: leg odometry + IMU gyro -> odom -> base_link, smooth, drifts
+#   ekf_map:  the same + GNSS (through navsat_transform) + IMU heading -> map -> odom
+# navsat_transform needs an absolute heading from the IMU (ENU: 0 = east). The Gazebo IMU
+# gives it; on the robot it has to come from the compass (MMC5983MA on the nose board).
+ekf_odom:
+  ros__parameters:
+    frequency: 30.0
+    two_d_mode: true
+    publish_tf: true
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: odom
+    # [x y z, roll pitch yaw, vx vy vz, vroll vpitch vyaw, ax ay az]
+    odom0: odom/legs
+    odom0_config: [false, false, false, false, false, false, true, true, false, false, false, true, false, false, false]
+    imu0: imu
+    imu0_config: [false, false, false, false, false, false, false, false, false, false, false, true, false, false, false]
+    imu0_remove_gravitational_acceleration: true
+
+ekf_map:
+  ros__parameters:
+    frequency: 30.0
+    two_d_mode: true
+    publish_tf: true
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: map
+    odom0: odom/legs
+    odom0_config: [false, false, false, false, false, false, true, true, false, false, false, true, false, false, false]
+    odom1: odometry/gps
+    odom1_config: [true, true, false, false, false, false, false, false, false, false, false, false, false, false, false]
+    imu0: imu
+    imu0_config: [false, false, false, false, false, true, false, false, false, false, false, true, false, false, false]
+    imu0_remove_gravitational_acceleration: true
+
+navsat_transform:
+  ros__parameters:
+    frequency: 10.0
+    delay: 1.0
+    magnetic_declination_radians: 0.105  # about 6 deg east in Romania
+    yaw_offset: 0.0                      # the IMU reads 0 facing east
+    zero_altitude: true
+    broadcast_cartesian_transform: false
+    publish_filtered_gps: true
+    use_odometry_yaw: false
+    wait_for_datum: false
+
+waypoint_follower:
+  ros__parameters:
+    rate: 10.0
+    max_v: 0.10
+    max_w: 0.4
+    arrive_m: 1.5

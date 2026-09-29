@@ -137,3 +137,78 @@ bool can_unpack_leg_cfg(const struct can_frame_t *f, struct leg_cfg_msg *m)
     m->op = f->data[7];
     return true;
 }
+
+void can_pack_power_state(struct can_frame_t *f, const struct power_state_msg *m)
+{
+    long ca = m->current_ma / 10;
+    if (ca > 32767) ca = 32767;
+    if (ca < -32768) ca = -32768;
+    frame(f, CAN_POWER_STATE | POWER_NODE, 8);
+    put16(f->data, m->pack_mv);
+    put16(f->data + 2, (uint16_t)(int16_t)ca);
+    f->data[4] = m->soc_half;
+    f->data[5] = (uint8_t)m->temp_c;
+    f->data[6] = (m->state & 0x0f) | (m->flags << 4);
+    f->data[7] = m->faults;
+}
+
+void can_pack_power_cells(struct can_frame_t *f, const struct power_cells_msg *m)
+{
+    frame(f, CAN_POWER_CELLS | POWER_NODE, 8);
+    for (int i = 0; i < 4; i++)
+        put16(f->data + 2 * i, m->cell_mv[i]);
+}
+
+void can_pack_power_detail(struct can_frame_t *f, const struct power_detail_msg *m)
+{
+    uint16_t in = m->input_mv / 100;
+    frame(f, CAN_POWER_DETAIL | POWER_NODE, 8);
+    f->data[0] = m->safety_a;
+    f->data[1] = m->safety_b;
+    f->data[2] = m->safety_c;
+    f->data[3] = (m->fets & 0x0f) | ((m->sides & 3) << 4) | ((m->inputs & 3) << 6);
+    f->data[4] = m->chg_stat & 7;
+    f->data[5] = m->charger_fault;
+    f->data[6] = in > 255 ? 255 : in;
+    f->data[7] = (uint8_t)m->fet_temp_c;
+}
+
+bool can_unpack_power_state(const struct can_frame_t *f, struct power_state_msg *m)
+{
+    if (can_function(f->id) != CAN_POWER_STATE || f->len < 8)
+        return false;
+    m->pack_mv = get16(f->data);
+    m->current_ma = (int16_t)get16(f->data + 2) * 10;
+    m->soc_half = f->data[4];
+    m->temp_c = (int8_t)f->data[5];
+    m->state = f->data[6] & 0x0f;
+    m->flags = f->data[6] >> 4;
+    m->faults = f->data[7];
+    return true;
+}
+
+bool can_unpack_power_cells(const struct can_frame_t *f, struct power_cells_msg *m)
+{
+    if (can_function(f->id) != CAN_POWER_CELLS || f->len < 8)
+        return false;
+    for (int i = 0; i < 4; i++)
+        m->cell_mv[i] = get16(f->data + 2 * i);
+    return true;
+}
+
+bool can_unpack_power_detail(const struct can_frame_t *f, struct power_detail_msg *m)
+{
+    if (can_function(f->id) != CAN_POWER_DETAIL || f->len < 8)
+        return false;
+    m->safety_a = f->data[0];
+    m->safety_b = f->data[1];
+    m->safety_c = f->data[2];
+    m->fets = f->data[3] & 0x0f;
+    m->sides = (f->data[3] >> 4) & 3;
+    m->inputs = f->data[3] >> 6;
+    m->chg_stat = f->data[4] & 7;
+    m->charger_fault = f->data[5];
+    m->input_mv = f->data[6] * 100;
+    m->fet_temp_c = (int8_t)f->data[7];
+    return true;
+}

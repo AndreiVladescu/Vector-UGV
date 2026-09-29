@@ -1,4 +1,4 @@
-VERSION "0.4"
+VERSION "0.5"
 
 NS_ :
 
@@ -281,7 +281,54 @@ BO_ 71 POWER_STATE: 8 POWER
  SG_ soc : 32|8@1+ (0.5,0) [0|100] "%" CM5
  SG_ max_cell_temp : 40|8@1- (1,0) [-128|127] "degC" CM5
  SG_ state : 48|4@1+ (1,0) [0|15] "" CM5
+ SG_ charger : 52|1@1+ (1,0) [0|1] "" CM5
+ SG_ charging : 53|1@1+ (1,0) [0|1] "" CM5
+ SG_ estop : 54|1@1+ (1,0) [0|1] "" CM5
+ SG_ low_battery : 55|1@1+ (1,0) [0|1] "" CM5
  SG_ faults : 56|8@1+ (1,0) [0|255] "" CM5
+
+BO_ 151 POWER_CELLS: 8 POWER
+ SG_ cell1 : 0|16@1+ (1,0) [0|65535] "mV" CM5
+ SG_ cell2 : 16|16@1+ (1,0) [0|65535] "mV" CM5
+ SG_ cell3 : 32|16@1+ (1,0) [0|65535] "mV" CM5
+ SG_ cell4 : 48|16@1+ (1,0) [0|65535] "mV" CM5
+
+BO_ 167 POWER_DETAIL: 8 POWER
+ SG_ safety_a : 0|8@1+ (1,0) [0|255] "" CM5
+ SG_ safety_b : 8|8@1+ (1,0) [0|255] "" CM5
+ SG_ safety_c : 16|8@1+ (1,0) [0|255] "" CM5
+ SG_ fets : 24|4@1+ (1,0) [0|15] "" CM5
+ SG_ side_left : 28|1@1+ (1,0) [0|1] "" CM5
+ SG_ side_right : 29|1@1+ (1,0) [0|1] "" CM5
+ SG_ input_dc : 30|1@1+ (1,0) [0|1] "" CM5
+ SG_ input_usb : 31|1@1+ (1,0) [0|1] "" CM5
+ SG_ charge_status : 32|3@1+ (1,0) [0|7] "" CM5
+ SG_ charger_fault : 40|8@1+ (1,0) [0|255] "" CM5
+ SG_ input_voltage : 48|8@1+ (100,0) [0|25500] "mV" CM5
+ SG_ fet_temp : 56|8@1- (1,0) [-128|127] "degC" CM5
+
+BO_ 87 POWER_CONFIG: 8 CM5
+ SG_ joint : 0|8@1+ (1,0) [0|255] "" POWER
+ SG_ key : 8|8@1+ (1,0) [0|255] "" POWER
+ SG_ value : 16|32@1- (1,0) [-2147483648|2147483647] "" POWER
+ SG_ seq : 48|8@1+ (1,0) [0|255] "" POWER
+ SG_ op : 56|8@1+ (1,0) [0|255] "" POWER
+
+BO_ 103 POWER_REPLY: 8 POWER
+ SG_ joint : 0|8@1+ (1,0) [0|255] "" CM5
+ SG_ key : 8|8@1+ (1,0) [0|255] "" CM5
+ SG_ value : 16|32@1- (1,0) [-2147483648|2147483647] "" CM5
+ SG_ seq : 48|8@1+ (1,0) [0|255] "" CM5
+ SG_ status : 56|8@1+ (1,0) [0|255] "" CM5
+
+BO_ 119 BOOT_POWER: 8 CM5
+ SG_ op : 0|8@1+ (1,0) [0|255] "" POWER
+ SG_ payload : 8|56@1+ (1,0) [0|0] "" POWER
+
+BO_ 135 BOOT_POWER_REPLY: 8 POWER
+ SG_ op : 0|8@1+ (1,0) [0|255] "" CM5
+ SG_ status : 8|8@1+ (1,0) [0|255] "" CM5
+ SG_ arg : 16|32@1+ (1,0) [0|4294967295] "" CM5
 
 CM_ "V.E.C.T.O.R. leg bus, classic CAN 1 Mbit/s. ID = (function << 4) | node.";
 VAL_ 0 mode 0 "IDLE" 1 "STAND" 2 "WALK" 3 "SENTINEL" 4 "WAKE" 15 "FAULT" ;
@@ -315,3 +362,9 @@ VAL_ 117 op 1 "ENTER" 2 "INFO" 3 "ERASE" 4 "DATA" 5 "DONE" 6 "RUN" ;
 VAL_ 133 status 0 "OK" 1 "BAD_OP" 2 "BAD_SEQ" 3 "FLASH_ERR" 4 "BAD_CRC" 5 "TOO_BIG" 6 "NO_IMAGE" 7 "BUSY" ;
 VAL_ 118 op 1 "ENTER" 2 "INFO" 3 "ERASE" 4 "DATA" 5 "DONE" 6 "RUN" ;
 VAL_ 134 status 0 "OK" 1 "BAD_OP" 2 "BAD_SEQ" 3 "FLASH_ERR" 4 "BAD_CRC" 5 "TOO_BIG" 6 "NO_IMAGE" 7 "BUSY" ;
+VAL_ 71 state 0 "BOOT" 1 "CHARGE" 2 "ON" 3 "HALTING" 4 "OFF" 5 "FAULT" ;
+VAL_ 167 charge_status 0 "NOT_CHARGING" 1 "TRICKLE" 2 "PRE" 3 "FAST" 4 "TAPER" 6 "TOPOFF" 7 "DONE" ;
+VAL_ 87 op 0 "READ" 1 "WRITE" 2 "SAVE" 3 "CALIBRATE" 4 "DEFAULTS" 5 "SELFTEST" ;
+VAL_ 103 status 0 "OK" 1 "BAD_KEY" 2 "BAD_VALUE" 3 "BUSY" 4 "CAL_RESULT" 5 "CAL_FAILED" 6 "CAL_DONE" 7 "TEST_PASS" 8 "TEST_FAIL" 9 "TEST_DONE" ;
+VAL_ 119 op 1 "ENTER" 2 "INFO" 3 "ERASE" 4 "DATA" 5 "DONE" 6 "RUN" ;
+VAL_ 135 status 0 "OK" 1 "BAD_OP" 2 "BAD_SEQ" 3 "FLASH_ERR" 4 "BAD_CRC" 5 "TOO_BIG" 6 "NO_IMAGE" 7 "BUSY" ;

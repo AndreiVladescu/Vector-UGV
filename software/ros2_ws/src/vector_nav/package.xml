@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>vector_nav</name>
+  <version>0.1.0</version>
+  <description>GNSS localization setup and the GPS waypoint follower for V.E.C.T.O.R.</description>
+  <maintainer email="avladescu2000@gmail.com">Andrei Vladescu</maintainer>
+  <license>TBD</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>geographic_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>std_srvs</exec_depend>
+  <exec_depend>robot_localization</exec_depend>
+  <exec_depend>nmea_navsat_driver</exec_depend>
+  <test_depend>ament_cmake_pytest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

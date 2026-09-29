@@ -1,6 +1,6 @@
 // Runs the gait at a fixed rate: cmd_vel in, 18 joint positions out to the
 // forward command controller, plus odom -> base_link from the commanded motion
-// and foot trails for rviz. Body pose via the body_* parameters (live).
+// (also as nav_msgs/Odometry on odom/legs, for the EKF) and foot trails for rviz. Body pose via the body_* parameters (live).
 // With level:=true the IMU tilt is fed back into the body pose to keep it level.
 // A cmd_vel with only linear.z set (teleop keys t/b) steps the body height up/down by
 // height_step and leaves the walking command alone.
@@ -27,6 +27,7 @@
 #include "control_msgs/msg/dynamic_interface_group_values.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -139,6 +140,7 @@ public:
         last_cmd_ = now();
       });
     joint_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("leg_controller/commands", 10);
+    odom_pub_ = create_publisher<nav_msgs::msg::Odometry>("odom/legs", 10);
 
     power_pub_ = create_publisher<control_msgs::msg::DynamicInterfaceGroupValues>("leg_power/commands", 10);
     power_sub_ = create_subscription<control_msgs::msg::DynamicInterfaceGroupValues>(
@@ -289,7 +291,33 @@ private:
 
     if (++tick_count_ % 4 == 0) {
       publish_trails(t, c, s);
+      publish_odom(t, tf, v);
     }
+  }
+
+  // The applied velocity with a variance that grows with speed (slip, uneven ground).
+  // The pose is plain dead reckoning, so the EKF should only take the twist.
+  void publish_odom(const rclcpp::Time & t, const geometry_msgs::msg::TransformStamped & tf, const vector::Twist2D & v)
+  {
+    nav_msgs::msg::Odometry o;
+    o.header.stamp = t;
+    o.header.frame_id = "odom";
+    o.child_frame_id = "base_link";
+    o.pose.pose.position.x = tf.transform.translation.x;
+    o.pose.pose.position.y = tf.transform.translation.y;
+    o.pose.pose.position.z = tf.transform.translation.z;
+    o.pose.pose.orientation = tf.transform.rotation;
+    for (int i = 0; i < 6; ++i) {
+      o.pose.covariance[i * 7] = 1e3;
+    }
+    o.twist.twist.linear.x = v.vx;
+    o.twist.twist.linear.y = v.vy;
+    o.twist.twist.angular.z = v.wz;
+    const double sv = 0.01 + 0.2 * std::hypot(v.vx, v.vy), sw = 0.02 + 0.2 * std::abs(v.wz);
+    o.twist.covariance[0] = o.twist.covariance[7] = sv * sv;
+    o.twist.covariance[14] = o.twist.covariance[21] = o.twist.covariance[28] = 1e-4;  // no z motion or tilt rate
+    o.twist.covariance[35] = sw * sw;
+    odom_pub_->publish(o);
   }
 
   void on_joints(const sensor_msgs::msg::JointState & msg)
@@ -532,6 +560,7 @@ private:
 
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_sub_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr joint_pub_;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr trail_pub_;
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_cb_;

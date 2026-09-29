@@ -12,6 +12,8 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 
 # Protocol + SocketCAN, no ROS.
 add_library(vector_can STATIC src/protocol.cpp src/socketcan.cpp)
@@ -30,6 +32,12 @@ add_executable(leg_monitor src/leg_monitor.cpp)
 target_link_libraries(leg_monitor vector_can rclcpp::rclcpp ${sensor_msgs_TARGETS} ${diagnostic_msgs_TARGETS})
 install(TARGETS leg_monitor DESTINATION lib/${PROJECT_NAME})
 
+# Battery, charger and power states from the power board; leg power and shutdown services.
+add_executable(power_monitor src/power_monitor.cpp)
+target_link_libraries(power_monitor vector_can rclcpp::rclcpp ${sensor_msgs_TARGETS} ${diagnostic_msgs_TARGETS}
+  ${std_msgs_TARGETS} ${std_srvs_TARGETS})
+install(TARGETS power_monitor DESTINATION lib/${PROJECT_NAME})
+
 install(TARGETS vector_hw vector_can LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 install(DIRECTORY include/ DESTINATION include)
 # The leg firmware logic with simulated servos, standing in for the side boards on (v)can.
@@ -43,6 +51,16 @@ target_include_directories(sim_legs PRIVATE ${LEG_FW}/leg-node/src ${LEG_FW}/leg
 set_target_properties(sim_legs PROPERTIES C_STANDARD 11)
 target_link_libraries(sim_legs m)
 install(TARGETS sim_legs DESTINATION lib/${PROJECT_NAME})
+# The power board firmware with its chip models and a battery, on (v)can.
+set(PWR ${LEG_FW}/power-node)
+add_executable(sim_power
+  ${PWR}/sim/sim_power.c ${PWR}/sim/power_sim.c ${PWR}/sim/bq76942_sim.c ${PWR}/sim/bq25798_sim.c
+  ${PWR}/src/power.c ${PWR}/src/bq76942.c ${PWR}/src/bq25798.c ${PWR}/src/gauge.c ${PWR}/src/config.c
+  ${LEG_FW}/common/vector_can.c ${LEG_FW}/common/boot.c)
+target_include_directories(sim_power PRIVATE ${PWR}/src ${PWR}/sim ${LEG_FW}/common)
+set_target_properties(sim_power PROPERTIES C_STANDARD 11)
+target_link_libraries(sim_power m)
+install(TARGETS sim_power DESTINATION lib/${PROJECT_NAME})
 install(PROGRAMS scripts/leg_config.py DESTINATION lib/${PROJECT_NAME})
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../../../../protocol/vector.dbc DESTINATION share/${PROJECT_NAME})
 

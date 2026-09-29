@@ -68,6 +68,12 @@ def generate_launch_description():
             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('hardware'), "' == 'can'"]))),
 
         Node(
+            package='vector_hw',
+            executable='power_monitor',
+            parameters=[{'can_interface': LaunchConfiguration('can_interface')}],
+            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('hardware'), "' == 'can'"]))),
+
+        Node(
             package='rviz2',
             executable='rviz2',
             arguments=['-d', os.path.join(bringup, 'rviz', 'sim.rviz')],

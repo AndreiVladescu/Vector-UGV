@@ -5,6 +5,6 @@ STM32C092 for all nodes, bare-metal on ST's HAL, built with CMake and arm-none-e
 - `common/`: CAN frames (`vector_can`, matching `protocol/vector.dbc`) and the bootloader protocol (`boot`)
 - `stm32c0/`: shared by every node: clocks and FDCAN (`mcu.c`), the CAN bootloader, flash map and linker scripts, the build helper (`stm32c0.cmake`), `flash_swd.sh`
 - `leg-node/`: servo PWM, pot and current ADC, ToF, wake, calibration, protection, self-test
-- `power-node/`: BMS setup, charger, power states, e-stop (not started)
+- `power-node/`: BQ76942 setup, BQ25798 charger, state of charge, power states, soft power and the ROS e-stop
 
 First flash over SWD with `stm32c0/flash_swd.sh`, then over CAN with `leg_config.py flash`. A node with a broken application can still be reached through the bootloader's 200 ms window after reset.
