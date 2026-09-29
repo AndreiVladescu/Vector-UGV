@@ -128,6 +128,222 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Connector_Generic:Conn_01x04"
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "J"
+				(at 0 5.08 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Conn_01x04"
+				(at 0 -7.62 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Generic connector, single row, 01x04, script generated (kicad-library-utils/schlib/autogen/connector/)"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "connector"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "Connector*:*_1x??_*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "Conn_01x04_1_1"
+				(rectangle
+					(start -1.27 3.81)
+					(end 1.27 -6.35)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(rectangle
+					(start -1.27 2.667)
+					(end 0 2.413)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 0.127)
+					(end 0 -0.127)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -2.413)
+					(end 0 -2.667)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -4.953)
+					(end 0 -5.207)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 2.54 0)
+					(length 3.81)
+					(name "Pin_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 3.81)
+					(name "Pin_2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -2.54 0)
+					(length 3.81)
+					(name "Pin_3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -5.08 0)
+					(length 3.81)
+					(name "Pin_4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "Device:C"
 			(pin_numbers
 				(hide yes)
@@ -266,172 +482,6 @@
 					(at 0 -3.81 90)
 					(length 2.794)
 					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "Device:D_TVS"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 1.016)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "D"
-				(at 0 2.54 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "D_TVS"
-				(at 0 -2.54 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" "Bidirectional transient-voltage-suppression diode"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "diode TVS thyrector"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_fp_filters" "TO-???* *_Diode_* *SingleDiode* D_*"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "D_TVS_0_1"
-				(polyline
-					(pts
-						(xy -2.54 1.27) (xy -2.54 -1.27) (xy 2.54 1.27) (xy 2.54 -1.27) (xy -2.54 1.27)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0.508 1.27) (xy 0 1.27) (xy 0 -1.27) (xy -0.508 -1.27)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.27 0) (xy -1.27 0)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "D_TVS_1_1"
-				(pin passive line
-					(at -3.81 0 0)
-					(length 2.54)
-					(name "A1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 3.81 0 180)
-					(length 2.54)
-					(name "A2"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1781,6 +1831,244 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "side-board:SMBJ18A-E3_52"
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "D"
+				(at 10.16 8.89 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left bottom)
+				)
+			)
+			(property "Value" "SMBJ18A-E3_52"
+				(at 10.16 6.35 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left bottom)
+				)
+			)
+			(property "Footprint" "side-board:DIOM5436X244N"
+				(at 10.16 -93.65 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left bottom)
+				)
+			)
+			(property "Datasheet" "http://www.vishay.com/docs/88392/smbj.pdf"
+				(at 10.16 -193.65 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left bottom)
+				)
+			)
+			(property "Description" "Vishay SMBJ18A-E3/52, Uni-Directional TVS Diode, 600W, 2-Pin DO-214AA"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Height" "2.44"
+				(at 10.16 -393.65 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left bottom)
+				)
+			)
+			(property "Mouser Part Number" "625-SMBJ18A-E3"
+				(at 10.16 -493.65 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left bottom)
+				)
+			)
+			(property "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/Vishay-General-Semiconductor/SMBJ18A-E3-52/?qs=3qLEwsAJF5THC%2Fs6Ge44Fg%3D%3D"
+				(at 10.16 -593.65 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left bottom)
+				)
+			)
+			(property "Manufacturer_Name" "Vishay"
+				(at 10.16 -693.65 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left bottom)
+				)
+			)
+			(property "Manufacturer_Part_Number" "SMBJ18A-E3/52"
+				(at 10.16 -793.65 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left bottom)
+				)
+			)
+			(symbol "SMBJ18A-E3_52_1_1"
+				(polyline
+					(pts
+						(xy 4.064 2.54) (xy 5.08 2.032)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 5.08 0) (xy 10.16 2.54)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 5.08 -2.032) (xy 5.08 2.032)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 5.08 -2.032) (xy 6.096 -2.54)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 10.16 -2.54) (xy 5.08 0)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 10.16 -2.54) (xy 10.16 2.54)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at 0 0 0)
+					(length 5.08)
+					(name "K"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 15.24 0 180)
+					(length 5.08)
+					(name "A"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "side-board:TPS62933DRLR"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -2064,16 +2352,6 @@
 			(embedded_fonts no)
 		)
 	)
-	(text "Watch polarity"
-		(exclude_from_sim no)
-		(at 54.61 117.475 90)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-		)
-		(uuid "69194925-061b-4e90-be40-b442fde951c2")
-	)
 	(text "3.3V Step-Down Converter"
 		(exclude_from_sim no)
 		(at 86.995 27.305 0)
@@ -2174,6 +2452,16 @@
 	)
 	(wire
 		(pts
+			(xy 97.79 177.165) (xy 97.79 179.705)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0d360266-468c-474a-99f5-30330f662a9a")
+	)
+	(wire
+		(pts
 			(xy 205.74 56.515) (xy 205.74 59.055)
 		)
 		(stroke
@@ -2214,7 +2502,7 @@
 	)
 	(wire
 		(pts
-			(xy 49.53 110.49) (xy 50.8 110.49)
+			(xy 45.72 106.045) (xy 46.99 106.045)
 		)
 		(stroke
 			(width 0)
@@ -2314,6 +2602,16 @@
 	)
 	(wire
 		(pts
+			(xy 139.7 182.245) (xy 140.97 182.245)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3db01e6a-2b86-41e1-9a20-104addbcfc02")
+	)
+	(wire
+		(pts
 			(xy 111.125 43.815) (xy 99.06 43.815)
 		)
 		(stroke
@@ -2334,6 +2632,26 @@
 	)
 	(wire
 		(pts
+			(xy 102.235 177.165) (xy 97.79 177.165)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "472f6038-ec8a-49f0-98c9-20274ff512b5")
+	)
+	(wire
+		(pts
+			(xy 139.7 189.865) (xy 140.97 189.865)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4886af63-247e-4c7a-9949-c1264d4aa462")
+	)
+	(wire
+		(pts
 			(xy 233.045 67.31) (xy 235.585 67.31)
 		)
 		(stroke
@@ -2341,6 +2659,16 @@
 			(type default)
 		)
 		(uuid "4eb79389-753e-4c27-b2cd-edef605a9f65")
+	)
+	(wire
+		(pts
+			(xy 139.7 184.785) (xy 140.97 184.785)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4f429615-bed1-4913-abc8-202a2559fba0")
 	)
 	(wire
 		(pts
@@ -2374,7 +2702,7 @@
 	)
 	(wire
 		(pts
-			(xy 50.8 110.49) (xy 50.8 113.03)
+			(xy 46.99 106.045) (xy 46.99 109.22)
 		)
 		(stroke
 			(width 0)
@@ -2524,6 +2852,16 @@
 	)
 	(wire
 		(pts
+			(xy 97.79 189.865) (xy 97.79 187.325)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "89c458aa-2c8f-41e9-9f34-3b9f1d757a20")
+	)
+	(wire
+		(pts
 			(xy 231.14 53.975) (xy 235.585 53.975)
 		)
 		(stroke
@@ -2604,13 +2942,23 @@
 	)
 	(wire
 		(pts
-			(xy 50.8 121.92) (xy 50.8 120.65)
+			(xy 46.99 125.73) (xy 46.99 124.46)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
 		(uuid "a985f434-e122-454c-909a-dd4d37ce4ca4")
+	)
+	(wire
+		(pts
+			(xy 101.6 189.865) (xy 97.79 189.865)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "aaaf1df3-43ad-4579-80e8-a26b30d7a0e1")
 	)
 	(wire
 		(pts
@@ -2671,6 +3019,16 @@
 			(type default)
 		)
 		(uuid "b846b82e-05d3-4b2c-98c9-137be51c910e")
+	)
+	(wire
+		(pts
+			(xy 132.08 187.325) (xy 140.97 187.325)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c2bd5a4d-5883-486b-86c2-17bbfbfaeb88")
 	)
 	(wire
 		(pts
@@ -2892,6 +3250,16 @@
 		)
 		(uuid "fb8055a0-69e8-4fcf-b7ab-e687dcf17a2c")
 	)
+	(label "~{ESTOP_N}"
+		(at 139.7 189.865 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "07b4fe7a-01c3-4e68-8871-7dc1cd87ce00")
+	)
 	(label "CAN_L"
 		(at 43.18 151.765 180)
 		(effects
@@ -2931,6 +3299,16 @@
 			(justify right bottom)
 		)
 		(uuid "32adb190-80d4-483a-abb3-16cd6621e4c0")
+	)
+	(label "CAN_H"
+		(at 139.7 182.245 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "335baeff-6df9-4941-a69e-5f4b9f714566")
 	)
 	(label "SIDE_BIT"
 		(at 233.045 64.135 180)
@@ -2982,6 +3360,16 @@
 		)
 		(uuid "6dc22213-3072-46dc-b64b-313d0692229d")
 	)
+	(label "CAN_L"
+		(at 101.6 189.865 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "7ca8d489-6faf-474b-9603-f6a28bb5010f")
+	)
 	(label "CAN_H"
 		(at 231.14 51.435 180)
 		(effects
@@ -2992,7 +3380,7 @@
 		)
 		(uuid "918c51f8-edd9-4939-8ee7-638080552cab")
 	)
-	(label "~{ESTOP_B}"
+	(label "~{ESTOP_N}"
 		(at 231.14 85.09 180)
 		(effects
 			(font
@@ -3002,7 +3390,7 @@
 		)
 		(uuid "a79ba457-c911-4dc6-a3da-8c45f68e22f7")
 	)
-	(label "~{ESTOP_C}"
+	(label "~{ESTOP_N}"
 		(at 231.14 113.03 180)
 		(effects
 			(font
@@ -3053,6 +3441,26 @@
 		(uuid "db3e331a-ae5f-4ece-bdea-3cab8539ac91")
 	)
 	(label "CAN_H"
+		(at 102.235 177.165 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "e194c4b6-e31d-4890-b0b8-189ce1feb31f")
+	)
+	(label "CAN_L"
+		(at 139.7 184.785 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "e50ded7e-3a7a-49c5-9f40-12d0ff588d8f")
+	)
+	(label "CAN_H"
 		(at 231.14 80.01 180)
 		(effects
 			(font
@@ -3062,7 +3470,7 @@
 		)
 		(uuid "e7636e4b-f305-4e14-84e1-9bb924905750")
 	)
-	(label "~{ESTOP_A}"
+	(label "~{ESTOP_N}"
 		(at 231.14 56.515 180)
 		(effects
 			(font
@@ -3084,7 +3492,7 @@
 	)
 	(hierarchical_label "VBAT"
 		(shape input)
-		(at 49.53 110.49 180)
+		(at 45.72 106.045 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3370,6 +3778,150 @@
 			(project "side-board"
 				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
 					(reference "#PWR0109")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "side-board:SMBJ18A-E3_52")
+		(at 46.99 109.22 270)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "0dea1c27-7e67-43d3-a1ae-94f2154311c9")
+		(property "Reference" "D101"
+			(at 50.8 115.0619 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "SMBJ18A-E3_52"
+			(at 50.8 117.6019 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "side-board:DIOM5436X244N"
+			(at -46.66 119.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Datasheet" "http://www.vishay.com/docs/88392/smbj.pdf"
+			(at -146.66 119.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Description" "Vishay SMBJ18A-E3/52, Uni-Directional TVS Diode, 600W, 2-Pin DO-214AA"
+			(at 46.99 109.22 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Height" "2.44"
+			(at -346.66 119.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Mouser Part Number" "625-SMBJ18A-E3"
+			(at -446.66 119.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/Vishay-General-Semiconductor/SMBJ18A-E3-52/?qs=3qLEwsAJF5THC%2Fs6Ge44Fg%3D%3D"
+			(at -546.66 119.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Manufacturer_Name" "Vishay"
+			(at -646.66 119.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Manufacturer_Part_Number" "SMBJ18A-E3/52"
+			(at -746.66 119.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(pin "1"
+			(uuid "ef7b1fd3-80ab-4911-8f87-b2e4e3c9a86d")
+		)
+		(pin "2"
+			(uuid "089f9492-0124-404b-8bcc-40f4a8454c1c")
+		)
+		(instances
+			(project "side-board"
+				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
+					(reference "D101")
 					(unit 1)
 				)
 			)
@@ -4010,6 +4562,85 @@
 		)
 	)
 	(symbol
+		(lib_id "power:GND")
+		(at 132.08 187.325 270)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "585356b3-652b-4aa9-95b3-83c5445d4bb0")
+		(property "Reference" "#PWR0113"
+			(at 125.73 187.325 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 128.27 187.3249 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" ""
+			(at 132.08 187.325 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 132.08 187.325 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 132.08 187.325 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "6711df80-e49a-4cfa-a2b5-f1bf914e03dd")
+		)
+		(instances
+			(project "side-board"
+				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
+					(reference "#PWR0113")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Connector:TestPoint")
 		(at 109.855 155.575 90)
 		(unit 1)
@@ -4249,7 +4880,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 50.8 121.92 0)
+		(at 46.99 125.73 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -4260,7 +4891,7 @@
 		(fields_autoplaced yes)
 		(uuid "7839b317-71ce-429d-ae2b-d2148a2a3beb")
 		(property "Reference" "#PWR0115"
-			(at 50.8 128.27 0)
+			(at 46.99 132.08 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4271,7 +4902,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 50.8 126.365 0)
+			(at 46.99 130.175 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -4281,7 +4912,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 50.8 121.92 0)
+			(at 46.99 125.73 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4292,7 +4923,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 50.8 121.92 0)
+			(at 46.99 125.73 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4303,7 +4934,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 50.8 121.92 0)
+			(at 46.99 125.73 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4811,6 +5442,88 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:R")
+		(at 97.79 183.515 180)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "994fcb20-e44a-4c50-a223-94fd24358878")
+		(property "Reference" "R104"
+			(at 100.33 182.2449 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "120"
+			(at 100.33 184.7849 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 99.568 183.515 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 97.79 183.515 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 97.79 183.515 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "7eb314e7-1260-4382-bb8f-6b0835954cac")
+		)
+		(pin "1"
+			(uuid "6b25e2eb-a173-4b3e-9634-5b62d29294b3")
+		)
+		(instances
+			(project "side-board"
+				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
+					(reference "R104")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Jumper:SolderJumper_2_Bridged")
 		(at 214.63 115.57 0)
 		(unit 1)
@@ -4962,6 +5675,94 @@
 			(project "side-board"
 				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
 					(reference "#PWR0114")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector_Generic:Conn_01x04")
+		(at 146.05 184.785 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "aa06212e-feec-4e72-b8e6-661de32f73f5")
+		(property "Reference" "J101"
+			(at 148.59 184.7849 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "Inter-board Connector"
+			(at 148.59 187.3249 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Connector_JST:JST_XH_S4B-XH-A-1_1x04_P2.50mm_Horizontal"
+			(at 146.05 184.785 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 146.05 184.785 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Generic connector, single row, 01x04, script generated (kicad-library-utils/schlib/autogen/connector/)"
+			(at 146.05 184.785 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "3"
+			(uuid "055b9a0c-5a89-474e-a015-c598096a6500")
+		)
+		(pin "2"
+			(uuid "a7e11b2b-3feb-45a8-9fb9-0aabacaa0a46")
+		)
+		(pin "1"
+			(uuid "fc82a24e-17f9-4287-8bb0-0124218f5c7b")
+		)
+		(pin "4"
+			(uuid "f2c9a6f1-5fcd-414d-aecb-4729b99a7d08")
+		)
+		(instances
+			(project "side-board"
+				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
+					(reference "J101")
 					(unit 1)
 				)
 			)
@@ -6305,99 +7106,6 @@
 			(project "side-board"
 				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
 					(reference "#PWR0117")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:D_TVS")
-		(at 50.8 116.84 270)
-		(mirror x)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "fe54c747-390c-4d9f-a06b-e581efad44d3")
-		(property "Reference" "D101"
-			(at 47.625 115.5699 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "SMBJ18A/TR13"
-			(at 47.625 118.1099 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "Diode_SMD:D_SMB"
-			(at 50.8 116.84 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 50.8 116.84 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Bidirectional transient-voltage-suppression diode"
-			(at 50.8 116.84 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MFR" "SMBJ18A/TR13"
-			(at 50.8 116.84 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "04989591-5cea-4dbb-8b4b-0bdaa52683cd")
-		)
-		(pin "2"
-			(uuid "1cae6fe9-8505-40a4-b70a-cf75d4989ed5")
-		)
-		(instances
-			(project "side-board"
-				(path "/f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
-					(reference "D101")
 					(unit 1)
 				)
 			)
