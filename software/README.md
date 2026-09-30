@@ -177,6 +177,17 @@ sudo CAN=vcan0 PROFILES=sim,vision software/host/setup.sh    # bench, with sim_l
 
 It installs Docker (default nofile 65536, logs to journald) and adds `vector-can` (can0 at 1 Mbit/s or vcan0), `vector-camera` (rpicam-vid) and `vector-stack` (`docker compose up -d`), and arms the hardware watchdog at 15 s. Settings live in `/etc/vector.env`. From power-on on the Pi 5 (NVMe): Linux ready in 10.7 s, legs active at 13.3 s, first YOLO result at about 18 s.
 
+### A card for the robot (CM5 on microSD)
+
+```sh
+software/image/make_card.sh vector.img --ssid Home --ssh-key ~/.ssh/pi5.pub      # an image file, flash it later
+sudo software/image/make_card.sh /dev/sdX --ssid Home --ssh-key ~/.ssh/pi5.pub   # straight to a card
+```
+
+It takes the latest Raspberry Pi OS Lite (arm64, checked against its SHA-256), and puts in the boot partition a cloud-init `user-data` (hostname `vector`, user `pi` with only the SSH key, Wi-Fi or Ethernet) and this checkout's code as `vector.tar.gz` (the GitHub repo is private, so nothing is cloned; `VERSION` in it says which commit, and whether there were local changes). On first boot `firstboot.sh` runs `setup.sh`, builds the three images, exports the YOLO model and reboots into the running stack: about 20 minutes with internet, log in `/var/log/vector-firstboot.log`. `--can vcan0 --profiles sim,vision` makes a test box.
+
+`setup.sh` also looks after the card: the journal stays in RAM (64 MB), swap only in zram, `fsck.repair=yes`. The root filesystem stays writable, since Docker's storage can't sit on an overlay root without a partition of its own; a clean halt through the power board is what keeps it intact.
+
 ## Camera and YOLO
 
 The camera stays on the host, where libcamera is native, and hands raw frames to the vision container over a local socket; nothing is encoded twice. YOLO runs from ONNX with ONNX Runtime (`software/vision/yolo_onnx.py`), no PyTorch on the robot; PyTorch and Ultralytics live only in an export image, used once:

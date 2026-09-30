@@ -1,0 +1,20 @@
+#cloud-config
+# Written by make_card.sh; @...@ are filled in there.
+hostname: @HOSTNAME@
+manage_etc_hosts: true
+timezone: Europe/Bucharest
+users:
+  - name: pi
+    groups: [adm, dialout, video, plugdev, input, gpio, i2c, spi, sudo]
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: true
+    ssh_authorized_keys:
+      - @SSH_KEY@
+ssh_pwauth: false
+package_update: true
+packages: [docker.io, docker-compose, can-utils, avahi-daemon]
+runcmd:
+  - [systemctl, enable, --now, ssh]
+  - [bash, -c, "mkdir -p /home/pi/vector && tar -xzf /boot/firmware/vector.tar.gz -C /home/pi/vector && chown -R pi:pi /home/pi/vector"]
+  - [bash, -c, "CAN=@CAN@ PROFILES=@PROFILES@ /home/pi/vector/software/image/firstboot.sh >/var/log/vector-firstboot.log 2>&1"]

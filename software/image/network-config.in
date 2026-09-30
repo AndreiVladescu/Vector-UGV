@@ -1,0 +1,10 @@
+network:
+  version: 2
+  wifis:
+    renderer: NetworkManager
+    wlan0:
+      dhcp4: true
+      regulatory-domain: RO
+      access-points:
+        "@SSID@":
+          password: "@PSK@"

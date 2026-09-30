@@ -125,7 +125,30 @@ RuntimeWatchdogSec=15
 RebootWatchdogSec=2min
 W
 
+# The SD card: fewer writes, and a quick recovery when power goes anyway. Root stays
+# writable (Docker's overlay2 can't sit on an overlay root without its own partition);
+# the power board gives the CM5 a clean halt.
+mkdir -p /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/vector.conf <<'J'
+[Journal]
+Storage=volatile
+RuntimeMaxUse=64M
+J
+# swap only in zram (the default adds a writeback file on the card); /tmp is tmpfs already
+if [[ -d /etc/rpi ]]; then
+    mkdir -p /etc/rpi/swap.conf.d
+    printf '[Main]\nMechanism=zram\n' > /etc/rpi/swap.conf.d/vector.conf
+fi
+grep -q 'fsck.repair=yes' /boot/firmware/cmdline.txt 2>/dev/null || sed -i 's/$/ fsck.repair=yes/' /boot/firmware/cmdline.txt
+
 systemctl daemon-reload
 systemctl daemon-reexec
-systemctl enable --now vector-can.service vector-camera.service vector-stack.service
+systemctl enable --now vector-can.service vector-camera.service
+systemctl enable vector-stack.service
+# the images come from firstboot.sh or a manual build; without them compose would try Docker Hub
+if docker image inspect vector >/dev/null 2>&1; then
+    systemctl restart vector-stack.service
+else
+    echo "no vector image yet: build it, then systemctl start vector-stack"
+fi
 echo "done: CAN=$CAN, profiles=$PROFILES, GNSS=${GNSS:-none}, nav=$NAV; status: systemctl status vector-stack"
