@@ -1,6 +1,7 @@
 /* Side board / Nucleo specifics: GPIO shared with the bootloader, and the node ID. */
 
 #include "board.h"
+#include "leg_id.h"
 
 void board_gpio(void)
 {
@@ -44,7 +45,6 @@ uint8_t board_node_id(void)
 #if defined(BOARD_NUCLEO)
     return LEG_ID;
 #else
-    uint8_t s = board_id_straps(), pos = s & 3;
-    return pos ? (uint8_t)(pos + ((s & 4) ? 3 : 0)) : 0; /* 0: the leg stays off with a config fault */
+    return leg_node_from_straps(board_id_straps()); /* 0: the leg stays off with a config fault */
 #endif
 }

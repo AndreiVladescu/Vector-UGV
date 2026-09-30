@@ -15,7 +15,7 @@ From `stm32/leg-node.ioc`, checked by loading it in CubeMX 6.18. Labels match th
 | 10 | PA3 | ADC1_IN3 | ADC_I_LEG (INA181 out) |
 | 11 | PA4 | ADC1_IN4 | NTC_SENSE |
 | 12 | PA5 | ADC1_IN5 | ADC_VBAT (100k / 15k) |
-| 13 | PA6 | ADC1_IN6 | ADC_6V0 (10k / 6.8k) |
+| 13 | PA6 | ADC1_IN6 | ADC_6V0 (15k / 10k) |
 | 18 | PA8 | TIM1_CH1 | TIM_PWM_COXA |
 | 19 | PA9 | TIM1_CH2 | TIM_PWM_FEMUR |
 | 21 | PA10 | TIM1_CH3 | TIM_PWM_TIBIA |
@@ -38,7 +38,7 @@ From `stm32/leg-node.ioc`, checked by loading it in CubeMX 6.18. Labels match th
 
 PA7 is the DBG test pad: high while each 1 ms tick runs (ToF, leg logic, LED), so a scope shows the loop time and any overrun; the pulse width should stay well under 1 ms. Spare: PC6.
 
-Leg ID: jumpers to 3V3, read with the internal pull-downs. Two per cell give its position, bridged as B1B0 = 01 for cell A next to the CAN-in connector (leg 1), 10 for B, 11 for C at the outer end (leg 3). JP107 sets the side for the whole board: open = left, bridged = right. Node = position + 3 × side, so L1–L3 = 1–3 and R1–R3 = 4–6. Position 00 means the jumpers weren't set: the leg stays off with a config fault and blinks fast. `leg_config.py read` shows the raw jumpers.
+Leg ID: jumpers to 3V3, read with the internal pull-downs. Two per cell give its position, bridged as B1B0 = 01 for cell A next to the CAN-in connector (leg 1), 10 for B, 11 for C at the outer end (leg 3). JP107 sets the side for the whole board: open = left, bridged = right. The right board is the same PCB turned 180°, so its cell A sits at the other end of the body and the order runs backwards: left A/B/C = L1/L2/L3 (nodes 1–3), right A/B/C = R3/R2/R1 (nodes 6/5/4). R1 is then the front leg on both sides, as in `legs.yaml`. This assumes cell A is at the front on the left side; if the chassis puts it at the rear, swap the two sides in `leg_node_from_straps()` (`src/leg_id.h`). Position 00 means the jumpers weren't set: the leg stays off with a config fault and blinks fast. `leg_config.py read` shows the raw jumpers.
 
 Clocks: the C0 has no PLL, so the core runs from HSI48 (48 MHz, divider 1) and FDCAN from the 40 MHz crystal (20 time quanta per bit at 1 Mbit/s; 25 MHz also works, `-DSIDE_HSE=25000000`). HSI alone is ±1 %, too loose for CAN between six nodes. TIM1 runs at 1 MHz (prescaler 47, period 19999), so pulse widths are set in µs. The ADC must use a clock divider: CubeMX shows 48 MHz, above the C0's ADC limit.
 

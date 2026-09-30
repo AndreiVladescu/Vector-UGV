@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "leg_id.h"
 #include "leg_sim.h"
 #include "tof_sim.h"
 #include "vl53l1x.h"
@@ -133,6 +134,14 @@ static void test_protocol(void)
     can_pack_leg_cfg(&f, CAN_LEG_REPLY, 6, &(struct leg_cfg_msg){2, 1, 15930, 200, 4});
     hex(&f, h);
     CHECK(f.id == 0x066 && !strcmp(h, "02013a3e0000c804"));
+}
+
+static void test_leg_id(void)
+{
+    /* straps = side << 2 | position; the right board is turned 180°, so it counts backwards */
+    const uint8_t want[8] = {0, 1, 2, 3, 0, 6, 5, 4};
+    for (uint8_t s = 0; s < 8; s++)
+        CHECK(leg_node_from_straps(s) == want[s]);
 }
 
 static void test_joint(void)
@@ -745,6 +754,7 @@ int main(void)
     struct { const char *name; void (*fn)(void); } tests[] = {
         {"protocol", test_protocol},
         {"joint", test_joint},
+        {"leg_id", test_leg_id},
         {"refuses_uncalibrated", test_refuses_uncalibrated},
         {"dead_servo", test_dead_servo},
         {"watchdog", test_watchdog},
