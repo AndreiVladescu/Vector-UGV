@@ -135,6 +135,20 @@ ros2 run vector_hw leg_config.py --channel vcan0 power set charge_ma 2500 --save
 
 `power_monitor` also puts battery, board and charger entries in `/diagnostics` and a latched `power/estop`. When the board starts a shutdown, or the charge falls under `sentinel_soc` (10 %) while discharging, it calls `gait_node/sentinel` so the robot sits down before the power goes. `kill -USR1` / `-USR2` on `sim_power` press the power button and plug / unplug the charger.
 
+## Radio and links
+
+With `links:=true` (`LINKS=true` in `/etc/vector.env`, the default with `can0`) `link_manager.py` is the only node that writes `cmd_vel`, from the first of: the ExpressLRS radio while armed (`cmd_vel/elrs`), an operator over Wi-Fi or LTE (`cmd_vel/teleop`), the GPS mission (`cmd_vel/nav`). The operator counts as connected while teleop commands or `operator/heartbeat` (std_msgs/Empty, about 1 Hz, e.g. from a Foxglove publish panel) keep coming. With no radio and no operator for 5 s the robot stops and sits down, and stays down until woken; a mission only moves while a link is up (`missions_alone` to change that).
+
+```sh
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=cmd_vel/teleop
+ros2 topic pub -r 1 /operator/heartbeat std_msgs/msg/Empty
+ros2 topic echo /links/active          # elrs, teleop, nav or idle
+```
+
+`elrs.py` reads an ExpressLRS receiver in CRSF mode (420000 baud) on UART2 (GPIO4 TX, GPIO5 RX, `/dev/ttyAMA2`). Mode 2: right stick forward / sideways, left stick sideways turns and up / down sets the top speed (30-100 % of 0.1 m/s). AUX1 arms, AUX2 high sits down (low wakes), AUX3 high is the e-stop. The handset shows the battery (voltage, current, used mAh, %) and the gait mode as telemetry. Set the receiver to failsafe "no pulses", so a lost link stops the sticks.
+
+The LTE modem (A7670E) in RNDIS / ECM mode is a wired interface to Linux; `setup.sh` adds a NetworkManager profile that matches it by driver and puts it behind Wi-Fi (route metric 700). `/diagnostics` shows the control source, the Wi-Fi signal and the modem's state, plus its signal with `LTE_AT=/dev/ttyUSB2` (the AT port number can differ; `AT+CSQ` is plain 3GPP). The APN and the modem's USB mode are set once with its own AT commands, see SIMCom's A76XX documents.
+
 ## GNSS and waypoints
 
 Position is GNSS first: `robot_localization` runs two EKFs (leg odometry `odom/legs` from `gait_node` plus the IMU for `odom -> base_link`; the same plus GNSS through `navsat_transform` for `map -> odom`), and `waypoints.py` walks GPS points. Config in `vector_nav/config/localization.yaml`.

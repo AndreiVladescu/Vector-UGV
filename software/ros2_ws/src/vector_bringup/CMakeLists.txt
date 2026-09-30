@@ -17,6 +17,10 @@ if(BUILD_TESTING)
   add_launch_test(test/test_gazebo_slope.py TIMEOUT 300 LABELS gazebo)
   add_launch_test(test/test_gazebo_rough.py TIMEOUT 300 LABELS gazebo)
   add_launch_test(test/test_gazebo_gnss.py TIMEOUT 400 LABELS gazebo)
+  # DDS on this machine only: a robot (or the Pi) on the LAN publishes its own
+  # robot_description, cmd_vel and so on, which would end up in these tests
+  get_property(tests DIRECTORY PROPERTY TESTS)
+  set_tests_properties(${tests} PROPERTIES ENVIRONMENT "ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST")
 endif()
 
 ament_package()

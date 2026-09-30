@@ -3,6 +3,8 @@
 #   sudo software/host/setup.sh                  # can0 (real bus), stack + vision
 #   sudo CAN=vcan0 PROFILES=sim,vision software/host/setup.sh   # test box: simulated legs
 #   GNSS=/dev/ttyAMA0 (default; "" = none), NAV=true for the EKFs and the waypoint follower
+#   LINKS=true (default with can0) for the link manager; ELRS=/dev/ttyAMA2 (UART2, default;
+#   "" = none); LTE_AT=/dev/ttyUSB2 for the modem's signal ("" = default, don't ask it)
 # Installs: Docker (with a sane open-files limit), CAN bring-up, the camera service, the
 # stack as a systemd service, and the hardware watchdog. Images are built separately.
 set -euo pipefail
@@ -17,6 +19,9 @@ CAMERA_HEIGHT=${CAMERA_HEIGHT:-960}
 USER_NAME=${SUDO_USER:-pi}
 GNSS=${GNSS-/dev/ttyAMA0}
 NAV=${NAV:-false}
+LINKS=${LINKS:-$([[ $CAN == can0 ]] && echo true || echo false)}
+ELRS=${ELRS-/dev/ttyAMA2}
+LTE_AT=${LTE_AT:-}
 
 command -v docker >/dev/null || apt-get install -y docker.io docker-compose
 usermod -aG docker "$USER_NAME"
@@ -41,6 +46,9 @@ CAMERA_WIDTH=$CAMERA_WIDTH
 CAMERA_HEIGHT=$CAMERA_HEIGHT
 GNSS_PORT=$GNSS
 NAV=$NAV
+LINKS=$LINKS
+ELRS_PORT=$ELRS
+LTE_AT_PORT=$LTE_AT
 E
 
 # UART0 on GPIO14 (TX) / 15 (RX) for the GNSS receiver, /dev/ttyAMA0 after a reboot. The
@@ -50,6 +58,37 @@ if [[ -n $GNSS && -f $BOOT_CFG ]] && ! grep -q '^dtparam=uart0=on' "$BOOT_CFG"; 
     echo 'dtparam=uart0=on' >> "$BOOT_CFG"
     echo "UART0 enabled in $BOOT_CFG: reboot for /dev/ttyAMA0"
 fi
+# UART2 on GPIO4 (TX) / 5 (RX) for the ExpressLRS receiver, /dev/ttyAMA2 (Pi 5 / CM5 overlay)
+if [[ -n $ELRS && -f $BOOT_CFG ]] && ! grep -q '^dtoverlay=uart2-pi5' "$BOOT_CFG"; then
+    echo 'dtoverlay=uart2-pi5' >> "$BOOT_CFG"
+    echo "UART2 enabled in $BOOT_CFG: reboot for $ELRS"
+fi
+
+# The A7670E (RNDIS / ECM) shows up as a wired interface, which NetworkManager would put
+# ahead of Wi-Fi. Match it by driver and give it a higher route metric: Wi-Fi first, LTE
+# when there's no Wi-Fi.
+if [[ -d /etc/NetworkManager/system-connections ]]; then
+    cat > /etc/NetworkManager/system-connections/vector-lte.nmconnection <<'N'
+[connection]
+id=vector-lte
+type=ethernet
+autoconnect=true
+
+[match]
+driver=rndis_host;cdc_ether;cdc_ncm;
+
+[ipv4]
+method=auto
+route-metric=700
+
+[ipv6]
+method=auto
+route-metric=700
+N
+    chmod 600 /etc/NetworkManager/system-connections/vector-lte.nmconnection
+    nmcli connection reload 2>/dev/null || true
+fi
+
 # I2C1 (GPIO2/3) for the nose board (VL53L8CX, compass) at 400 kHz, as /dev/i2c-1
 if [[ -f $BOOT_CFG ]] && ! grep -q '^dtparam=i2c_arm=on' "$BOOT_CFG"; then
     echo 'dtparam=i2c_arm=on,i2c_arm_baudrate=400000' >> "$BOOT_CFG"
@@ -151,4 +190,4 @@ if docker image inspect vector >/dev/null 2>&1; then
 else
     echo "no vector image yet: build it, then systemctl start vector-stack"
 fi
-echo "done: CAN=$CAN, profiles=$PROFILES, GNSS=${GNSS:-none}, nav=$NAV; status: systemctl status vector-stack"
+echo "done: CAN=$CAN, profiles=$PROFILES, GNSS=${GNSS:-none}, nav=$NAV, links=$LINKS, ELRS=${ELRS:-none}; status: systemctl status vector-stack"

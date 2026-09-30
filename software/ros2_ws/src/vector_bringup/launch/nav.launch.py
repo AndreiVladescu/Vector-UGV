@@ -22,6 +22,8 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false'),
+        DeclareLaunchArgument('cmd_topic', default_value='cmd_vel',
+                              description='cmd_vel/nav when the link manager runs (links:=true)'),
         DeclareLaunchArgument('declination', default_value='0.105',
                               description='rad, east positive; 0 in Gazebo, whose IMU gives true heading'),
 
@@ -33,6 +35,7 @@ def generate_launch_description():
              parameters=params + [declination],
              remappings=[('gps/fix', 'gnss/fix'), ('gps/filtered', 'gnss/filtered'),
                          ('odometry/filtered', 'odometry/global')]),
-        Node(package='vector_nav', executable='waypoints.py', name='waypoint_follower', parameters=params),
+        Node(package='vector_nav', executable='waypoints.py', name='waypoint_follower', parameters=params,
+             remappings=[('cmd_vel', LaunchConfiguration('cmd_topic'))]),
         Node(package='vector_nav', executable='obstacles.py', name='obstacles', parameters=params),
     ])

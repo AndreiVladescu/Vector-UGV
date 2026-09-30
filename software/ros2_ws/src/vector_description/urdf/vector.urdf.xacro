@@ -211,7 +211,8 @@
         <imu><orientation_reference_frame><localization>ENU</localization></orientation_reference_frame></imu>
       </sensor>
     </gazebo>
-    <!-- GNSS: 5 Hz, 0.5 m noise (a real receiver is nearer 1.5-2.5 m, but this keeps the test short) -->
+    <!-- GNSS: 5 Hz, about 0.5 m of noise (a real receiver is nearer 1.5-2.5 m, but this keeps the
+         test short). Gazebo applies the horizontal noise to latitude and longitude in degrees. -->
     <gazebo reference="gnss">
       <sensor name="gnss" type="navsat">
         <always_on>true</always_on>
@@ -220,7 +221,7 @@
         <gz_frame_id>gnss</gz_frame_id>
         <navsat>
           <position_sensing>
-            <horizontal><noise type="gaussian"><stddev>0.5</stddev></noise></horizontal>
+            <horizontal><noise type="gaussian"><stddev>5e-6</stddev></noise></horizontal>
             <vertical><noise type="gaussian"><stddev>1.0</stddev></noise></vertical>
           </position_sensing>
         </navsat>

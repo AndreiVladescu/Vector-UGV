@@ -5,6 +5,9 @@
   ros2 launch vector_bringup robot.launch.py hardware:=can can_interface:=vcan0   # sim_legs
   gnss_port:=/dev/ttyAMA0 [gnss_baud:=115200]   NMEA GNSS on a UART: gnss/fix, gnss/vel
   nav:=true                                     EKFs, navsat_transform, waypoint follower
+  links:=true [elrs_port:=/dev/ttyAMA2] [lte_at_port:=/dev/ttyUSB2]
+      the link manager owns cmd_vel (radio > cmd_vel/teleop > cmd_vel/nav) and sits the robot
+      down when every link is gone; teleop then goes to cmd_vel/teleop
 
 Drive it with: ros2 run teleop_twist_keyboard teleop_twist_keyboard
 """
@@ -42,6 +45,9 @@ def generate_launch_description():
         DeclareLaunchArgument('nav', default_value='false'),
         DeclareLaunchArgument('gnss_port', default_value='', description='serial port of an NMEA receiver'),
         DeclareLaunchArgument('gnss_baud', default_value='115200'),
+        DeclareLaunchArgument('links', default_value='false'),
+        DeclareLaunchArgument('elrs_port', default_value='', description='UART of the ExpressLRS receiver'),
+        DeclareLaunchArgument('lte_at_port', default_value='', description='AT port of the LTE modem'),
 
         Node(
             package='robot_state_publisher',
@@ -81,7 +87,20 @@ def generate_launch_description():
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(bringup, 'launch', 'nav.launch.py')),
+            launch_arguments={'cmd_topic': PythonExpression(
+                ["'cmd_vel/nav' if '", LaunchConfiguration('links'), "' == 'true' else 'cmd_vel'"])}.items(),
             condition=IfCondition(LaunchConfiguration('nav'))),
+
+        Node(
+            package='vector_link',
+            executable='link_manager.py',
+            parameters=[{'lte_at_port': LaunchConfiguration('lte_at_port')}],
+            condition=IfCondition(LaunchConfiguration('links'))),
+        Node(
+            package='vector_link',
+            executable='elrs.py',
+            parameters=[{'port': LaunchConfiguration('elrs_port')}],
+            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('elrs_port'), "' != ''"]))),
 
         # faults, supplies and ToF from the legs: /diagnostics and legs/<leg>/tof
         Node(
