@@ -2494,7 +2494,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "side-board:NCP18XH103F03RB"
+		(symbol "vector:NCP18XH103F03RB"
 			(pin_names
 				(hide yes)
 			)
@@ -2525,7 +2525,7 @@
 					(justify left top)
 				)
 			)
-			(property "Footprint" "side-board:THRMC1608X95N"
+			(property "Footprint" "vector:THRMC1608X95N"
 				(at 13.97 -96.19 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2695,7 +2695,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "side-board:STM32C092KCT6"
+		(symbol "vector:STM32C092KCT6"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -2723,7 +2723,7 @@
 					(justify left top)
 				)
 			)
-			(property "Footprint" "side-board:QFP80P900X900X160-32N"
+			(property "Footprint" "vector:QFP80P900X900X160-32N"
 				(at 44.45 -79.68 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -3409,7 +3409,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "side-board:TCAN332DR"
+		(symbol "vector:TCAN332DR"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -3437,7 +3437,7 @@
 					(justify left top)
 				)
 			)
-			(property "Footprint" "side-board:SOIC127P600X175-8N"
+			(property "Footprint" "vector:SOIC127P600X175-8N"
 				(at 24.13 -94.92 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -14268,7 +14268,7 @@
 		)
 	)
 	(symbol
-		(lib_id "side-board:TCAN332DR")
+		(lib_id "vector:TCAN332DR")
 		(at 244.475 154.94 0)
 		(unit 1)
 		(body_style 1)
@@ -14299,7 +14299,7 @@
 				)
 			)
 		)
-		(property "Footprint" "side-board:SOIC127P600X175-8N"
+		(property "Footprint" "vector:SOIC127P600X175-8N"
 			(at 268.605 249.86 0)
 			(hide yes)
 			(show_name no)
@@ -17133,7 +17133,7 @@
 		)
 	)
 	(symbol
-		(lib_id "side-board:NCP18XH103F03RB")
+		(lib_id "vector:NCP18XH103F03RB")
 		(at 238.76 92.71 0)
 		(unit 1)
 		(body_style 1)
@@ -17164,7 +17164,7 @@
 				)
 			)
 		)
-		(property "Footprint" "side-board:THRMC1608X95N"
+		(property "Footprint" "vector:THRMC1608X95N"
 			(at 252.73 188.9 0)
 			(hide yes)
 			(show_name no)
@@ -18961,7 +18961,7 @@
 		)
 	)
 	(symbol
-		(lib_id "side-board:STM32C092KCT6")
+		(lib_id "vector:STM32C092KCT6")
 		(at 50.8 62.23 0)
 		(unit 1)
 		(body_style 1)
@@ -18991,7 +18991,7 @@
 				)
 			)
 		)
-		(property "Footprint" "side-board:QFP80P900X900X160-32N"
+		(property "Footprint" "vector:QFP80P900X900X160-32N"
 			(at 95.25 141.91 0)
 			(hide yes)
 			(show_name no)

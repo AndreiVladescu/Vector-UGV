@@ -2,9 +2,285 @@
 	(version 20260306)
 	(generator "eeschema")
 	(generator_version "10.0")
-	(uuid 941d2914-89b1-43c8-b139-14f6c0b9b60e)
+	(uuid "941d2914-89b1-43c8-b139-14f6c0b9b60e")
 	(paper "A4")
 	(lib_symbols)
+	(sheet
+		(at 175.895 71.755)
+		(size 18.415 24.13)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "2814a326-399d-4f5b-add7-c31c176d2838")
+		(property "Sheetname" "Charger"
+			(at 175.895 71.0434 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "charger.kicad_sch"
+			(at 175.895 96.4696 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "power-board"
+				(path "/941d2914-89b1-43c8-b139-14f6c0b9b60e"
+					(page "3")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 102.87 144.78)
+		(size 29.845 15.24)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "6ed46044-1181-4735-96f1-6e9cff12ac28")
+		(property "Sheetname" "Hotswap1"
+			(at 102.87 144.0684 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "hotswap.kicad_sch"
+			(at 102.87 160.6046 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "power-board"
+				(path "/941d2914-89b1-43c8-b139-14f6c0b9b60e"
+					(page "7")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 135.89 71.755)
+		(size 26.035 20.32)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "d6230d8d-c4ce-4f76-bf05-5c140eba2626")
+		(property "Sheetname" "BMS"
+			(at 135.89 71.0434 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "bms.kicad_sch"
+			(at 135.89 92.6596 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "power-board"
+				(path "/941d2914-89b1-43c8-b139-14f6c0b9b60e"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 154.94 115.57)
+		(size 24.13 15.24)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "e94eaa03-308b-403f-8e5d-56d8d267b6b4")
+		(property "Sheetname" "Control"
+			(at 154.94 114.8584 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "control.kicad_sch"
+			(at 154.94 131.3946 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "power-board"
+				(path "/941d2914-89b1-43c8-b139-14f6c0b9b60e"
+					(page "5")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 185.42 116.84)
+		(size 24.13 13.97)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "f36e1315-7f36-4813-bafb-c3d8b7709174")
+		(property "Sheetname" "Supplies"
+			(at 185.42 116.1284 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "supplies.kicad_sch"
+			(at 185.42 131.3946 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "power-board"
+				(path "/941d2914-89b1-43c8-b139-14f6c0b9b60e"
+					(page "6")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 107.315 114.3)
+		(size 29.845 15.24)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "fe55740a-1bd5-460c-acc5-4ed5cba0f3b7")
+		(property "Sheetname" "Hotswap"
+			(at 107.315 113.5884 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "hotswap.kicad_sch"
+			(at 107.315 130.1246 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "power-board"
+				(path "/941d2914-89b1-43c8-b139-14f6c0b9b60e"
+					(page "4")
+				)
+			)
+		)
+	)
 	(sheet_instances
 		(path "/"
 			(page "1")
