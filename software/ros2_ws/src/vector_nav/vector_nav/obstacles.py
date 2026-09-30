@@ -50,6 +50,20 @@ def raised(points, ground_z, min_height=0.05, max_range=3.0):
     return points[keep]
 
 
+def sectors(points_xy, n=12, max_range=2.0):
+    """Nearest obstacle in each of n directions around the robot (base_link x, y), metres,
+    inf where there's nothing; sector 0 is straight ahead, then counter-clockwise (left)."""
+    out = np.full(n, np.inf)
+    if not len(points_xy):
+        return out
+    d = np.hypot(points_xy[:, 0], points_xy[:, 1])
+    a = np.arctan2(points_xy[:, 1], points_xy[:, 0])
+    idx = np.round(a / (2 * math.pi / n)).astype(int) % n
+    near = d <= max_range
+    np.minimum.at(out, idx[near], d[near])
+    return out
+
+
 def clearance(points_xy, half_width=0.25, look=2.0):
     """(free distance straight ahead, side with more room: +1 left, -1 right) from
     base_link (x, y) obstacle points."""

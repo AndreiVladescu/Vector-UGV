@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0a0d12">
+<title>VECTOR</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root {
+    --bg: #0a0d12; --glass: rgba(14, 18, 25, 0.64); --glass-2: rgba(22, 28, 38, 0.72);
+    --edge: rgba(255, 255, 255, 0.09); --text: #eef2f7; --dim: #8d97a8; --faint: #5a6474;
+    --accent: #3ea6ff; --ok: #34d17a; --warn: #f5b83d; --err: #ff4d5a;
+    --r: 18px; --gap: 12px;
+    --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); overflow: hidden;
+               font: 14px/1.3 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; user-select: none; -webkit-user-select: none; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .glass { background: var(--glass); border: 1px solid var(--edge); border-radius: var(--r);
+           backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3);
+           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); }
+
+  /* the video is the canvas everything floats on */
+  #stage { position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 40%, #1a2230 0%, #0a0d12 70%); }
+  #video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; }
+  #novideo { position: absolute; inset: 0; display: grid; place-items: center; color: var(--faint); letter-spacing: .08em; }
+  .vignette { position: absolute; inset: 0; pointer-events: none;
+              background: linear-gradient(to bottom, rgba(0,0,0,.55), transparent 22%, transparent 62%, rgba(0,0,0,.7)); }
+
+  /* top bar */
+  header { position: fixed; top: calc(var(--gap) + var(--safe-t)); left: var(--gap); right: var(--gap); z-index: 5;
+           display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 16px; }
+  .brand { font-weight: 800; letter-spacing: .22em; font-size: 13px; }
+  .brand span { color: var(--accent); }
+  .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px;
+          background: rgba(255, 255, 255, 0.06); white-space: nowrap; }
+  .pill small { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); box-shadow: 0 0 10px currentColor; }
+  .spacer { flex: 1; }
+  .sig { display: inline-flex; align-items: flex-end; gap: 6px; padding: 4px 8px; border-radius: 10px; }
+  .sig svg { display: block; }
+  .sig b { font-size: 11px; color: var(--dim); font-weight: 600; letter-spacing: .04em; }
+  .batt { display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; }
+  .batt .pct { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .batt .v { color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+  #estop { width: 58px; height: 58px; border-radius: 50%; border: 3px solid #ffd0d4; font-weight: 900; font-size: 12px;
+           letter-spacing: .06em; color: #fff; background: radial-gradient(circle at 35% 30%, #ff7480, #d8111f 70%);
+           box-shadow: 0 0 0 4px rgba(255, 77, 90, .25), 0 8px 24px rgba(216, 17, 31, .5); flex: none; }
+  #estop:active { transform: scale(.95); }
+
+  /* banners */
+  .banner { position: fixed; left: 50%; transform: translateX(-50%); top: calc(92px + var(--safe-t)); z-index: 6;
+            display: none; align-items: center; gap: 14px; padding: 12px 18px; border-radius: 14px; font-weight: 700; }
+  .banner.show { display: flex; }
+  #estopBanner { background: rgba(216, 17, 31, .9); box-shadow: 0 0 40px rgba(255, 77, 90, .5); letter-spacing: .1em; }
+  #estopBanner button { background: #fff; color: #b0101c; border: 0; border-radius: 10px; padding: 8px 14px; font-weight: 800; }
+  #lostBanner { background: rgba(245, 184, 61, .92); color: #231800; }
+
+  /* bottom docks */
+  .dock { position: fixed; bottom: calc(var(--gap) + var(--safe-b)); z-index: 4; display: flex; gap: var(--gap); align-items: flex-end; }
+  #leftDock { left: var(--gap); }
+  #rightDock { right: var(--gap); }
+  .card { padding: 14px; }
+
+  /* joystick */
+  #stick { width: 190px; height: 190px; border-radius: 50%; position: relative; touch-action: none;
+           background: radial-gradient(circle, rgba(62, 166, 255, .08), rgba(14, 18, 25, .55) 70%);
+           border: 1px solid var(--edge); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  #stick::before { content: ""; position: absolute; inset: 22%; border-radius: 50%; border: 1px dashed rgba(255, 255, 255, .12); }
+  #stick .tick { position: absolute; color: var(--faint); font-size: 10px; font-weight: 700; letter-spacing: .08em; }
+  #knob { width: 76px; height: 76px; border-radius: 50%; position: absolute; left: 57px; top: 57px;
+          background: radial-gradient(circle at 35% 30%, #7cc4ff, #1f86e0 70%);
+          box-shadow: 0 0 24px rgba(62, 166, 255, .55), inset 0 -4px 10px rgba(0, 0, 0, .25); transition: box-shadow .2s; }
+  #stick.held #knob { box-shadow: 0 0 36px rgba(62, 166, 255, .9); }
+
+  /* radar card */
+  .radar { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 250px; }
+  #view { width: 222px; height: 222px; }
+  #pose { font-weight: 700; font-size: 15px; }
+  #speed { color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+  /* drive card */
+  .drive { display: flex; flex-direction: column; gap: 12px; align-items: center; width: 190px; }
+  .dpad { position: relative; width: 150px; height: 150px; border-radius: 50%; background: rgba(255, 255, 255, .04);
+          border: 1px solid var(--edge); flex: none; }
+  .dpad button { position: absolute; width: 50px; height: 50px; border-radius: 14px; border: 1px solid var(--edge);
+                 background: var(--glass-2); display: grid; place-items: center; }
+  .dpad button svg { width: 18px; height: 18px; fill: var(--text); }
+  .dpad button.on { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 18px rgba(62, 166, 255, .6); }
+  .dpad [data-c=fwd] { left: 50px; top: 4px; } .dpad [data-c=back] { left: 50px; bottom: 4px; }
+  .dpad [data-c=left] { left: 4px; top: 50px; } .dpad [data-c=right] { right: 4px; top: 50px; }
+  .dpad [data-c=stop] { left: 50px; top: 50px; border-radius: 50%; }
+  .row { display: flex; gap: 8px; width: 100%; }
+  .btn { flex: 1; padding: 11px 10px; border-radius: 12px; border: 1px solid var(--edge); background: var(--glass-2); font-weight: 700; }
+  .btn:active { background: rgba(255, 255, 255, .12); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #031526; }
+  .switch { display: flex; align-items: center; justify-content: space-between; width: 100%; color: var(--dim); font-size: 13px; }
+  .switch input { display: none; }
+  .switch i { width: 42px; height: 24px; border-radius: 999px; background: rgba(255, 255, 255, .12); position: relative; transition: .2s; }
+  .switch i::after { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; border-radius: 50%; background: #fff; transition: .2s; }
+  .switch input:checked + i { background: var(--accent); }
+  .switch input:checked + i::after { left: 21px; }
+
+  /* mission bar and map drawer */
+  #missionBar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--gap) + var(--safe-b)); z-index: 3;
+                display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 16px; max-width: 34vw; }
+  #missionText { color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #drawer { position: fixed; left: var(--gap); right: var(--gap); bottom: calc(var(--gap) + var(--safe-b)); z-index: 7;
+            height: min(62vh, 560px); display: flex; flex-direction: column; overflow: hidden;
+            transform: translateY(calc(100% + 40px)); transition: transform .3s cubic-bezier(.2, .8, .2, 1); }
+  #drawer.open { transform: none; }
+  #map { flex: 1; background: #111; }
+  .toolbar { display: flex; gap: 8px; padding: 10px; align-items: center; flex-wrap: wrap; }
+  .toolbar .grow { flex: 1; color: var(--dim); min-width: 120px; }
+  .wp { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #031526; font-weight: 800;
+        display: grid; place-items: center; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .5); font-size: 12px; }
+
+  #toast { position: fixed; left: 50%; bottom: calc(96px + var(--safe-b)); transform: translateX(-50%) translateY(20px);
+           z-index: 8; padding: 10px 16px; border-radius: 12px; opacity: 0; transition: .25s; pointer-events: none; }
+  #toast.show { opacity: 1; transform: translateX(-50%); }
+
+  /* header tools, ping, detections */
+  .tool { width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--edge); background: rgba(255,255,255,.06);
+          display: grid; place-items: center; flex: none; }
+  .tool svg { width: 18px; height: 18px; stroke: var(--text); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .tool.on { background: var(--accent); border-color: var(--accent); }
+  #ping { font-variant-numeric: tabular-nums; }
+  #objects { position: fixed; top: calc(96px + var(--safe-t)); left: var(--gap); z-index: 4; display: flex; flex-direction: column; gap: 6px; }
+  .obj { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border-radius: 999px; font-weight: 600; }
+  .obj i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 11px;
+           background: rgba(255,255,255,.1); }
+  .obj b { font-variant-numeric: tabular-nums; }
+  /* segmented controls */
+  .seg { display: flex; width: 100%; background: rgba(255,255,255,.06); border-radius: 12px; padding: 3px; gap: 3px; }
+  .seg button { flex: 1; border: 0; background: transparent; border-radius: 9px; padding: 7px 4px; font-weight: 700; font-size: 12px; color: var(--dim); }
+  .seg button.on { background: var(--glass-2); color: var(--text); box-shadow: 0 1px 6px rgba(0,0,0,.4); }
+  .label { width: 100%; color: var(--faint); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  .stepper { display: flex; align-items: center; gap: 8px; width: 100%; }
+  .stepper button { width: 40px; height: 36px; border-radius: 10px; border: 1px solid var(--edge); background: var(--glass-2); font-weight: 800; font-size: 18px; }
+  .stepper span { flex: 1; text-align: center; font-variant-numeric: tabular-nums; font-weight: 700; }
+  .drive hr { width: 100%; border: 0; border-top: 1px solid var(--edge); margin: 2px 0; }
+
+  /* narrow / portrait: video on top, the cards below it */
+  @media (max-width: 820px), (orientation: portrait) {
+    html, body { overflow: auto; }
+    #stage { position: relative; height: 42vh; }
+    header { position: absolute; flex-wrap: wrap; padding: 8px; gap: 6px; }
+    .brand, .pill small { display: none; }
+    #estop { width: 50px; height: 50px; }
+    .banner { top: calc(40vh - 60px); }
+    .dock, #missionBar { position: static; transform: none; max-width: none; margin: var(--gap); }
+    #leftDock, #rightDock { justify-content: center; flex-wrap: wrap; }
+    #rightDock { flex-direction: column; align-items: stretch; }
+    .radar, .drive { width: auto; }
+    .drive { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+    #drawer { height: 70vh; }
+    #objects { position: absolute; top: auto; bottom: calc(58vh + 8px); }
+    .tool { width: 34px; height: 34px; }
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <iframe id="video" allow="autoplay; fullscreen"></iframe>
+  <div id="novideo">NO VIDEO</div>
+  <div class="vignette"></div>
+  <header class="glass">
+    <div class="brand">V<span>.</span>E<span>.</span>C<span>.</span>T<span>.</span>O<span>.</span>R</div>
+    <div class="pill"><span class="dot" id="modeDot"></span><small>mode</small><b id="mode">-</b></div>
+    <div class="pill"><small>control</small><b id="control">-</b></div>
+    <div class="spacer"></div>
+    <div class="sig" id="sigElrs" title="ExpressLRS"></div>
+    <div class="sig" id="sigWifi" title="Wi-Fi"></div>
+    <div class="sig" id="sigLte" title="LTE"></div>
+    <div class="pill" id="ping" title="round trip to the robot">- ms</div>
+    <div class="batt" id="batt"></div>
+    <button class="tool" id="snap" title="save a camera snapshot"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+    <button class="tool" id="full" title="full screen, keep the screen on"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    <button id="estop" title="emergency stop">STOP</button>
+  </header>
+  <div class="banner" id="estopBanner">E-STOP ENGAGED <button id="release">Release</button></div>
+  <div id="objects"></div>
+  <div class="banner" id="lostBanner">No radio or operator: the robot sat down. Press Wake when ready.</div>
+</div>
+
+<div class="dock" id="leftDock">
+  <div id="stick"><span class="tick" style="left:50%;top:8px;transform:translateX(-50%)">FWD</span>
+    <span class="tick" style="left:50%;bottom:8px;transform:translateX(-50%)">BACK</span><div id="knob"></div></div>
+</div>
+
+<div class="dock" id="rightDock">
+  <div class="card glass radar">
+    <canvas id="view" width="444" height="444"></canvas>
+    <div id="pose">-</div>
+    <div id="speed">-</div>
+  </div>
+  <div class="card glass drive">
+    <div class="dpad" id="cruise">
+      <button data-c="fwd" title="cruise forward"><svg viewBox="0 0 24 24"><path d="M12 5l8 11H4z"/></svg></button>
+      <button data-c="left" title="cruise left"><svg viewBox="0 0 24 24"><path d="M5 12l11-8v16z"/></svg></button>
+      <button data-c="stop" title="stop"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>
+      <button data-c="right" title="cruise right"><svg viewBox="0 0 24 24"><path d="M19 12L8 4v16z"/></svg></button>
+      <button data-c="back" title="cruise backwards"><svg viewBox="0 0 24 24"><path d="M12 19l8-11H4z"/></svg></button>
+    </div>
+    <div class="seg" id="speedSeg"><button data-v="0.3">Slow</button><button data-v="0.6">Normal</button><button data-v="1">Fast</button></div>
+    <label class="switch">Sideways<input type="checkbox" id="strafe"><i></i></label>
+    <div class="row"><button class="btn" id="sit">Sit</button><button class="btn primary" id="wake">Wake</button></div>
+    <hr>
+    <div class="label">Body height</div>
+    <div class="stepper"><button id="down" title="lower">&minus;</button><span id="height">-</span><button id="up" title="raise">+</button></div>
+    <div class="label">Gait</div>
+    <div class="seg" id="gaitSeg"><button data-g="tripod">Tripod</button><button data-g="ripple">Ripple</button><button data-g="wave">Wave</button></div>
+  </div>
+</div>
+
+<div class="glass" id="missionBar">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8d97a8" stroke-width="2"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/></svg>
+  <span id="missionText">No mission</span>
+  <button class="btn" id="openMap" style="flex:none">Map</button>
+</div>
+
+<div class="glass" id="drawer">
+  <div id="map"></div>
+  <div class="toolbar">
+    <span class="grow" id="drawerText">Tap the map to add waypoints</span>
+    <button class="btn primary" id="send" style="flex:none">Send 0</button>
+    <button class="btn" id="undo" style="flex:none">Undo</button>
+    <button class="btn" id="clear" style="flex:none">Clear</button>
+    <button class="btn" id="cancel" style="flex:none">Stop mission</button>
+    <button class="btn" id="setHome" style="flex:none" title="remember where the robot is now">Set home</button>
+    <button class="btn" id="goHome" style="flex:none">Go home</button>
+    <button class="btn" id="closeMap" style="flex:none">Close</button>
+  </div>
+</div>
+<div class="glass" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const params = new URLSearchParams(location.search), key = params.get('key');
+const videoHost = params.get('video') || location.hostname;  // when the video comes through another address
+const api = p => '/api/' + p + (key ? '?key=' + encodeURIComponent(key) : '');
+const $ = id => document.getElementById(id);
+const COL = {ok: '#34d17a', warn: '#f5b83d', err: '#ff4d5a', dim: '#5a6474', accent: '#3ea6ff'};
+const lvl = l => ['ok', 'warn', 'err', 'dim'][l] || 'dim';
+
+async function post(p, body, say) {
+  try {
+    const r = await fetch(api(p), {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body || {})});
+    if (say) toast(r.ok ? say : say + ' failed (' + (r.status === 503 ? 'not available' : r.status) + ')', !r.ok);
+    return r.ok;
+  } catch (e) { if (say) toast('Robot unreachable', true); return false; }
+}
+let toastTimer;
+function toast(text, bad) {
+  const t = $('toast');
+  t.textContent = text;
+  t.style.color = bad ? COL.err : '';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ---- header widgets ----
+function bars(n, color) {  // 0..3 signal bars
+  return `<svg width="18" height="14" viewBox="0 0 18 14">${[0, 1, 2].map(i =>
+    `<rect x="${i * 6}" y="${10 - i * 5}" width="4" height="${4 + i * 5}" rx="1" fill="${i < n ? color : 'rgba(255,255,255,.15)'}"/>`).join('')}</svg>`;
+}
+function signal(el, label, d) {
+  const level = d ? d.level : 3, n = !d ? 0 : [3, 1, 0, 0][level];
+  el.innerHTML = bars(n, COL[lvl(level)]) + `<b>${label}</b>`;
+  el.title = label + ': ' + (d ? d.message : 'no data');
+}
+function battery(b) {
+  if (!b) { $('batt').innerHTML = '<span class="v">battery -</span>'; return; }
+  const p = Math.max(0, Math.min(100, b.percent)), c = p < 15 ? COL.err : p < 30 ? COL.warn : COL.ok;
+  const charging = b.status === 1;
+  $('batt').innerHTML = `<svg width="30" height="16" viewBox="0 0 30 16"><rect x="1" y="1" width="25" height="14" rx="3" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5"/>
+    <rect x="27" y="5" width="2.5" height="6" rx="1" fill="rgba(255,255,255,.55)"/><rect x="3" y="3" width="${21 * p / 100}" height="10" rx="1.5" fill="${c}"/>
+    ${charging ? '<path d="M14 2l-4 7h3l-1 5 5-8h-3z" fill="#fff"/>' : ''}</svg>
+    <span class="pct" style="color:${c}">${p}%</span><span class="v">${b.voltage.toFixed(1)} V · ${Math.abs(b.current).toFixed(1)} A</span>`;
+}
+
+// ---- map drawer (Leaflet from a CDN; without internet the rest still works) ----
+let map = null, robot = null, route = null, marks = [], points = [], lastFix = null;
+function openMap(open) {
+  $('drawer').classList.toggle('open', open);
+  if (open && !map && window.L) {
+    map = L.map('map', {zoomControl: false}).setView(lastFix || [44.4268, 26.1025], 19);
+    L.control.zoom({position: 'topright'}).addTo(map);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 21, maxNativeZoom: 19, attribution: '&copy; OpenStreetMap'}).addTo(map);
+    route = L.polyline([], {color: COL.accent, weight: 3, dashArray: '6 8'}).addTo(map);
+    map.on('click', e => { points.push([e.latlng.lat, e.latlng.lng]); drawRoute(); });
+  } else if (open && !window.L) {
+    $('map').innerHTML = '<div style="padding:20px;color:#8d97a8">The map needs internet on this device.</div>';
+  }
+  if (open && map) setTimeout(() => { map.invalidateSize(); if (lastFix) map.panTo(lastFix); }, 320);
+}
+function drawRoute() {
+  marks.forEach(m => m.remove());
+  marks = points.map((p, i) => L.marker(p, {icon: L.divIcon({className: '', iconSize: [26, 26], iconAnchor: [13, 13],
+    html: `<div class="wp">${i + 1}</div>`})}).addTo(map));
+  route.setLatLngs((lastFix ? [lastFix] : []).concat(points));
+  $('send').textContent = 'Send ' + points.length;
+}
+$('openMap').onclick = () => openMap(true);
+$('closeMap').onclick = () => openMap(false);
+$('undo').onclick = () => { points.pop(); if (map) drawRoute(); };
+$('clear').onclick = () => { points = []; if (map) drawRoute(); };
+$('send').onclick = async () => {
+  if (!points.length) return toast('Add waypoints first', true);
+  if (await post('mission', {points}, `Mission sent: ${points.length} waypoint${points.length > 1 ? 's' : ''}`)) openMap(false);
+};
+$('cancel').onclick = () => post('cancel', {}, 'Mission stopped');
+$('setHome').onclick = () => {
+  if (!lastFix) return toast('No GNSS fix yet', true);
+  try { localStorage.setItem('home', JSON.stringify(lastFix)); } catch (e) { /* fine */ }
+  toast('Home set here');
+};
+$('goHome').onclick = async () => {
+  let home = null;
+  try { home = JSON.parse(localStorage.getItem('home')); } catch (e) { /* none */ }
+  if (!home) return toast('Set home first', true);
+  if (await post('mission', {points: [home]}, 'Going home')) openMap(false);
+};
+
+// ---- driving: joystick, cruise, keyboard; 10 Hz while active ----
+const stick = $('stick'), knob = $('knob');
+let held = false, sx = 0, sy = 0, cruise = null, keys = {};
+let speed = 0.6;
+try { speed = parseFloat(localStorage.getItem('speed')) || 0.6; } catch (e) { /* private window */ }
+function setSpeed(v) {
+  speed = v;
+  try { localStorage.setItem('speed', v); } catch (e) { /* fine */ }
+  document.querySelectorAll('#speedSeg button').forEach(b => b.classList.toggle('on', parseFloat(b.dataset.v) === v));
+}
+document.querySelectorAll('#speedSeg button').forEach(b => b.onclick = () => setSpeed(parseFloat(b.dataset.v)));
+setSpeed(speed);
+const CRUISE = 1.0;  // cruise and keys at the chosen speed
+function moveKnob(x, y) { knob.style.left = (57 + x * 57) + 'px'; knob.style.top = (57 + y * 57) + 'px'; }
+function fromEvent(e) {
+  const r = stick.getBoundingClientRect(), rad = r.width / 2;
+  let x = (e.clientX - r.left - rad) / rad, y = (e.clientY - r.top - rad) / rad;
+  const n = Math.hypot(x, y); if (n > 1) { x /= n; y /= n; }
+  sx = x; sy = y; moveKnob(x, y);
+}
+stick.addEventListener('pointerdown', e => { setCruise(null); held = true; stick.classList.add('held'); stick.setPointerCapture(e.pointerId); fromEvent(e); });
+stick.addEventListener('pointermove', e => { if (held) fromEvent(e); });
+const release = () => { held = false; stick.classList.remove('held'); sx = sy = 0; moveKnob(0, 0); post('cmd', {vx: 0, vy: 0, wz: 0}); };
+stick.addEventListener('pointerup', release);
+stick.addEventListener('pointercancel', release);
+
+function setCruise(c) {
+  const was = cruise;
+  cruise = c === 'stop' ? null : c;
+  document.querySelectorAll('#cruise button').forEach(b => b.classList.toggle('on', b.dataset.c === cruise));
+  if (was && !cruise) post('cmd', {vx: 0, vy: 0, wz: 0});
+}
+document.querySelectorAll('#cruise button').forEach(b => b.onclick = () => setCruise(b.dataset.c === cruise ? 'stop' : b.dataset.c));
+
+const KEYS = {w: [1, 0], arrowup: [1, 0], s: [-1, 0], arrowdown: [-1, 0], a: [0, 1], arrowleft: [0, 1], d: [0, -1], arrowright: [0, -1]};
+addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (k === ' ') { setCruise('stop'); e.preventDefault(); return; }
+  if (KEYS[k] && !$('drawer').classList.contains('open')) { setCruise(null); keys[k] = true; e.preventDefault(); }
+});
+addEventListener('keyup', e => {
+  const k = e.key.toLowerCase();
+  if (keys[k]) { delete keys[k]; if (!Object.keys(keys).length) post('cmd', {vx: 0, vy: 0, wz: 0}); }
+});
+
+setInterval(() => {
+  const side = $('strafe').checked;
+  let fwd = 0, turn = 0;
+  if (held) { fwd = -sy; turn = -sx; }
+  else if (Object.keys(keys).length) { Object.keys(keys).forEach(k => { fwd += KEYS[k][0] * CRUISE; turn += KEYS[k][1] * CRUISE; }); }
+  else if (cruise) { fwd = {fwd: CRUISE, back: -CRUISE}[cruise] || 0; turn = {left: CRUISE, right: -CRUISE}[cruise] || 0; }
+  else return;
+  fwd *= speed; turn *= speed;
+  post('cmd', {vx: fwd, vy: side ? turn : 0, wz: side ? 0 : turn});
+}, 100);
+
+// a short buzz on every button, where the phone can
+document.addEventListener('click', e => { if (e.target.closest('button') && navigator.vibrate) navigator.vibrate(12); });
+
+// full screen and keep the screen on while driving
+let wakeLock = null;
+$('full').onclick = async () => {
+  try {
+    if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+    else await document.exitFullscreen();
+  } catch (e) { toast('Full screen not available here', true); }
+  try { if (!wakeLock && navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) { /* not allowed */ }
+};
+document.addEventListener('fullscreenchange', () => $('full').classList.toggle('on', !!document.fullscreenElement));
+$('snap').onclick = async () => {
+  const r = await fetch(api('snapshot')).catch(() => null);
+  if (!r || !r.ok) return toast('No camera frame yet', true);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(await r.blob());
+  a.download = 'vector-' + new Date().toISOString().replace(/[:.]/g, '-') + '.jpg';
+  a.click();
+  toast('Snapshot saved');
+};
+
+// body height and gait, through gait_node's parameters
+async function param(path, body, ok) {
+  try {
+    const r = await fetch(api(path), {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+    const j = await r.json();
+    toast(r.ok ? ok : (j.reason || j.error || 'refused'), !r.ok);
+  } catch (e) { toast('Robot unreachable', true); }
+}
+$('up').onclick = () => param('height', {step: 1}, 'Body up');
+$('down').onclick = () => param('height', {step: -1}, 'Body down');
+document.querySelectorAll('#gaitSeg button').forEach(b => b.onclick = () => param('gait', {name: b.dataset.g}, 'Gait: ' + b.dataset.g));
+setInterval(() => { if (document.visibilityState === 'visible') post('heartbeat'); }, 1000);
+
+$('sit').onclick = () => { setCruise('stop'); post('sentinel', {}, 'Sitting down'); };
+$('wake').onclick = () => post('wake', {}, 'Waking up');
+let estopOn = false;
+$('estop').onclick = () => { setCruise('stop'); post('estop', {on: true}, 'E-stop engaged'); };
+$('release').onclick = () => { if (confirm('Release the e-stop? Wake the robot afterwards.')) post('estop', {on: false}, 'E-stop released'); };
+
+// ---- top-down robot: legs from the real joint angles, the floor sliding under it, footprints,
+// the path ahead as backup-camera guide lines, parking-sensor rings around it ----
+let geom = null, pose = null, lastMode = null, stoppedAt = 0;
+fetch(api('robot')).then(r => r.json()).then(g => { geom = g && g.mounts ? g : null; }).catch(() => {});
+const LEGS = ['L1', 'L2', 'L3', 'R1', 'R2', 'R3'];
+const SAY = {walk: 'Standing', stopping: 'Stopping…', lowering: 'Sitting down…', sentinel: 'Resting · Sentinel',
+             powering: 'Powering legs…', raising: 'Standing up…', halted: 'Halted · leg fault'};
+const RINGS = [[0.3, COL.err], [0.6, COL.warn], [1.2, COL.ok]];
+// the robot's own dead reckoning, only to move the floor and the footprints
+const odo = {x: 0, y: 0, yaw: 0};
+let prints = [], planted = {}, lastFrame = performance.now();
+
+function legPoints(g, name, q) {
+  const m = g.mounts[name], a = m.yaw + q[0];
+  const knee = g.coxa + g.femur * Math.cos(q[1]), reach = knee + g.tibia * Math.cos(q[1] + q[2]);
+  const at = r => [m.x + r * Math.cos(a), m.y + r * Math.sin(a)];
+  return {hip: [m.x, m.y], coxa: at(g.coxa), knee: at(knee), foot: at(reach), z: g.femur * Math.sin(q[1]) + g.tibia * Math.sin(q[1] + q[2])};
+}
+function describe(p) {
+  const moving = Math.hypot(p.motion[0], p.motion[1]) > 0.003 || Math.abs(p.motion[2]) > 0.02;
+  if (p.mode !== 'walk') { lastMode = p.mode; return SAY[p.mode] || p.mode || '-'; }
+  if (moving) { lastMode = 'moving'; return Math.hypot(p.motion[0], p.motion[1]) > 0.003 ? 'Walking' : 'Turning'; }
+  if (lastMode === 'moving' || lastMode === 'stopping') { stoppedAt = Date.now(); lastMode = 'stopped'; }
+  return Date.now() - stoppedAt < 3000 ? 'Stopped' : 'Standing';
+}
+const toWorld = ([x, y]) => [odo.x + x * Math.cos(odo.yaw) - y * Math.sin(odo.yaw), odo.y + x * Math.sin(odo.yaw) + y * Math.cos(odo.yaw)];
+const toRobot = ([x, y]) => { const dx = x - odo.x, dy = y - odo.y, c = Math.cos(odo.yaw), s = Math.sin(odo.yaw); return [c * dx + s * dy, -s * dx + c * dy]; };
+
+function frame(now) {
+  const dt = Math.min(0.1, (now - lastFrame) / 1000);
+  lastFrame = now;
+  const [vx, vy, wz] = pose ? pose.motion : [0, 0, 0];
+  odo.x += (vx * Math.cos(odo.yaw) - vy * Math.sin(odo.yaw)) * dt;
+  odo.y += (vx * Math.sin(odo.yaw) + vy * Math.cos(odo.yaw)) * dt;
+  odo.yaw += wz * dt;
+  draw(now / 1000);
+  requestAnimationFrame(frame);
+}
+
+function draw(t) {
+  const c = $('view'), ctx = c.getContext('2d'), W = c.width, S = W / 1.05;
+  ctx.clearRect(0, 0, W, W);
+  ctx.save();
+  ctx.translate(W / 2, W / 2);
+  ctx.beginPath(); ctx.arc(0, 0, W / 2, 0, 2 * Math.PI); ctx.clip();
+  const P = ([x, y]) => [-y * S, -x * S];  // x forward = up, y left = left
+  const [vx, vy, wz] = pose ? pose.motion : [0, 0, 0];
+  const moving = Math.hypot(vx, vy) > 0.003 || Math.abs(wz) > 0.02;
+
+  // the floor: a 10 cm grid fixed to the ground, so it slides and turns under the robot
+  ctx.save();
+  ctx.rotate(odo.yaw);
+  const ox = (odo.x % 0.1) * S, oy = (odo.y % 0.1) * S;
+  ctx.translate(oy, ox);
+  ctx.strokeStyle = 'rgba(255,255,255,.09)'; ctx.lineWidth = 2;
+  for (let g = -0.8; g <= 0.8; g += 0.1) {
+    ctx.beginPath(); ctx.moveTo(g * S, -0.8 * S); ctx.lineTo(g * S, 0.8 * S); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-0.8 * S, g * S); ctx.lineTo(0.8 * S, g * S); ctx.stroke();
+  }
+  ctx.restore();
+
+  // footprints the planted feet left behind, fading over 2.5 s
+  prints = prints.filter(p => t - p.t < 2.5);
+  prints.forEach(p => {
+    const [px, py] = P(toRobot(p.w)), a = 1 - (t - p.t) / 2.5;
+    ctx.fillStyle = `rgba(62,166,255,${0.3 * a})`;
+    ctx.strokeStyle = `rgba(62,166,255,${0.8 * a})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(px, py, 8, 11, 0, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+  });
+
+  // the path ahead as two guide lines at the robot's width, from the nose out to 45 cm, bending
+  // with the turn rate, green near and amber far, a tick every 15 cm: a car's backup camera
+  const v = Math.hypot(vx, vy);
+  if (v > 0.003) {
+    const heading = Math.atan2(vy, vx), curve = wz / v;  // rad per metre travelled
+    // at most ~45 degrees of the turn, or a tight one sweeps the lines across the whole view
+    const half = 0.2, start = (geom ? geom.body.length / 2 : 0.14) + 0.02, len = Math.min(0.45, 0.8 / Math.max(Math.abs(curve), 1e-6));
+    const at = (d, side) => {  // point d metres along the path, side metres to its left
+      const a = curve * d, h = heading + a;
+      const x = Math.abs(curve) < 1e-3 ? d * Math.cos(heading) : (Math.sin(h) - Math.sin(heading)) / curve;
+      const y = Math.abs(curve) < 1e-3 ? d * Math.sin(heading) : (Math.cos(heading) - Math.cos(h)) / curve;
+      return [x - side * Math.sin(h), y + side * Math.cos(h)];
+    };
+    // the body front along the direction of travel, so the lines leave from its edge
+    const d0 = start * Math.max(Math.abs(Math.cos(heading)), 0.6);
+    ctx.lineCap = 'round';
+    [-half, half].forEach(side => {
+      for (let k = 0; k < 24; k++) {
+        const f0 = k / 24, f1 = (k + 1) / 24;
+        const [ax, ay] = P(at(d0 + f0 * len, side)), [bx, by] = P(at(d0 + f1 * len, side));
+        ctx.strokeStyle = f0 < 0.55 ? `rgba(52,209,122,${0.95 - f0 * 0.8})` : `rgba(245,184,61,${0.95 - f0 * 0.8})`;
+        ctx.lineWidth = 7;
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+      }
+    });
+    for (let d = 0.15; d <= len + 1e-6; d += 0.15) {  // ticks only as far as the lines go
+      const [ax, ay] = P(at(d0 + d, -half)), [bx, by] = P(at(d0 + d, half));
+      ctx.strokeStyle = `rgba(255,255,255,${0.55 - d * 0.7})`; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    }
+  }
+
+  // parking-sensor rings: the nearest obstacle per direction lit in its colour, pulsing when close
+  const n = pose && pose.sectors ? pose.sectors.length : 12, span = 2 * Math.PI / n;
+  for (let i = 0; i < n; i++) {
+    const mid = -Math.PI / 2 - i * span, d = pose && pose.sectors ? pose.sectors[i] : null;
+    RINGS.forEach(([r, col], k) => {
+      const lit = d != null && d <= r && (k === 0 || d > RINGS[k - 1][0]);
+      ctx.beginPath();
+      ctx.arc(0, 0, (0.33 + 0.07 * k) * S, mid - span / 2 + 0.07, mid + span / 2 - 0.07);
+      ctx.strokeStyle = lit ? col : 'rgba(255,255,255,.07)';
+      ctx.globalAlpha = lit && k === 0 ? 0.65 + 0.35 * Math.sin(t * 12) : 1;
+      ctx.lineWidth = lit ? 14 : 8; ctx.lineCap = 'round';
+      ctx.shadowColor = lit ? col : 'transparent'; ctx.shadowBlur = lit ? 18 : 0;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    });
+  }
+  ctx.shadowBlur = 0;
+
+  if (!geom) { ctx.restore(); return; }
+  const q = LEGS.map(l => ['coxa', 'femur', 'tibia'].map(j => (pose && pose.joints[`${l}_${j}`]) || 0));
+  const legs = LEGS.map((l, i) => legPoints(geom, l, q[i]));
+  const low = Math.min(...legs.map(l => l.z)), height = Math.max(0, -low);
+  const powered = pose && !['sentinel', 'lowering', 'powering'].includes(pose.mode);
+  const b = geom.body, bw = b.width * S, bl = b.length * S;
+
+  // turning on the spot: chevrons circling the body
+  if (Math.abs(wz) > 0.02 && Math.hypot(vx, vy) <= 0.003) {
+    const r = 0.29 * S, sgn = Math.sign(wz);  // between the feet and the rings
+    for (let k = 0; k < 8; k++) {
+      const a = -Math.PI / 2 - sgn * (t * 1.5 + k * Math.PI / 4);
+      ctx.save(); ctx.translate(r * Math.cos(a), r * Math.sin(a)); ctx.rotate(sgn > 0 ? a : a + Math.PI);  // tip along the circle, the way it turns
+      ctx.strokeStyle = `rgba(52,209,122,${0.35 + 0.5 * ((k % 4) / 3)})`; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(-12, 8); ctx.lineTo(0, -6); ctx.lineTo(12, 8); ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // shadow grows with the body height, gone when it rests
+  const off = height * S * 0.6;
+  ctx.fillStyle = `rgba(0,0,0,${0.2 + height * 2.5})`;
+  ctx.beginPath(); ctx.roundRect(-bw / 2 + off, -bl / 2 + off, bw, bl, 18); ctx.fill();
+  legs.forEach((l, i) => {
+    const pts = [l.hip, l.coxa, l.knee, l.foot].map(P);
+    ctx.beginPath();
+    pts.forEach(([x, y], k) => k ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+    ctx.strokeStyle = powered ? '#d7dee8' : '#4b5462';
+    ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.stroke();
+    const [fx, fy] = pts[3], lifted = l.z - low > 0.01;
+    // a foot touching down leaves a print where it stands
+    if (!lifted && planted[i] === false && moving) prints.push({w: toWorld(l.foot), t});
+    planted[i] = !lifted;
+    ctx.beginPath(); ctx.arc(fx, fy, 11, 0, 2 * Math.PI);
+    if (lifted) { ctx.strokeStyle = COL.accent; ctx.lineWidth = 4; ctx.stroke(); }
+    else { ctx.fillStyle = powered ? COL.accent : '#4b5462'; ctx.shadowColor = COL.accent; ctx.shadowBlur = powered ? 12 : 0; ctx.fill(); ctx.shadowBlur = 0; }
+  });
+  const grad = ctx.createLinearGradient(0, -bl / 2, 0, bl / 2);
+  grad.addColorStop(0, powered ? '#3a4a60' : '#2a303a'); grad.addColorStop(1, powered ? '#232d3b' : '#1c2129');
+  ctx.fillStyle = grad; ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(-bw / 2, -bl / 2, bw, bl, 18); ctx.fill(); ctx.stroke();
+  // nose: camera and ToF, with a faint field of view
+  const fov = ctx.createRadialGradient(0, -bl / 2, 0, 0, -bl / 2, 0.3 * S);
+  fov.addColorStop(0, 'rgba(62,166,255,.18)'); fov.addColorStop(1, 'rgba(62,166,255,0)');
+  ctx.fillStyle = fov;
+  ctx.beginPath(); ctx.moveTo(0, -bl / 2); ctx.arc(0, -bl / 2, 0.3 * S, -Math.PI / 2 - 0.47, -Math.PI / 2 + 0.47); ctx.fill();
+  ctx.fillStyle = COL.accent;
+  ctx.beginPath(); ctx.roundRect(-18, -bl / 2 - 6, 36, 10, 5); ctx.fill();
+  ctx.restore();
+}
+function renderPose() {
+  if (!pose) return;
+  const text = describe(pose), [vx, vy, wz] = pose.motion;
+  $('pose').textContent = text;
+  $('pose').style.color = /Halted/.test(text) ? COL.err : /Resting|Sitting/.test(text) ? '#8d97a8' : '';
+  $('speed').textContent = `${(Math.hypot(vx, vy) * 100).toFixed(1)} cm/s · ${Math.round(wz * 180 / Math.PI)}°/s`;
+}
+async function pollPose() {
+  try { const r = await fetch(api('pose')); if (r.ok) pose = await r.json(); } catch (e) { /* keep the last pose */ }
+  renderPose();
+  setTimeout(pollPose, 100);
+}
+pollPose();
+requestAnimationFrame(frame);
+
+// ---- state ----
+const ICON = {person: '🚶', car: '🚗', truck: '🚚', bicycle: '🚲', motorcycle: '🏍', dog: '🐕', cat: '🐈', bus: '🚌', bird: '🐦'};
+function render(s) {
+  $('height').textContent = s.body_z == null ? '-' : `${s.body_z >= 0 ? '+' : ''}${(s.body_z * 100).toFixed(1)} cm`;
+  document.querySelectorAll('#gaitSeg button').forEach(b => b.classList.toggle('on', b.dataset.g === s.gait));
+  $('objects').innerHTML = (s.objects || []).slice(0, 5).map(o =>
+    `<div class="obj glass"><i>${ICON[o.cls] || '•'}</i>${o.n > 1 ? o.n + '× ' : ''}${o.cls}${o.dist != null ? ` <b style="color:${o.dist < 1 ? COL.err : o.dist < 2 ? COL.warn : COL.ok}">${o.dist} m</b>` : ''}</div>`).join('');
+  const mode = s.mode || '-';
+  $('mode').textContent = mode;
+  $('modeDot').style.background = $('modeDot').style.color =
+    {walk: COL.ok, halted: COL.err, sentinel: '#8d97a8'}[mode] || (s.mode ? COL.warn : COL.dim);
+  const d = s.diag || {}, c = d['links: control'];
+  $('control').textContent = s.active || '-';
+  $('control').style.color = c ? COL[lvl(c.level)] : '';
+  $('lostBanner').classList.toggle('show', !!(c && c.level >= 2) && !s.estop);
+  signal($('sigElrs'), 'ELRS', d['links: elrs']);
+  signal($('sigWifi'), 'WiFi', d['links: wifi']);
+  signal($('sigLte'), 'LTE', d['links: lte']);
+  battery(s.battery);
+  estopOn = !!s.estop;
+  $('estopBanner').classList.toggle('show', estopOn);
+  $('missionText').textContent = s.mission && s.mission !== 'idle' ? s.mission : 'No mission';
+  $('drawerText').textContent = s.mission && s.mission !== 'idle' ? 'Mission: ' + s.mission : 'Tap the map to add waypoints';
+  if (s.fix && s.fix.status >= 0) {
+    lastFix = [s.fix.lat, s.fix.lon];
+    if (map) {
+      const icon = L.divIcon({className: '', iconSize: [30, 30], iconAnchor: [15, 15],
+        html: `<svg width="30" height="30" viewBox="0 0 30 30" style="transform:rotate(${s.heading || 0}deg)">
+               <circle cx="15" cy="15" r="13" fill="rgba(62,166,255,.2)"/><path d="M15 3 L24 25 L15 20 L6 25 Z" fill="#3ea6ff" stroke="#fff" stroke-width="1.5"/></svg>`});
+      if (!robot) robot = L.marker(lastFix, {icon}).addTo(map); else { robot.setLatLng(lastFix); robot.setIcon(icon); }
+      route.setLatLngs([lastFix].concat(points));
+    }
+  }
+}
+async function poll() {
+  try {
+    const t0 = performance.now();
+    const r = await fetch(api('state'));
+    const ms = Math.round(performance.now() - t0);
+    $('ping').textContent = ms + ' ms';
+    $('ping').style.color = ms < 150 ? '' : ms < 400 ? COL.warn : COL.err;
+    if (r.ok) {
+      const s = await r.json();
+      if (!$('video').src && s.video) {
+        $('video').src = location.protocol + '//' + videoHost + s.video;
+        $('video').onload = () => { $('novideo').style.display = 'none'; };
+      }
+      render(s);
+    }
+  } catch (e) { /* robot unreachable: keep the last state */ }
+  setTimeout(poll, 250);
+}
+poll();
+</script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 """GNSS localization and the GPS waypoint follower (config in vector_nav/config/localization.yaml).
+The obstacle node the follower listens to is started by robot.launch.py / sim_gazebo.launch.py.
 
 Included by robot.launch.py and sim_gazebo.launch.py with nav:=true. Needs gnss/fix, imu
 (with an absolute heading) and odom/legs from gait_node. Send a mission with:
@@ -37,5 +38,4 @@ def generate_launch_description():
                          ('odometry/filtered', 'odometry/global')]),
         Node(package='vector_nav', executable='waypoints.py', name='waypoint_follower', parameters=params,
              remappings=[('cmd_vel', LaunchConfiguration('cmd_topic'))]),
-        Node(package='vector_nav', executable='obstacles.py', name='obstacles', parameters=params),
     ])

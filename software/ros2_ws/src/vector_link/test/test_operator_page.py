@@ -1,0 +1,157 @@
+"""The operator page's HTTP API against the ROS side: state in, commands out."""
+import json
+import time
+import unittest
+import urllib.error
+import urllib.request
+
+import launch
+import launch_ros.actions
+import launch_testing.actions
+import pytest
+import rclpy
+from geographic_msgs.msg import GeoPath
+from geometry_msgs.msg import Twist
+from sensor_msgs.msg import BatteryState, CompressedImage
+from std_msgs.msg import Empty
+from std_srvs.srv import SetBool, Trigger
+
+PORT = 18080
+BASE = f'http://127.0.0.1:{PORT}'
+
+
+@pytest.mark.launch_test
+def generate_test_description():
+    page = launch_ros.actions.Node(package='vector_link', executable='operator_page.py', output='screen',
+                                   parameters=[{'port': PORT, 'token': 'k'}])
+    return launch.LaunchDescription([page, launch_testing.actions.ReadyToTest()])
+
+
+def request(path, body=None, key='k'):
+    url = BASE + path + (f'?key={key}' if key else '')
+    data = json.dumps(body).encode() if body is not None else None
+    req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'},
+                                 method='POST' if body is not None else 'GET')
+    try:
+        with urllib.request.urlopen(req, timeout=2) as r:
+            return r.status, r.read()
+    except urllib.error.HTTPError as e:
+        return e.code, e.read()
+
+
+class TestOperatorPage(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        rclpy.init()
+        cls.node = rclpy.create_node('page_test')
+        cls.cmd, cls.hb, cls.missions, cls.calls = [], [], [], []
+        cls.node.create_subscription(Twist, '/cmd_vel/teleop', cls.cmd.append, 10)
+        cls.node.create_subscription(Empty, '/operator/heartbeat', cls.hb.append, 10)
+        cls.node.create_subscription(GeoPath, '/mission', cls.missions.append, 10)
+
+        def trig(req, res):
+            cls.calls.append('sentinel')
+            res.success = True
+            return res
+
+        def estop(req, res):
+            cls.calls.append(f'estop {req.data}')
+            res.success = True
+            return res
+        cls.node.create_service(Trigger, '/gait_node/sentinel', trig)
+        cls.node.create_service(SetBool, '/gait_node/estop', estop)
+        cls.battery = cls.node.create_publisher(BatteryState, '/battery', 10)
+        cls.camera = cls.node.create_publisher(CompressedImage, '/yolo/debug/compressed', 10)
+        # stands in for gait_node's parameters
+        cls.gait = rclpy.create_node('gait_node')
+        cls.gait.declare_parameter('gait', 'tripod')
+        cls.gait.declare_parameter('body_z', 0.0)
+        end = time.time() + 10
+        while time.time() < end:
+            try:
+                urllib.request.urlopen(BASE + '/api/state?key=k', timeout=1)
+                break
+            except OSError:
+                time.sleep(0.2)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.gait.destroy_node()
+        cls.node.destroy_node()
+        rclpy.shutdown()
+
+    def spin(self, seconds):
+        end = time.time() + seconds
+        while time.time() < end:
+            rclpy.spin_once(self.node, timeout_sec=0.02)
+            rclpy.spin_once(self.gait, timeout_sec=0.02)
+
+    def request_spinning(self, path, body):
+        """A request that needs gait_node to answer while it waits."""
+        import threading
+        out = {}
+        t = threading.Thread(target=lambda: out.update(r=request(path, body)))
+        t.start()
+        while t.is_alive():
+            self.spin(0.05)
+        return out['r']
+
+    def test_page_and_key(self):
+        status, body = request('/')
+        self.assertEqual(status, 200)
+        self.assertIn(b'VECTOR', body)
+        self.assertEqual(request('/api/state', key='wrong')[0], 403)
+
+    def test_state_follows_ros(self):
+        for _ in range(20):
+            self.battery.publish(BatteryState(voltage=15.2, current=-2.0, percentage=0.64))
+            self.spin(0.1)
+        s = json.loads(request('/api/state')[1])
+        self.assertEqual(s['battery']['percent'], 64)
+        self.assertEqual(s['video'], ':8889/yolo')
+
+    def test_drive_scaled_and_stopped_by_the_watchdog(self):
+        self.cmd.clear()
+        self.assertEqual(request('/api/cmd', {'vx': 1, 'vy': 0, 'wz': -2})[0], 200)
+        self.spin(0.8)  # no more commands: the watchdog stops it
+        self.assertAlmostEqual(self.cmd[0].linear.x, 0.10)
+        self.assertAlmostEqual(self.cmd[0].angular.z, -0.5)
+        self.assertEqual(self.cmd[-1].linear.x, 0.0)
+        self.assertTrue(self.hb)
+
+    def test_mission(self):
+        self.assertEqual(request('/api/mission', {'points': [[44.1, 26.1], [44.2, 26.2]]})[0], 200)
+        self.assertEqual(request('/api/mission', {'points': [[144.1, 26.1]]})[0], 400)
+        self.spin(0.5)
+        self.assertEqual(len(self.missions[-1].poses), 2)
+        self.assertAlmostEqual(self.missions[-1].poses[1].pose.position.longitude, 26.2)
+
+    def test_buttons(self):
+        self.spin(0.5)
+        self.assertEqual(request('/api/sentinel', {})[0], 200)
+        self.assertEqual(request('/api/estop', {'on': True})[0], 200)
+        self.assertEqual(request('/api/wake', {})[0], 503)  # nobody offers wake here
+        self.spin(0.5)
+        self.assertEqual(self.calls, ['sentinel', 'estop True'])
+
+    def test_height_and_gait(self):
+        self.spin(2.5)  # the page's parameter clients find gait_node
+        status, body = self.request_spinning('/api/height', {'step': 1})
+        self.assertEqual(status, 200, body)
+        self.assertAlmostEqual(self.gait.get_parameter('body_z').value, 0.005)
+        self.request_spinning('/api/height', {'step': -1})
+        self.request_spinning('/api/height', {'step': -1})
+        self.assertAlmostEqual(self.gait.get_parameter('body_z').value, -0.005)
+        self.assertEqual(self.request_spinning('/api/gait', {'name': 'wave'})[0], 200)
+        self.assertEqual(self.gait.get_parameter('gait').value, 'wave')
+        self.assertEqual(request('/api/gait', {'name': 'gallop'})[0], 400)
+
+    def test_snapshot(self):
+        self.assertEqual(request('/api/snapshot')[0], 404)
+        for _ in range(5):
+            self.camera.publish(CompressedImage(format='jpeg', data=b'\xff\xd8fake'))
+            self.spin(0.1)
+        status, body = request('/api/snapshot')
+        self.assertEqual(status, 200)
+        self.assertEqual(body, b'\xff\xd8fake')

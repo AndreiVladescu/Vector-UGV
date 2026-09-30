@@ -6,7 +6,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from vector_nav.obstacles import (clearance, ground_hits, mask_contacts, pixel_rays,  # noqa: E402
-                                  quat_matrix, raised)
+                                  quat_matrix, raised, sectors)
 
 HFOV, VFOV = math.radians(53.5), math.radians(41.4)
 
@@ -52,3 +52,11 @@ def test_clearance_and_side():
     free, side = clearance(np.array([[1.2, 0.1], [0.8, 0.6], [1.0, 0.3], [0.9, 0.35]]))
     assert abs(free - 1.2) < 1e-9 and side == -1  # the left is crowded: go right
     assert clearance(np.zeros((0, 2)))[0] == math.inf
+
+
+def test_sectors():
+    s = sectors(np.array([[0.5, 0.0], [0.9, 0.05], [0.0, 1.2], [-0.4, -0.01], [3.0, 0.0]]))
+    assert len(s) == 12
+    assert abs(s[0] - 0.5) < 1e-9                         # ahead, the nearer of two
+    assert abs(s[3] - 1.2) < 1e-9 and abs(s[6] - 0.4) < 0.01  # left, behind
+    assert np.isinf(s[9])                                  # right: nothing; 3 m ahead is too far

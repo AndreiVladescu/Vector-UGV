@@ -113,6 +113,13 @@ def generate_launch_description():
             PythonLaunchDescriptionSource(os.path.join(bringup, 'launch', 'nav.launch.py')),
             launch_arguments={'use_sim_time': 'true', 'declination': '0.0'}.items(),
             condition=IfCondition(LaunchConfiguration('nav'))),
+        Node(
+            package='vector_nav',
+            executable='obstacles.py',
+            name='obstacles',
+            parameters=[os.path.join(get_package_share_directory('vector_nav'), 'config', 'localization.yaml'),
+                        sim_time],
+            condition=IfCondition(LaunchConfiguration('nav'))),
 
         Node(
             package='controller_manager',

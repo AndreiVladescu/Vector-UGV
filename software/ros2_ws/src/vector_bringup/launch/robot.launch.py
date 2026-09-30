@@ -48,6 +48,7 @@ def generate_launch_description():
         DeclareLaunchArgument('links', default_value='false'),
         DeclareLaunchArgument('elrs_port', default_value='', description='UART of the ExpressLRS receiver'),
         DeclareLaunchArgument('lte_at_port', default_value='', description='AT port of the LTE modem'),
+        DeclareLaunchArgument('page_key', default_value='', description='?key= the operator page asks for'),
 
         Node(
             package='robot_state_publisher',
@@ -95,6 +96,21 @@ def generate_launch_description():
             package='vector_link',
             executable='link_manager.py',
             parameters=[{'lte_at_port': LaunchConfiguration('lte_at_port')}],
+            condition=IfCondition(LaunchConfiguration('links'))),
+        # obstacles around the robot, for the follower and the operator page's parking HUD
+        Node(
+            package='vector_nav',
+            executable='obstacles.py',
+            name='obstacles',
+            parameters=[os.path.join(get_package_share_directory('vector_nav'), 'config', 'localization.yaml')],
+            condition=IfCondition(PythonExpression(
+                ["'", LaunchConfiguration('nav'), "' == 'true' or '", LaunchConfiguration('links'), "' == 'true'"]))),
+
+        # the operator page, http://<robot>:8080
+        Node(
+            package='vector_link',
+            executable='operator_page.py',
+            parameters=[{'token': LaunchConfiguration('page_key')}],
             condition=IfCondition(LaunchConfiguration('links'))),
         Node(
             package='vector_link',

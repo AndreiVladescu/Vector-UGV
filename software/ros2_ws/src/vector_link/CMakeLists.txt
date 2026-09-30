@@ -5,7 +5,8 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 
 ament_python_install_package(${PROJECT_NAME})
-install(PROGRAMS scripts/elrs.py scripts/link_manager.py DESTINATION lib/${PROJECT_NAME})
+install(PROGRAMS scripts/elrs.py scripts/link_manager.py scripts/operator_page.py DESTINATION lib/${PROJECT_NAME})
+install(DIRECTORY web DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_cmake_pytest REQUIRED)
@@ -15,7 +16,10 @@ if(BUILD_TESTING)
   find_package(launch_testing_ament_cmake REQUIRED)
   # a radio on a pseudo-terminal, through elrs.py and the link manager
   add_launch_test(test/test_radio.py TIMEOUT 90)
-  set_tests_properties(test_test_radio.py PROPERTIES ENVIRONMENT "ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST")
+  # the operator page's HTTP API
+  add_launch_test(test/test_operator_page.py TIMEOUT 60)
+  set_tests_properties(test_test_radio.py test_test_operator_page.py
+    PROPERTIES ENVIRONMENT "ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST")
 endif()
 
 ament_package()

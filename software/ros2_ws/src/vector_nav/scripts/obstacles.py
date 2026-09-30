@@ -8,6 +8,8 @@ Points are kept keep_s seconds in odom, so they stay put while the robot walks, 
   obstacles/grid       nav_msgs/OccupancyGrid around the robot (odom frame), for Foxglove
   obstacles/clearance  std_msgs/Float32MultiArray [free metres straight ahead (inf = clear),
                        side with more room: +1 left, -1 right], used by the waypoint follower
+  obstacles/sectors    std_msgs/Float32MultiArray, the nearest obstacle in 12 directions (0 =
+                       ahead, counter-clockwise, inf = nothing within 2 m), for the operator page
 """
 import math
 import time
@@ -23,7 +25,7 @@ from sensor_msgs_py import point_cloud2
 from std_msgs.msg import Float32MultiArray
 from tf2_ros import Buffer, TransformException, TransformListener
 
-from vector_nav.obstacles import clearance, ground_hits, mask_contacts, pixel_rays, quat_matrix, raised
+from vector_nav.obstacles import clearance, ground_hits, mask_contacts, pixel_rays, quat_matrix, raised, sectors
 
 LEGS = ('L1', 'L2', 'L3', 'R1', 'R2', 'R3')
 
@@ -54,6 +56,7 @@ class Obstacles(Node):
             self.create_subscription(Range, f'/legs/{leg}/tof', self.on_range, qos_profile_sensor_data)
         self.grid_pub = self.create_publisher(OccupancyGrid, 'obstacles/grid', 2)
         self.clear_pub = self.create_publisher(Float32MultiArray, 'obstacles/clearance', 10)
+        self.sector_pub = self.create_publisher(Float32MultiArray, 'obstacles/sectors', 10)
         self.create_timer(1.0 / p('rate', 5.0), self.tick)
 
     def lookup(self, target, source):
@@ -114,6 +117,7 @@ class Obstacles(Node):
         base = np.stack([c * rel[:, 0] + s * rel[:, 1], -s * rel[:, 0] + c * rel[:, 1]], axis=1)
         free, side = clearance(base, self.half_width)
         self.clear_pub.publish(Float32MultiArray(data=[float(free), float(side)]))
+        self.sector_pub.publish(Float32MultiArray(data=[float(v) for v in sectors(base)]))
 
         n = int(self.size / self.res)
         g = OccupancyGrid()
