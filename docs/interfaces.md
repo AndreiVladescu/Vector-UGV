@@ -9,13 +9,12 @@ Both ends of a cable use the same footprint and pin order.
 |---|---|---|---|
 | J-BAT | Pack → Power board | XT60 | VBAT (≈20 A peak) |
 | J-BAL | Pack → Power board | JST-XH 5-pin | Cell taps C0–C4 |
-| J-NTC | Pack → Power board | JST-PH 2×2-pin *TBD* | 2 cell NTCs |
-| J-DCIN | GX-12 → Power board | GX-12 2-pin + JST-XH | 12–20 V charge input |
-| J-USBC | Panel → Power board | USB-C receptacle (on board or panel pigtail *TBD*) | PD charge input, 20 V |
+| J-NTC | Pack → Power board | JST-PH 2-pin | cell NTC (DIY pack only) |
+| J-USBC | Panel → Power board | USB-C receptacle (on board or panel pigtail *TBD*) | PD charge input, 20 V, the only charge input |
 | J-PWRBTN | Panel → Power board | JST-PH 2-pin | momentary power button |
-| J-ESTOP | Panel → Power board | JST-PH 2-pin | latching e-stop, normally closed |
-| J-LEGPWR-L / -R | Power board → Side board | XT30 (PCB: XT30PW-M) | VBAT_L / VBAT_R (~13 A peak each) |
-| J-SYSPWR | Power board → Carrier | Molex Micro-Fit 3.0 2×3 *TBD* | 5 V (6 A), VBAT_SYS, GND |
+| J-LEGPWR-L / -R | Power board → Side board | XT30 (PCB: XT30PW-M) | VBAT (~13 A peak each) |
+| J-SYSPWR | Power board → Carrier | XT30 (PCB: XT30PW-M) | VBAT; the carrier makes 5 V itself |
+| J-USBDEV | Carrier → laptop | USB-C receptacle | CM5 USB 2.0 for rpiboot, data only |
 | J-SYSCTL | Power board ↔ Carrier | JST-GH 6-pin | see below |
 | J-CAN (×n) | Bus hops | JST-GH 4-pin | CANH, CANL, GND, ESTOP_N / spare |
 | J-SERVO (×9 per side) | Side board → servo | 4-pin latched (JST-XH or 2.54 mm latching *TBD*) | V+ (6 V), GND, PWM, POT |
@@ -43,7 +42,7 @@ J-CAN pinout (JST-GH 4-pin):
 | 1 | CANH |
 | 2 | CANL |
 | 3 | GND |
-| 4 | ESTOP_N: pulled up on every leg cell, only ever driven low (by the power board's e-stop buffer) |
+| 4 | ESTOP_N: pulled up on every leg cell, only ever driven low (by the power MCU's open-drain pin); a diode on each leg cell holds its servo buck's EN low while it's low |
 
 ## J-SYSCTL pinout
 
@@ -53,8 +52,10 @@ J-CAN pinout (JST-GH 4-pin):
 | 2 | SHUTDOWN_REQ_N | power → CM5 | `gpio-shutdown` overlay: low = shut down |
 | 3 | HALTED | CM5 → power | `gpio-poweroff` overlay: high once halted |
 | 4 | ESTOP_N | power → CM5 | input, so ROS sees the hardware stop |
-| 5 | 5V_PG | power → CM5 | 5 V rail good, optional |
-| 6 | spare | | |
+| 5 | 5V_EN | power → carrier | the carrier's 5 V buck EN: pulled up on the carrier, pulled low by the power board to keep the CM5 off |
+| 6 | 5V_PG | carrier → power | the 5 V buck's PG |
+
+J-SYSCTL and the power board's J-CAN may merge into one 10-pin JST-GH (one cable to the carrier); not decided.
 
 ## J-NOSE pinout
 

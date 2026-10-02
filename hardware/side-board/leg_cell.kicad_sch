@@ -2494,6 +2494,378 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "side-board:TPS56A37RPAR"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "IC"
+				(at 26.67 7.62 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+				)
+			)
+			(property "Value" "TPS56A37RPAR"
+				(at 26.67 5.08 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+				)
+			)
+			(property "Footprint" "side-board:TPS56A37RPAR"
+				(at 26.67 -94.92 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+				)
+			)
+			(property "Datasheet" "https://www.ti.com/lit/ds/symlink/tps56a37.pdf?ts=1708310049261&ref_url=https%253A%252F%252Fwww.ti.com%252Fproduct%252FTPS56A37"
+				(at 26.67 -194.92 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+				)
+			)
+			(property "Description" "Switching Voltage Regulators 4.5V to 28V input, 10A synchronous buck converter"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Height" "1"
+				(at 26.67 -394.92 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+				)
+			)
+			(property "Mouser Part Number" "595-TPS56A37RPAR"
+				(at 26.67 -494.92 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+				)
+			)
+			(property "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/Texas-Instruments/TPS56A37RPAR?qs=dbcCsuKDzFV3BmG4b9YeGQ%3D%3D"
+				(at 26.67 -594.92 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+				)
+			)
+			(property "Manufacturer_Name" "Texas Instruments"
+				(at 26.67 -694.92 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+				)
+			)
+			(property "Manufacturer_Part_Number" "TPS56A37RPAR"
+				(at 26.67 -794.92 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+				)
+			)
+			(symbol "TPS56A37RPAR_1_1"
+				(rectangle
+					(start 5.08 2.54)
+					(end 25.4 -17.78)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin passive line
+					(at 0 0 0)
+					(length 5.08)
+					(name "EN"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -2.54 0)
+					(length 5.08)
+					(name "FB"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -5.08 0)
+					(length 5.08)
+					(name "AGND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -7.62 0)
+					(length 5.08)
+					(name "PG"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -10.16 0)
+					(length 5.08)
+					(name "SS"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -12.7 0)
+					(length 5.08)
+					(name "SW"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -15.24 0)
+					(length 5.08)
+					(name "BOOT"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 30.48 0 180)
+					(length 5.08)
+					(name "VIN_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 30.48 -2.54 180)
+					(length 5.08)
+					(name "PGND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "9"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 30.48 -5.08 180)
+					(length 5.08)
+					(name "MODE"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "10"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 30.48 -7.62 180)
+					(length 5.08)
+					(name "VIN_2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "11"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 30.48 -10.16 180)
+					(length 5.08)
+					(name "VIN_3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "12"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 30.48 -12.7 180)
+					(length 5.08)
+					(name "VIN_4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "13"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "vector:NCP18XH103F03RB"
 			(pin_names
 				(hide yes)
@@ -3691,378 +4063,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "side-board:TPS56A37RPAR"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "IC"
-				(at 26.67 7.62 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left top)
-				)
-			)
-			(property "Value" "TPS56A37RPAR"
-				(at 26.67 5.08 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left top)
-				)
-			)
-			(property "Footprint" "side-board:TPS56A37RPAR"
-				(at 26.67 -94.92 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left top)
-				)
-			)
-			(property "Datasheet" "https://www.ti.com/lit/ds/symlink/tps56a37.pdf?ts=1708310049261&ref_url=https%253A%252F%252Fwww.ti.com%252Fproduct%252FTPS56A37"
-				(at 26.67 -194.92 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left top)
-				)
-			)
-			(property "Description" "Switching Voltage Regulators 4.5V to 28V input, 10A synchronous buck converter"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Height" "1"
-				(at 26.67 -394.92 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left top)
-				)
-			)
-			(property "Mouser Part Number" "595-TPS56A37RPAR"
-				(at 26.67 -494.92 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left top)
-				)
-			)
-			(property "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/Texas-Instruments/TPS56A37RPAR?qs=dbcCsuKDzFV3BmG4b9YeGQ%3D%3D"
-				(at 26.67 -594.92 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left top)
-				)
-			)
-			(property "Manufacturer_Name" "Texas Instruments"
-				(at 26.67 -694.92 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left top)
-				)
-			)
-			(property "Manufacturer_Part_Number" "TPS56A37RPAR"
-				(at 26.67 -794.92 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left top)
-				)
-			)
-			(symbol "TPS56A37RPAR_1_1"
-				(rectangle
-					(start 5.08 2.54)
-					(end 25.4 -17.78)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 5.08)
-					(name "EN"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -2.54 0)
-					(length 5.08)
-					(name "FB"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 5.08)
-					(name "AGND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -7.62 0)
-					(length 5.08)
-					(name "PG"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -10.16 0)
-					(length 5.08)
-					(name "SS"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -12.7 0)
-					(length 5.08)
-					(name "SW"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "6"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -15.24 0)
-					(length 5.08)
-					(name "BOOT"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "7"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 30.48 0 180)
-					(length 5.08)
-					(name "VIN_1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "8"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 30.48 -2.54 180)
-					(length 5.08)
-					(name "PGND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "9"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 30.48 -5.08 180)
-					(length 5.08)
-					(name "MODE"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "10"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 30.48 -7.62 180)
-					(length 5.08)
-					(name "VIN_2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "11"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 30.48 -10.16 180)
-					(length 5.08)
-					(name "VIN_3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "12"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 30.48 -12.7 180)
-					(length 5.08)
-					(name "VIN_4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "13"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 	)
 	(rectangle
 		(start 210.82 80.645)
@@ -4658,7 +4658,7 @@
 	)
 	(wire
 		(pts
-			(xy 48.895 62.23) (xy 50.8 62.23)
+			(xy 48.26 61.595) (xy 49.53 61.595)
 		)
 		(stroke
 			(width 0)
@@ -4778,7 +4778,7 @@
 	)
 	(wire
 		(pts
-			(xy 100.33 67.31) (xy 99.06 67.31)
+			(xy 100.965 67.31) (xy 99.06 67.31)
 		)
 		(stroke
 			(width 0)
@@ -4988,7 +4988,7 @@
 	)
 	(wire
 		(pts
-			(xy 100.33 64.77) (xy 99.06 64.77)
+			(xy 100.965 64.77) (xy 99.06 64.77)
 		)
 		(stroke
 			(width 0)
@@ -5378,7 +5378,7 @@
 	)
 	(wire
 		(pts
-			(xy 100.33 62.23) (xy 99.06 62.23)
+			(xy 100.965 62.23) (xy 99.06 62.23)
 		)
 		(stroke
 			(width 0)
@@ -5578,7 +5578,7 @@
 	)
 	(wire
 		(pts
-			(xy 100.33 74.93) (xy 99.06 74.93)
+			(xy 100.965 74.93) (xy 99.06 74.93)
 		)
 		(stroke
 			(width 0)
@@ -5938,6 +5938,16 @@
 	)
 	(wire
 		(pts
+			(xy 49.53 62.23) (xy 50.8 62.23)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "910deec7-666f-4f4d-a0e0-83196a44ba9e")
+	)
+	(wire
+		(pts
 			(xy 78.74 37.465) (xy 78.74 39.37)
 		)
 		(stroke
@@ -5995,6 +6005,16 @@
 			(type default)
 		)
 		(uuid "95d76b22-7130-4ca8-a765-2dd79dd60e7c")
+	)
+	(wire
+		(pts
+			(xy 49.53 61.595) (xy 49.53 62.23)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "96822acc-4473-4a42-aa42-760cc5f9007f")
 	)
 	(wire
 		(pts
@@ -6268,7 +6288,7 @@
 	)
 	(wire
 		(pts
-			(xy 100.33 77.47) (xy 99.06 77.47)
+			(xy 100.965 77.47) (xy 99.06 77.47)
 		)
 		(stroke
 			(width 0)
@@ -6448,16 +6468,6 @@
 	)
 	(wire
 		(pts
-			(xy 243.84 270.51) (xy 245.745 270.51)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "bc1e903c-48ef-486b-81c9-e9c6818c7349")
-	)
-	(wire
-		(pts
 			(xy 59.055 230.505) (xy 53.975 230.505)
 		)
 		(stroke
@@ -6528,7 +6538,7 @@
 	)
 	(wire
 		(pts
-			(xy 100.33 69.85) (xy 99.06 69.85)
+			(xy 100.965 69.85) (xy 99.06 69.85)
 		)
 		(stroke
 			(width 0)
@@ -6725,6 +6735,16 @@
 			(type default)
 		)
 		(uuid "d9b85c8a-d232-4ecd-ab57-9902d1e702fe")
+	)
+	(wire
+		(pts
+			(xy 248.92 269.24) (xy 248.92 270.51)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "da2e657e-a6f0-4322-a88e-268fed32dc8b")
 	)
 	(wire
 		(pts
@@ -7028,6 +7048,16 @@
 	)
 	(wire
 		(pts
+			(xy 248.92 270.51) (xy 243.84 270.51)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fa0c3b43-8699-4947-ab6d-3a62ffeeb289")
+	)
+	(wire
+		(pts
 			(xy 27.305 153.035) (xy 28.575 153.035)
 		)
 		(stroke
@@ -7058,7 +7088,7 @@
 	)
 	(wire
 		(pts
-			(xy 99.06 80.01) (xy 100.33 80.01)
+			(xy 99.06 80.01) (xy 100.965 80.01)
 		)
 		(stroke
 			(width 0)
@@ -7267,7 +7297,7 @@
 		(uuid "45e15519-253f-42f7-b10b-40e9db0a3a78")
 	)
 	(label "CAN_RX"
-		(at 100.33 67.31 0)
+		(at 100.965 67.31 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -7577,7 +7607,7 @@
 		(uuid "9adada3f-7d16-40ed-b9b7-fee1f6d94460")
 	)
 	(label "CAN_TX"
-		(at 100.33 64.77 0)
+		(at 100.965 64.77 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -7757,7 +7787,7 @@
 		(uuid "d557083f-0622-493e-8606-75c2f086f630")
 	)
 	(label "TIM_PWM_TIBIA"
-		(at 100.33 69.85 0)
+		(at 100.965 69.85 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -7847,7 +7877,7 @@
 		(uuid "e41d86ac-8307-4630-8936-211399c23ddd")
 	)
 	(label "TIM_PWM_COXA"
-		(at 100.33 77.47 0)
+		(at 100.965 77.47 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -7887,7 +7917,7 @@
 		(uuid "ea39172f-a8c5-470c-bc19-658c7dda2d16")
 	)
 	(label "SWDIO"
-		(at 100.33 62.23 0)
+		(at 100.965 62.23 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -7947,7 +7977,7 @@
 		(uuid "fad16016-e963-467d-80e2-2bea31fa0c13")
 	)
 	(label "TIM_PWM_FEMUR"
-		(at 100.33 74.93 0)
+		(at 100.965 74.93 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8035,7 +8065,7 @@
 	)
 	(hierarchical_label "LEG_ID_B2"
 		(shape input)
-		(at 48.895 62.23 180)
+		(at 48.26 61.595 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8046,7 +8076,7 @@
 	)
 	(hierarchical_label "~{ESTOP}"
 		(shape input)
-		(at 100.33 80.01 0)
+		(at 100.965 80.01 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -13579,7 +13609,7 @@
 		(dnp no)
 		(uuid "6f9b3ea1-9088-4d67-aa71-175ece697b83")
 		(property "Reference" "TP203"
-			(at 239.395 265.43 90)
+			(at 237.49 265.43 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -13590,7 +13620,7 @@
 			)
 		)
 		(property "Value" "3V3"
-			(at 239.395 267.97 90)
+			(at 237.49 267.97 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -14619,25 +14649,25 @@
 		(dnp yes)
 		(uuid "7ddfcf65-9237-46af-a81e-2535da663c93")
 		(property "Reference" "R228"
-			(at 367.03 166.37 0)
+			(at 361.95 163.83 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify right)
+				(justify left)
 			)
 		)
 		(property "Value" "10k"
-			(at 367.03 163.83 0)
+			(at 361.95 166.37 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify right)
+				(justify left)
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
@@ -20510,7 +20540,7 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 245.745 270.51 270)
+		(at 248.92 269.24 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -20520,7 +20550,7 @@
 		(dnp no)
 		(uuid "f14c5ab8-b67a-4f85-9259-af51e8f4cce8")
 		(property "Reference" "#PWR0221"
-			(at 241.935 270.51 0)
+			(at 248.92 273.05 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20531,7 +20561,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 251.46 270.51 90)
+			(at 248.285 265.43 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -20541,7 +20571,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 245.745 270.51 0)
+			(at 248.92 269.24 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20552,7 +20582,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 245.745 270.51 0)
+			(at 248.92 269.24 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20563,7 +20593,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3V3\""
-			(at 245.745 270.51 0)
+			(at 248.92 269.24 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)

@@ -10,8 +10,15 @@
 
 ## On hold
 
-- Power board firmware extras (5 V / VBAT ADC, ALERT pin, OTP): the power board, its BOM and the charging scheme are being reworked.
+- Power board firmware: catch up with the new board (`hardware/power-board/BOM.md`). Drop the side-cut outputs (no LM5069s), drive ESTOP_N straight from the RUN pin, 5V_OFF becomes the carrier's 5V_EN, BQ25798 single input (only VAC1 / VBUS), 5V_PG from the carrier; update the pin table in `firmware/power-node/README.md`, the simulator and the tests. The ADC dividers are gone, so that extra is dropped; ALERT and OTP stay as ideas.
 - IMU and compass drivers: the parts aren't chosen yet. `nav:=true` on the robot needs the compass for heading.
+
+## Hardware
+
+- Decide whether J-SYSCTL and the power board's J-CAN merge into one 10-pin JST-GH to the carrier.
+- Side boards: add the e-stop diode (BAT54J, BUCK_EN → ESTOP_N) and the 1k in series with PB0 on each leg cell.
+- Carrier: TPS56A37 5 V buck from VBAT (EN pulled up, 5V_EN / 5V_PG to J-SYSCTL), XT30 input, data-only USB-C for rpiboot, nRPIBOOT jumper, console UART header.
+- XT60 / XT30 aren't on Mouser: order from TME.
 
 ## Mechanical
 

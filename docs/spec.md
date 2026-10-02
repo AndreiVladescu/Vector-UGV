@@ -15,8 +15,8 @@ Four designs, five boards:
 | Board | Qty | Layers | Main parts |
 |---|---|---|---|
 | Side board | 2 | 4 | 3 leg cells, each with STM32C092, TCAN332DR, TPS56A37 6 V buck |
-| Power & BMS | 1 | 4, 2 oz | BQ76942, BQ25798, 2× LM5069, 5 V / 6 A buck, STM32C092 |
-| CM5 carrier | 1 | 4, impedance-controlled | CM5, M.2, EC25-EUX LTE, 2× GNSS, MCP251863, IMU |
+| Power & BMS | 1 | 4, 2 oz | BQ7694202, BQ25798 (USB-C), STM32C092 |
+| CM5 carrier | 1 | 4, impedance-controlled | CM5, 5 V buck (TPS56A37), M.2, EC25-EUX LTE, 2× GNSS, MCP251863, IMU |
 | Nose board | 1 | 2 | VL53L8CX front ToF, MMC5983MA compass, Pi camera mount |
 
 ```
@@ -24,7 +24,7 @@ Four designs, five boards:
        └ side board L ┘      │         └ side board R ┘
                        power board (stub)
 
-power board ──VBAT_L──► side L     ──VBAT_R──► side R     ──5V, VBAT_SYS──► carrier
+power board ──VBAT──► side L, side R, carrier (3× XT30; the carrier makes its own 5 V)
 carrier ──J-NOSE (I2C, 3V3) + CSI ribbon──► nose board
 ```
 
@@ -49,18 +49,21 @@ About 24 MCU pins in total: 3 PWM, 8 ADC, 3 CAN, 1–2 oscillator, 4 ToF, 3 SWD/
 
 ### Power & BMS board
 
-- **BQ7694202 battery monitor** (3–10 cells, the cheaper sibling of the BQ76952, same commands; the 02 variant has REG1 on from the factory, which starts the MCU): high-side FETs, so every board keeps a common ground. It handles cell over- and undervoltage, overcurrent, temperature, balancing and coulomb counting. It works with the DIY pack or a store-bought 4S LiPo through the balance lead.
-- **BQ25798 charger:** two inputs through its own input FET pairs, GX-12 DC (12–20 V, e.g. a laptop brick; the charger is rated 30 V absolute) and USB-C PD (a CH224K asking for 20 V). About 60 W of charging, charge-only. The robot's load does not go through it. Plugging either input wakes the board.
-- **2× LM5069 hot-swap controllers, one per side:** they soft-start the leg bus, limit current, and act as the hardware e-stop (a latching switch on EN). The CM5 stays powered when the e-stop is hit. They stay on in Sentinel: the leg MCUs switch their own servo bucks off, so the side boards' MCUs, CAN and ToF keep running. The LM5069s only cut a side for e-stop, a fault or a full shutdown.
-- **5 V / 6 A buck:** powers the Pi 5 during development, and the carrier later.
-- **Soft power:** no switch in the 20 A path. Off means the BQ76942 is in SHUTDOWN (a few µA from the pack, safe for months). A short press on the power button (or plugging a charger) wakes it through TS2; its REG1 output enables the 3.3 V buck for the MCU, which configures the BMS, turns the FETs and the 5 V buck on. A charger on its own only wakes it to charge, with the CM5 and the legs left off until the button is pressed. A long press, low battery or a command from ROS asks the CM5 to shut down over J-SYSCTL (`gpio-shutdown` overlay), waits for its "halted" line (`gpio-poweroff`, with a 30 s fallback), then cuts 5 V and puts the BMS back in SHUTDOWN. A clean halt matters with the CM5 on microSD.
-- **E-stop:** a latching mushroom button with a normally closed contact in series with the RUN net's pull-up, so pressing it or a broken wire means stop. A 74LVC3G07 (three open-drain buffers) turns RUN low into: ESTOP_N low on the CAN connectors (every leg MCU stops), and both LM5069 UVLO pins low (servo power on both sides gone within microseconds). No firmware in that path. The MCU can pull RUN low too, so a stop from ROS or ELRS takes the same hardware path, and it can cut one side alone for a fault. The CM5 stays powered. The side boards keep their ESTOP_N pull-ups: the power board only ever drives the line low.
-- **MCU:** an STM32C092 configures the BMS at boot (its config lives in RAM), runs the charger and the power states, keeps the state of charge, and reports on CAN. See `firmware/power-node/README.md`.
+Battery protection, USB-C charging and soft power, with a power MCU on CAN. BOM in `hardware/power-board/BOM.md`.
+
+- **Pack:** detachable, XT60 for power plus one 5-pin JST-XH balance plug (GND, C1–C4), as on drone packs, so a store-bought 4S LiPo also fits and a hobby balance charger is a backup. The 30 A fuse sits in the pack lead. Plugging the pack in doesn't spark: the BMS FETs start open.
+- **BQ7694202 battery monitor** (the 02 variant has REG1 on from the factory, which starts the MCU): two high-side FETs (BSC010N04LS), so every board keeps a common ground. Cell over- and undervoltage, overcurrent and short circuit, temperature, balancing and coulomb counting. Its pre-discharge path is the inrush limit for the side boards and the carrier.
+- **BQ25798 charger, USB-C only:** single input, no input FETs. A CYPD3177 asks a PD charger for 20 V, about 60 W (2.5 h); a 5 V-only source still charges at about 15 W. Plugging USB-C in wakes the BMS. The robot's load does not go through the charger.
+- **No hot-swap controllers, no 5 V buck:** VBAT goes straight from the BMS FETs to both side boards and the carrier over XT30s. The 5 V buck is on the carrier; the power board switches it with 5V_EN in J-SYSCTL.
+- **Soft power:** no switch in the 20 A path. Off means the BMS is in SHUTDOWN (about 1 µA, safe for months). A press on the power button (or plugging USB-C in) wakes it through TS2; REG1 enables the 3.3 V buck for the MCU, which configures the BMS and closes the FETs. A charger alone only charges, with 5V_EN held low so the CM5 stays off. A long press, low battery or a command from ROS asks the CM5 to shut down over J-SYSCTL (`gpio-shutdown`), waits for HALTED (`gpio-poweroff`, 30 s fallback), then opens the FETs and puts the BMS in SHUTDOWN, which also removes the MCU's own supply. A clean halt matters with the CM5 on microSD.
+- **E-stop, no mushroom button:** stops come from ROS, the ELRS switch or the operator page, as the e-stop flag in SYNC. The power MCU then pulls ESTOP_N low from an open-drain pin, and a diode on every leg cell holds its servo buck's EN low: servo power is gone without any leg firmware. The CM5 stays up. If the CM5 or the power MCU hangs, SYNC stops and every leg crouches and powers down on its own.
+- **MCU:** an STM32C092 (node 7) configures the BMS and charger at every start (their settings live in RAM), runs the power states, keeps the state of charge and reports on CAN. See `firmware/power-node/README.md`.
 
 ### CM5 carrier
 
 - **CM5:** CM5 Lite, 2 GB, Wi-Fi, booting from a microSD socket on the carrier (more space than eMMC). 2 GB is enough, measured on a Pi 5 2 GB: the control stack (ros2_control, gait, monitor, foxglove_bridge) in Docker uses 481 MB system-wide, leaving 1.5 GB for camera and inference; H.264 in software costs 20 % of a core at 640×360 / 15 fps.
 - **M.2 M-key 2242 on the single PCIe lane:** kept only as an upgrade path for a Hailo accelerator. Not fitted on the prototype or the CM5 board; vision runs on the CPU.
+- **5 V for the CM5:** a TPS56A37 (the side boards' servo buck, set to 5.0 V) fed with VBAT over an XT30 from the power board. EN is pulled up on the carrier and pulled low by the power board (5V_EN in J-SYSCTL); PG goes back as 5V_PG. Without a power board, 12–16.8 V on the XT30 just runs it, which is how it's powered on the bench.
 - **CAN:** MCP251863 (MCP2518FD plus transceiver in one package), which shows up as `can0` through the mainline `mcp251xfd` driver. The bus passes through the carrier, with no termination on it.
 - **LTE:** Quectel EC25-EUX in an mPCIe socket (USB 2.0 lines only), with a nano-SIM and a 3.8 V / 3 A buck.
 - **GNSS:** u-blox MAX-M10S plus Quectel LC76G, two vendors for real redundancy. Both use active antennas with a bias-tee each, plus a SAW filter, because LTE band 3 uplink sits close to GPS L1.
@@ -73,7 +76,8 @@ About 24 MCU pins in total: 3 PWM, 8 ADC, 3 CAN, 1–2 oscillator, 4 ToF, 3 SWD/
   - microSD socket (the CM5 Lite boots from it)
   - ELRS and lidar UARTs
   - gimbal PWM for 2× SG90 with a small 5 V buck
-  - a USB-C port for rpiboot
+  - a USB-C port for rpiboot, data only: D+/D− to the CM5's USB 2.0, 5.1k on CC, VBUS not connected to the 5 V rail (the CM5 is powered from VBAT, or a bench supply on the XT30). With a CM5 Lite on microSD it's rarely needed
+  - an nRPIBOOT jumper and a 3-pin console UART header
   - a fan
   - an RTC battery
 - **SWD recovery header:** on CM5 GPIOs.

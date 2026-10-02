@@ -22,10 +22,12 @@ Status: **sch** = in the schematic now, **add** = still to draw, **change** = in
 | 1 | Soft-start cap | per datasheet (few nF) | 0603 | 0.01 | add | slows the inrush when a leg wakes |
 | 2 | Buck feedback | 90.9k / 10k 1 % (6.0 V from 0.6 V) | 0603 | 0.02 | add | |
 | 1 | EN pull-down | 100k | 0603 | 0.01 | sch | R217: buck off while the MCU is in reset |
+| 1 | E-stop diode | BAT54J | SOD-323F | 0.10 | add | anode BUCK_EN, cathode ESTOP_N: the hardware e-stop holds the servo buck off |
+| 1 | BUCK_EN series | 1k | 0603 | 0.01 | add | between PB0 and BUCK_EN, so the diode wins over the MCU pin |
 | 1 | PG pull-up | 100k | 0603 | 0.01 | sch | R218 |
 | 1 | Current amp | INA181A1IDBVR (×20) | SOT-23-6 | 0.40 | sch | + 100 nF |
 | 1 | Shunt | 10 mΩ 1 %, ≥ 1 W | 2512 | 0.30 | add | 7.5 A stall → 0.56 W |
-| 3 | Pot series R | 10k | 0603 | 0.01 | change | was 15k; wiper → 10k → ADC |
+| 3 | Pot series R | 10k | 0603 | 0.01 | change | wiper → 10k → ADC |
 | 3 | Pot divider bottom | 10k | 0603 | – | change | mark DNP (no divider needed, see docs/servos.md) |
 | 3 | Pot RC | 1k → 0 Ω link, 100 nF at the ADC | 0603 | 0.02 | change | gives 10k + 100 nF = 160 Hz |
 | 3 | PWM series | 220 Ω | 0603 | 0.01 | sch | |
