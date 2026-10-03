@@ -47,7 +47,7 @@ void bq76942_sim_init(struct bq76942_sim *s, bool crc)
     *mem(s, 0x929C) = 50;
     set16(s, 0x923F, 0);
     s->host_fets = true;
-    s->ts1_c = s->hdq_c = s->ts3_c = s->int_c = 25;
+    s->ts1_c = s->ts3_c = s->int_c = 25;
     bq76942_sim_cells(s, 3800);
 }
 
@@ -199,8 +199,8 @@ static void direct(struct bq76942_sim *s, uint8_t *regs)
     regs[0x37] = regs[0x39] = pack >> 8;
     regs[0x3A] = (uint16_t)s->current_ma & 0xff;
     regs[0x3B] = (uint16_t)s->current_ma >> 8;
-    const int16_t temps[][2] = {{0x68, s->int_c}, {0x70, s->ts1_c}, {0x74, s->ts3_c}, {0x76, s->hdq_c}};
-    for (int i = 0; i < 4; i++) {
+    const int16_t temps[][2] = {{0x68, s->int_c}, {0x70, s->ts1_c}, {0x74, s->ts3_c}};
+    for (int i = 0; i < 3; i++) {
         uint16_t k = (uint16_t)kelvin10(temps[i][1]);
         regs[temps[i][0]] = k & 0xff;
         regs[temps[i][0] + 1] = k >> 8;

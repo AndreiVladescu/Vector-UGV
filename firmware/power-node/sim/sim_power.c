@@ -82,12 +82,13 @@ static void battery_step(struct battery *b, struct power_sim *s)
     uint8_t fets = bq76942_sim_fets(&s->bms);
     float load = 0, charge = 0;
     if (fets & BQ_FET_DSG) {
-        if (!s->outs[OUT_5V_OFF])
-            load += 400; /* CM5, camera, radios at pack voltage */
-        load += (!s->outs[OUT_SIDE_L_OFF] + !s->outs[OUT_SIDE_R_OFF]) * b->load_ma / 2;
+        if (!s->outs[OUT_CM5_OFF])
+            load += 400 + b->load_ma; /* CM5, camera, radios, and the legs walking */
+        else
+            load += 60;               /* leg cells idle: MCUs, CAN, ToF */
         load += 30;
     }
-    if ((fets & BQ_FET_CHG) && (s->chg.vac1 || s->chg.vac2) && (s->chg.regs[CHG_CTRL0] & 0x20)) {
+    if ((fets & BQ_FET_CHG) && s->chg.vbus && (s->chg.regs[CHG_CTRL0] & 0x20)) {
         charge = bq25798_sim_reg16(&s->chg, CHG_ICHG) * 10.0f;
         if (b->soc > 95)
             charge *= (100 - b->soc) / 5; /* constant-voltage taper */
@@ -101,7 +102,7 @@ static void battery_step(struct battery *b, struct power_sim *s)
     s->bms.current_ma = (int16_t)net;
     bq76942_sim_cells(&s->bms, (uint16_t)(ocv_mv(b->soc) + net * 0.01f)); /* 10 mΩ per 3P group */
     s->chg.vbat_mv = (uint16_t)(4 * ocv_mv(b->soc));
-    s->chg.vac_mv = 20000;
+    s->chg.vbus_mv = 20000;
 }
 
 int main(int argc, char **argv)
@@ -136,7 +137,7 @@ int main(int argc, char **argv)
     static struct power_sim sim;
     power_sim_init(&sim, true);
     sim.tx = tx;
-    sim.chg.vac1 = charger;
+    sim.chg.vbus = charger;
     /* the saved SoC is what the gauge will trust, as after a normal power-off */
     config_defaults(&sim.flash[0]);
     sim.flash[0].soc = bat.soc;
@@ -173,8 +174,8 @@ int main(int argc, char **argv)
         }
         if (plug) {
             plug = 0;
-            sim.chg.vac1 = !sim.chg.vac1;
-            printf("charger %s\n", sim.chg.vac1 ? "plugged in" : "unplugged");
+            sim.chg.vbus = !sim.chg.vbus;
+            printf("charger %s\n", sim.chg.vbus ? "plugged in" : "unplugged");
         }
         if (sim.p.state == POWER_HALTING) {
             if (!halting_since)

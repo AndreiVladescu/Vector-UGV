@@ -9,8 +9,8 @@
 
 struct bq25798_sim {
     uint8_t regs[0x49];
-    bool vac1, vac2, done;
-    uint16_t vac_mv, vbat_mv;
+    bool vbus, done;  /* something on USB-C; VAC1 and VAC2 are tied to VBUS on the board */
+    uint16_t vbus_mv, vbat_mv;
     uint32_t wd_ms; /* since the last WD_RST */
     int wd_expired, fail_next;
 };

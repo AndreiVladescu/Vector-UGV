@@ -1,4 +1,4 @@
-VERSION "0.5"
+VERSION "0.6"
 
 NS_ :
 
@@ -298,10 +298,7 @@ BO_ 167 POWER_DETAIL: 8 POWER
  SG_ safety_b : 8|8@1+ (1,0) [0|255] "" CM5
  SG_ safety_c : 16|8@1+ (1,0) [0|255] "" CM5
  SG_ fets : 24|4@1+ (1,0) [0|15] "" CM5
- SG_ side_left : 28|1@1+ (1,0) [0|1] "" CM5
- SG_ side_right : 29|1@1+ (1,0) [0|1] "" CM5
- SG_ input_dc : 30|1@1+ (1,0) [0|1] "" CM5
- SG_ input_usb : 31|1@1+ (1,0) [0|1] "" CM5
+ SG_ usb : 28|1@1+ (1,0) [0|1] "" CM5
  SG_ charge_status : 32|3@1+ (1,0) [0|7] "" CM5
  SG_ charger_fault : 40|8@1+ (1,0) [0|255] "" CM5
  SG_ input_voltage : 48|8@1+ (100,0) [0|25500] "mV" CM5

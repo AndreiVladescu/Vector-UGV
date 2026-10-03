@@ -73,17 +73,15 @@ void bq25798_sim_step(struct bq25798_sim *s, uint32_t ms)
         s->wd_ms = 0;
         s->wd_expired++;
     }
-    bool in = s->vac1 || s->vac2;
+    bool in = s->vbus;
     uint8_t st0 = s->regs[CHG_STATUS0] & 0x20;
-    if (s->vac1) st0 |= 0x02;
-    if (s->vac2) st0 |= 0x04;
-    if (in) st0 |= 0x08;
+    if (in) st0 |= 0x0F; /* VBUS, AC1, AC2 present (tied together), power good */
     s->regs[CHG_STATUS0] = st0;
     uint8_t stat = !in || !(s->regs[CHG_CTRL0] & 0x20) ? CHG_NOT_CHARGING : s->done ? CHG_DONE : CHG_FAST;
     s->regs[CHG_STATUS1] = (uint8_t)(stat << 5);
     bool adc = s->regs[CHG_ADC_CTRL] & 0x80;
-    put16(s, 0x35, adc && in ? s->vac_mv : 0);
-    put16(s, 0x37, adc && s->vac1 ? s->vac_mv : 0);
-    put16(s, 0x39, adc && s->vac2 ? s->vac_mv : 0);
+    put16(s, 0x35, adc && in ? s->vbus_mv : 0);
+    put16(s, 0x37, adc && in ? s->vbus_mv : 0);
+    put16(s, 0x39, adc && in ? s->vbus_mv : 0);
     put16(s, 0x3B, adc ? s->vbat_mv : 0);
 }

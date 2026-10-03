@@ -25,9 +25,9 @@ struct charge_settings {
 
 struct charger_reading {
     uint8_t status0, chg_stat, fault0, fault1;
-    bool vac1, vac2, power_good;
+    bool vbus, power_good; /* single input: VAC1 and VAC2 are tied to VBUS */
     int16_t ibus_ma, ibat_ma;
-    uint16_t vbus_mv, vac1_mv, vac2_mv, vbat_mv;
+    uint16_t vbus_mv, vbat_mv;
 };
 
 struct bq25798 {

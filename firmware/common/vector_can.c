@@ -166,7 +166,7 @@ void can_pack_power_detail(struct can_frame_t *f, const struct power_detail_msg 
     f->data[0] = m->safety_a;
     f->data[1] = m->safety_b;
     f->data[2] = m->safety_c;
-    f->data[3] = (m->fets & 0x0f) | ((m->sides & 3) << 4) | ((m->inputs & 3) << 6);
+    f->data[3] = (m->fets & 0x0f) | (m->usb ? 0x10 : 0);
     f->data[4] = m->chg_stat & 7;
     f->data[5] = m->charger_fault;
     f->data[6] = in > 255 ? 255 : in;
@@ -204,8 +204,7 @@ bool can_unpack_power_detail(const struct can_frame_t *f, struct power_detail_ms
     m->safety_b = f->data[1];
     m->safety_c = f->data[2];
     m->fets = f->data[3] & 0x0f;
-    m->sides = (f->data[3] >> 4) & 3;
-    m->inputs = f->data[3] >> 6;
+    m->usb = f->data[3] & 0x10;
     m->chg_stat = f->data[4] & 7;
     m->charger_fault = f->data[5];
     m->input_mv = f->data[6] * 100;

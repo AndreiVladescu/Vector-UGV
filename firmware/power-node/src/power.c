@@ -59,17 +59,11 @@ static uint16_t cell_max(const struct bq_reading *r)
     return v;
 }
 
-static bool charger_in(struct power *p) { return p->ch_ok && (p->ch.vac1 || p->ch.vac2); }
+static bool charger_in(struct power *p) { return p->ch_ok && p->ch.vbus; }
 
 static struct charge_settings charge_settings(struct power *p)
 {
     return (struct charge_settings){p->cfg.charge_mv, p->cfg.charge_ma, p->cfg.input_ma, true};
-}
-
-static void set_sides(struct power *p, bool allowed)
-{
-    out(p, OUT_SIDE_L_OFF, !(allowed && (p->sides & 1)));
-    out(p, OUT_SIDE_R_OFF, !(allowed && (p->sides & 2)));
 }
 
 /* write over the older slot; the other keeps the last good copy if power drops now */
@@ -93,18 +87,16 @@ static void enter(struct power *p, enum power_state s)
     switch (s) {
     case POWER_ON:
         out(p, OUT_SHUTDOWN_REQ, false);
-        out(p, OUT_5V_OFF, false);
-        set_sides(p, true);
+        out(p, OUT_CM5_OFF, false);
         bq_fets(&p->bms, true);
         p->low_t = p->halted_t = p->pg_bad_t = 0;
         break;
     case POWER_CHARGE:
-        /* loads off before the FETs close: CHG and DSG both on, so the charge current
-           doesn't go through the DSG FET's body diode */
+        /* CHG and DSG both on, so the charge current doesn't go through the DSG FET's body
+           diode. The side boards see VBAT too: their MCUs idle with the servo bucks off. */
         out(p, OUT_SHUTDOWN_REQ, false);
-        out(p, OUT_RUN_LOW, false);
-        out(p, OUT_5V_OFF, true);
-        set_sides(p, false);
+        out(p, OUT_ESTOP, false);
+        out(p, OUT_CM5_OFF, true);
         bq_fets(&p->bms, true);
         p->no_input_t = 0;
         break;
@@ -114,16 +106,14 @@ static void enter(struct power *p, enum power_state s)
         break;
     case POWER_OFF:
         out(p, OUT_SHUTDOWN_REQ, false);
-        out(p, OUT_RUN_LOW, false);
-        out(p, OUT_5V_OFF, true);
-        set_sides(p, false);
+        out(p, OUT_ESTOP, false);
+        out(p, OUT_CM5_OFF, true);
         save(p);
         bq_fets(&p->bms, false);
         p->off_t = 0;
         break;
     case POWER_FAULT:
-        out(p, OUT_5V_OFF, true);
-        set_sides(p, false);
+        out(p, OUT_CM5_OFF, true);
         break;
     case POWER_BOOT:
         p->boot_tries = 0;
@@ -179,7 +169,7 @@ static void update_faults(struct power *p)
             f |= PWR_FAULT_LOW_CELL;
         if (lo > 3000 && hi - lo > 100)
             f |= PWR_FAULT_IMBALANCE;
-        if (r->cell_temp_c[0] > 50 || r->cell_temp_c[1] > 50 || r->fet_temp_c > 80)
+        if (r->cell_temp_c > 50 || r->fet_temp_c > 80)
             f |= PWR_FAULT_HOT;
         if (p->gauge.soc < 15 || lo < p->cfg.low_mv + 100)
             fl |= PWR_LOW;
@@ -221,10 +211,9 @@ static void poll_charger(struct power *p)
 static void send_state(struct power *p)
 {
     struct can_frame_t f;
-    int16_t temp = p->bat.cell_temp_c[0] > p->bat.cell_temp_c[1] ? p->bat.cell_temp_c[0] : p->bat.cell_temp_c[1];
     struct power_state_msg m = {
         .pack_mv = p->bat.stack_mv, .current_ma = p->bat.current_ma,
-        .soc_half = (uint8_t)(p->gauge.soc * 2 + 0.5f), .temp_c = (int8_t)temp,
+        .soc_half = (uint8_t)(p->gauge.soc * 2 + 0.5f), .temp_c = (int8_t)p->bat.cell_temp_c,
         .state = p->state, .flags = p->flags, .faults = p->faults,
     };
     can_pack_power_state(&f, &m);
@@ -243,10 +232,9 @@ static void send_slow(struct power *p)
     struct power_detail_msg d = {
         .safety_a = p->bat.safety_a, .safety_b = p->bat.safety_b, .safety_c = p->bat.safety_c,
         .fets = p->bat.fets & 0x0f,
-        .sides = p->state == POWER_ON || p->state == POWER_HALTING ? p->sides : 0,
-        .inputs = (p->ch.vac1 ? 1 : 0) | (p->ch.vac2 ? 2 : 0),
+        .usb = p->ch.vbus,
         .chg_stat = p->ch.chg_stat, .charger_fault = p->ch.fault0 & 0x7f,
-        .input_mv = p->ch.vac1_mv > p->ch.vac2_mv ? p->ch.vac1_mv : p->ch.vac2_mv,
+        .input_mv = p->ch.vbus_mv,
         .fet_temp_c = (int8_t)p->bat.fet_temp_c,
     };
     can_pack_power_detail(&f, &d);
@@ -297,8 +285,9 @@ static void state_step(struct power *p)
     uint32_t t = now(p);
     switch (p->state) {
     case POWER_ON: {
-        /* ROS's e-stop (the SYNC flag) takes the same hardware path as the button */
-        out(p, OUT_RUN_LOW, p->sync_estop && t - p->last_sync < SYNC_STALE_MS);
+        /* ROS's e-stop (the SYNC flag) pulls ESTOP_N, which holds every servo buck off in
+           hardware. A stale SYNC lets go: the legs crouch and power down on their own then. */
+        out(p, OUT_ESTOP, p->sync_estop && t - p->last_sync < SYNC_STALE_MS);
         if (held(p, in(p, IN_HALTED), &p->halted_t, HALTED_MS)) {
             after_halt(p);
             break;
@@ -316,6 +305,7 @@ static void state_step(struct power *p)
         break;
     }
     case POWER_HALTING:
+        out(p, OUT_ESTOP, p->sync_estop && t - p->last_sync < SYNC_STALE_MS);
         if (held(p, in(p, IN_HALTED), &p->halted_t, HALTED_MS) || t - p->entered >= HALT_TIMEOUT_MS)
             after_halt(p);
         break;
@@ -367,9 +357,8 @@ void power_init(struct power *p, const struct power_hal *hal, uint16_t cell_mask
         config_defaults(&p->cfg);
         p->faults |= PWR_FAULT_CONFIG;
     }
-    p->bms = (struct bq76942){.hal = hal, .crc = bms_crc, .cell_mask = cell_mask};
+    p->bms = (struct bq76942){.hal = hal, .crc = bms_crc, .cell_mask = cell_mask, .cell_ntc = p->cfg.cell_ntc};
     p->chg = (struct bq25798){.hal = hal};
-    p->sides = 3;
     for (int i = 0; i < OUTPUTS; i++)
         out(p, (enum pwr_out)i, false);
     uint32_t t = now(p);
@@ -424,7 +413,7 @@ static bool key_get(struct power *p, uint8_t key, int32_t arg, int32_t *v)
     case PKEY_CHARGE_MV: *v = p->cfg.charge_mv; return true;
     case PKEY_INPUT_MA: *v = p->cfg.input_ma; return true;
     case PKEY_LOW_MV: *v = p->cfg.low_mv; return true;
-    case PKEY_SIDES: *v = p->sides; return true;
+    case PKEY_CELL_NTC: *v = p->cfg.cell_ntc; return true;
     case PKEY_SOC: *v = (int32_t)(p->gauge.soc * 10 + 0.5f); return true;
     case PKEY_SHUTDOWN: *v = p->state == POWER_HALTING; return true;
     case PKEY_BMS_MEM: {
@@ -458,13 +447,9 @@ static uint8_t key_set(struct power *p, uint8_t key, int32_t v)
     case PKEY_CHARGE_MV: st = range(v, 12000, 16800, &p->cfg.charge_mv); break;
     case PKEY_INPUT_MA: st = range(v, 100, 3300, &p->cfg.input_ma); break;
     case PKEY_LOW_MV: return range(v, 3000, 3700, &p->cfg.low_mv);
-    case PKEY_SIDES:
-        if (v < 0 || v > 3)
-            return ST_BAD_VALUE;
-        p->sides = (uint8_t)v;
-        if (p->state == POWER_ON || p->state == POWER_HALTING)
-            set_sides(p, true);
-        return ST_OK;
+    case PKEY_CELL_NTC:
+        /* the BMS takes it at the next power-up: reconfiguring it now would open the FETs */
+        return range(v, 0, 1, &p->cfg.cell_ntc);
     case PKEY_SOC:
         if (v < 0 || v > 1000)
             return ST_BAD_VALUE;

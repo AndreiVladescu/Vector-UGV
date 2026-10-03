@@ -35,10 +35,10 @@ static void gpio(void)
     HAL_GPIO_Init(IN_BUTTON_PORT, &g);
     g = (GPIO_InitTypeDef){.Pin = IN_HALTED_PIN, .Mode = GPIO_MODE_INPUT, .Pull = GPIO_PULLDOWN};
     HAL_GPIO_Init(IN_HALTED_PORT, &g);
-    g = (GPIO_InitTypeDef){.Pin = IN_RUN_PIN, .Mode = GPIO_MODE_INPUT};
-    HAL_GPIO_Init(IN_RUN_PORT, &g);
     g = (GPIO_InitTypeDef){.Pin = IN_PG_PIN, .Mode = GPIO_MODE_INPUT, .Pull = GPIO_PULLUP};
     HAL_GPIO_Init(IN_PG_PORT, &g);
+    g = (GPIO_InitTypeDef){.Pin = IN_ALERT_PIN | IN_CHG_INT_PIN, .Mode = GPIO_MODE_INPUT, .Pull = GPIO_PULLUP};
+    HAL_GPIO_Init(GPIOB, &g);
 }
 
 static void i2c(void)
@@ -101,10 +101,8 @@ static void hal_out(void *ctx, enum pwr_out pin, bool on)
 {
     (void)ctx;
     switch (pin) {
-    case OUT_5V_OFF: HAL_GPIO_WritePin(OUT_5V_OFF_PORT, OUT_5V_OFF_PIN, on ? GPIO_PIN_SET : GPIO_PIN_RESET); break;
-    case OUT_SIDE_L_OFF: HAL_GPIO_WritePin(OUT_SIDE_L_PORT, OUT_SIDE_L_PIN, on ? GPIO_PIN_SET : GPIO_PIN_RESET); break;
-    case OUT_SIDE_R_OFF: HAL_GPIO_WritePin(OUT_SIDE_R_PORT, OUT_SIDE_R_PIN, on ? GPIO_PIN_SET : GPIO_PIN_RESET); break;
-    case OUT_RUN_LOW: HAL_GPIO_WritePin(OUT_RUN_PORT, OUT_RUN_PIN, on ? GPIO_PIN_RESET : GPIO_PIN_SET); break;
+    case OUT_CM5_OFF: HAL_GPIO_WritePin(OUT_CM5_OFF_PORT, OUT_CM5_OFF_PIN, on ? GPIO_PIN_SET : GPIO_PIN_RESET); break;
+    case OUT_ESTOP: HAL_GPIO_WritePin(OUT_ESTOP_PORT, OUT_ESTOP_PIN, on ? GPIO_PIN_RESET : GPIO_PIN_SET); break;
     case OUT_SHUTDOWN_REQ: HAL_GPIO_WritePin(OUT_SHUTDOWN_PORT, OUT_SHUTDOWN_PIN, on ? GPIO_PIN_RESET : GPIO_PIN_SET); break;
     case OUT_LED: HAL_GPIO_WritePin(LED_PORT, LED_PIN, on ? GPIO_PIN_SET : GPIO_PIN_RESET); break;
     default: break;
@@ -117,7 +115,7 @@ static bool hal_in(void *ctx, enum pwr_in pin)
     switch (pin) {
     case IN_BUTTON: return HAL_GPIO_ReadPin(IN_BUTTON_PORT, IN_BUTTON_PIN) == GPIO_PIN_RESET;
     case IN_HALTED: return HAL_GPIO_ReadPin(IN_HALTED_PORT, IN_HALTED_PIN) == GPIO_PIN_SET;
-    case IN_ESTOP: return HAL_GPIO_ReadPin(IN_RUN_PORT, IN_RUN_PIN) == GPIO_PIN_RESET;
+    case IN_ESTOP: return HAL_GPIO_ReadPin(OUT_ESTOP_PORT, OUT_ESTOP_PIN) == GPIO_PIN_RESET; /* open drain reads the line */
     case IN_5V_PG: return HAL_GPIO_ReadPin(IN_PG_PORT, IN_PG_PIN) == GPIO_PIN_SET;
     default: return false;
     }

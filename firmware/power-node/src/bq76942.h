@@ -15,7 +15,7 @@ enum {
     BQ_SAFETY_STATUS_A = 0x03, BQ_SAFETY_STATUS_B = 0x05, BQ_SAFETY_STATUS_C = 0x07,
     BQ_BATTERY_STATUS = 0x12, BQ_CELL1 = 0x14, BQ_STACK = 0x34, BQ_PACK = 0x36, BQ_LD = 0x38,
     BQ_CC2_CURRENT = 0x3A, BQ_INT_TEMP = 0x68, BQ_TS1_TEMP = 0x70, BQ_TS3_TEMP = 0x74,
-    BQ_HDQ_TEMP = 0x76, BQ_FET_STATUS = 0x7F,
+    BQ_FET_STATUS = 0x7F,
     BQ_SUBCMD = 0x3E, BQ_BUFFER = 0x40, BQ_CHECKSUM = 0x60,
 };
 
@@ -36,6 +36,7 @@ struct bq76942 {
     const struct power_hal *hal;
     bool crc;          /* I2C CRC, on for the BQ7694202 */
     uint16_t cell_mask; /* Vcell Mode: which VC inputs are cells, bottom to top */
+    bool cell_ntc;      /* thermistor on TS1; without it the die temperature is the cell temperature */
     uint16_t errors;    /* failed transfers, for diagnostics */
 };
 
@@ -43,7 +44,7 @@ struct bq_reading {
     uint16_t cell_mv[BQ_CELLS];
     uint16_t stack_mv, pack_mv, ld_mv;
     int16_t current_ma; /* positive = charging */
-    int16_t cell_temp_c[2], fet_temp_c, int_temp_c;
+    int16_t cell_temp_c, fet_temp_c, int_temp_c;
     uint16_t battery_status;
     uint8_t safety_a, safety_b, safety_c, fets;
 };

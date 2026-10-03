@@ -13,7 +13,7 @@ struct power_sim {
     struct bq76942_sim bms;
     struct bq25798_sim chg;
     bool outs[OUTPUTS];
-    bool button, halted, estop_hw;
+    bool button, halted;
     struct power_config flash[2];
     bool flash_fail;
     int saves;

@@ -14,6 +14,7 @@ void config_defaults(struct power_config *c)
     c->charge_mv = 16600;   /* 4.15 V per cell: a little capacity for a lot of cycle life */
     c->input_ma = 3000;
     c->low_mv = 3300;
+    c->cell_ntc = 0; /* a drone pack has none: an open TS1 would read as deep cold and trip the BMS */
     c->soc = -1;
     config_seal(c);
 }

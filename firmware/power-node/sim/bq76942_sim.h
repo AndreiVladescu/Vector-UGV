@@ -23,7 +23,7 @@ struct bq76942_sim {
 
     uint16_t vc_mv[10];  /* per VC input; unused ones 0 */
     int16_t current_ma;  /* positive = charging */
-    int16_t ts1_c, hdq_c, ts3_c, int_c;
+    int16_t ts1_c, ts3_c, int_c; /* ts1_c -40: nothing on J-NTC, an open thermistor reads as deep cold */
     bool ld_high;        /* something (a charger) keeps LD up: SHUTDOWN waits */
     double accum_mah;
     uint32_t accum_ms;

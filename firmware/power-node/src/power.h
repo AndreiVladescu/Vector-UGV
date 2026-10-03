@@ -20,7 +20,6 @@ struct power {
     enum power_state state;
     uint32_t entered;
     uint8_t faults, flags;
-    uint8_t sides; /* wanted by the CM5, bit 0 left, bit 1 right */
     bool sync_estop;
     uint32_t last_sync;
 

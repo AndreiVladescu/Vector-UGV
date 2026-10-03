@@ -10,7 +10,6 @@
 
 ## On hold
 
-- Power board firmware: catch up with the new board (`hardware/power-board/BOM.md`). Drop the side-cut outputs (no LM5069s), drive ESTOP_N straight from the RUN pin, 5V_OFF becomes the carrier's 5V_EN, BQ25798 single input (only VAC1 / VBUS), 5V_PG from the carrier; update the pin table in `firmware/power-node/README.md`, the simulator and the tests. The ADC dividers are gone, so that extra is dropped; ALERT and OTP stay as ideas.
 - IMU and compass drivers: the parts aren't chosen yet. `nav:=true` on the robot needs the compass for heading.
 
 ## Hardware

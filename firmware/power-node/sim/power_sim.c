@@ -8,7 +8,7 @@ static void chips_step(struct power_sim *s, uint32_t ms)
     bq76942_sim_step(&s->bms, ms);
     bq25798_sim_step(&s->chg, ms);
     /* a charger on PACK+ holds LD up, as on the board */
-    s->bms.ld_high = s->chg.vac1 || s->chg.vac2;
+    s->bms.ld_high = s->chg.vbus;
 }
 
 static uint32_t now_ms(void *ctx) { return ((struct power_sim *)ctx)->t; }
@@ -42,8 +42,8 @@ static bool in(void *ctx, enum pwr_in pin)
     switch (pin) {
     case IN_BUTTON: return s->button;
     case IN_HALTED: return s->halted;
-    case IN_ESTOP: return s->estop_hw || s->outs[OUT_RUN_LOW];
-    case IN_5V_PG: return !s->outs[OUT_5V_OFF] && (bq76942_sim_fets(&s->bms) & BQ_FET_DSG);
+    case IN_ESTOP: return s->outs[OUT_ESTOP];
+    case IN_5V_PG: return !s->outs[OUT_CM5_OFF] && (bq76942_sim_fets(&s->bms) & BQ_FET_DSG);
     default: return false;
     }
 }

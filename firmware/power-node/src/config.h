@@ -9,7 +9,7 @@
 struct power_config {
     uint32_t magic;
     uint16_t capacity_mah, charge_ma, charge_mv, input_ma, low_mv;
-    uint16_t reserved;
+    uint16_t cell_ntc; /* a thermistor on J-NTC */
     float soc; /* at the last power-off, -1 = unknown */
     uint32_t seq; /* bumped on every save; two flash slots, the newer valid one wins */
     uint32_t crc;

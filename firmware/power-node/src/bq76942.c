@@ -5,7 +5,7 @@
 enum { U1 = 1, U2 = 2 };
 
 /* Data memory settings for the 4S pack, 1 mΩ shunt (CC Gain stays at its 1 mΩ default).
-   Vcell Mode comes from bq76942.cell_mask. */
+   Vcell Mode, TS1 and DA Configuration come from bq76942.cell_mask and .cell_ntc. */
 static const struct setting {
     uint16_t addr;
     uint8_t size;
@@ -14,11 +14,9 @@ static const struct setting {
     {0x9234, U2, 0x2882}, /* Power Config: default with SLEEP off, the MCU is awake anyway */
     {0x9237, U1, 0x01},   /* REG0 Config: pre-regulator on */
     {0x9236, U1, 0x0D},   /* REG12 Config: REG1 on at 3.3 V (feeds the MCU buck enable) */
-    {0x92FD, U1, 0x07},   /* TS1: cell thermistor, 18k model */
     {0x92FE, U1, 0x00},   /* TS2: wake input only, never a thermistor */
     {0x92FF, U1, 0x0F},   /* TS3: FET thermistor */
-    {0x9300, U1, 0x07},   /* HDQ pin: second cell thermistor */
-    {0x9303, U1, 0x01},   /* DA Configuration: mV and mA */
+    {0x9300, U1, 0x00},   /* HDQ pin: unused */
     {0x9308, U1, 0x3D},   /* FET Options: series FETs, host control, predischarge, FETs wait for us */
     {0x930E, U1, 20},     /* Predischarge Timeout, 10 ms: 200 ms */
     {0x9343, U2, 0x0010}, /* Mfg Status Init: FET_EN (normal FET control), permanent fail off */
@@ -41,6 +39,8 @@ static const struct setting {
 };
 #define SETTINGS (sizeof(settings) / sizeof(settings[0]))
 #define VCELL_MODE 0x9304
+#define TS1_CONFIG 0x92FD
+#define DA_CONFIG 0x9303
 
 uint8_t bq_crc8(uint8_t crc, const uint8_t *p, int n)
 {
@@ -196,12 +196,17 @@ static bool fet_control_on(struct bq76942 *b)
 
 bool bq_configure(struct bq76942 *b, bool *changed)
 {
-    struct setting all[SETTINGS + 1];
+    enum { N = SETTINGS + 3 };
+    struct setting all[N];
     memcpy(all, settings, sizeof(settings));
     all[SETTINGS] = (struct setting){VCELL_MODE, U2, (int16_t)b->cell_mask};
+    /* TS1: cell thermistor (18k model) or unused; DA: mV and mA, plus TINT_EN (the die stands in
+       for the cell temperature) without a thermistor */
+    all[SETTINGS + 1] = (struct setting){TS1_CONFIG, U1, b->cell_ntc ? 0x07 : 0x00};
+    all[SETTINGS + 2] = (struct setting){DA_CONFIG, U1, b->cell_ntc ? 0x01 : 0x09};
 
-    bool diff[SETTINGS + 1], any = false;
-    for (unsigned i = 0; i <= SETTINGS; i++) {
+    bool diff[N], any = false;
+    for (unsigned i = 0; i < N; i++) {
         diff[i] = !matches(b, &all[i]);
         any |= diff[i];
     }
@@ -209,7 +214,7 @@ bool bq_configure(struct bq76942 *b, bool *changed)
     if (any) {
         if (!bq_command(b, BQ_SET_CFGUPDATE) || !status_bit(b, BQ_ST_CFGUPDATE, true))
             return false;
-        for (unsigned i = 0; i <= SETTINGS; i++) {
+        for (unsigned i = 0; i < N; i++) {
             uint8_t d[2];
             encode(&all[i], d);
             if (diff[i] && !bq_mem_write(b, all[i].addr, d, all[i].size))
@@ -217,7 +222,7 @@ bool bq_configure(struct bq76942 *b, bool *changed)
         }
         if (!bq_command(b, BQ_EXIT_CFGUPDATE) || !status_bit(b, BQ_ST_CFGUPDATE, false))
             return false;
-        for (unsigned i = 0; i <= SETTINGS; i++)
+        for (unsigned i = 0; i < N; i++)
             if (!matches(b, &all[i]))
                 return fail(b);
         bq_command(b, BQ_RESET_PASSQ);
@@ -242,17 +247,16 @@ bool bq_read(struct bq76942 *b, struct bq_reading *r)
             return false;
         r->cell_mv[cell++] = v < 0 ? 0 : (uint16_t)v;
     }
-    static const uint8_t temps[4] = {BQ_TS1_TEMP, BQ_HDQ_TEMP, BQ_TS3_TEMP, BQ_INT_TEMP};
-    int16_t t[4];
-    for (int i = 0; i < 4; i++) {
+    static const uint8_t temps[3] = {BQ_TS1_TEMP, BQ_TS3_TEMP, BQ_INT_TEMP};
+    int16_t t[3];
+    for (int i = 0; i < 3; i++) {
         if (!read16(b, temps[i], &v))
             return false;
         t[i] = kelvin10_to_c(v);
     }
-    r->cell_temp_c[0] = t[0];
-    r->cell_temp_c[1] = t[1];
-    r->fet_temp_c = t[2];
-    r->int_temp_c = t[3];
+    r->cell_temp_c = b->cell_ntc ? t[0] : t[2];
+    r->fet_temp_c = t[1];
+    r->int_temp_c = t[2];
 
     int16_t stack, pack, ld, st;
     if (!read16(b, BQ_STACK, &stack) || !read16(b, BQ_PACK, &pack) || !read16(b, BQ_LD, &ld) ||

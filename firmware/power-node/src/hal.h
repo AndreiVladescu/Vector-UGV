@@ -7,10 +7,8 @@
 #include "vector_can.h"
 
 enum pwr_out {
-    OUT_5V_OFF,     /* holds the 5 V buck off (pulled on, so an MCU reset doesn't drop the CM5) */
-    OUT_SIDE_L_OFF, /* LM5069 UVLO low: left side unpowered */
-    OUT_SIDE_R_OFF,
-    OUT_RUN_LOW,    /* pulls the e-stop RUN line low, the same hardware path as the button */
+    OUT_CM5_OFF,      /* pulls the carrier's 5V_EN low: CM5 off (pulled on, so an MCU reset doesn't drop it) */
+    OUT_ESTOP,        /* pulls ESTOP_N low: every leg cell's servo buck is held off */
     OUT_SHUTDOWN_REQ, /* J-SYSCTL SHUTDOWN_REQ_N low: the CM5 halts */
     OUT_LED,
     OUTPUTS
@@ -19,8 +17,8 @@ enum pwr_out {
 enum pwr_in {
     IN_BUTTON, /* power button held */
     IN_HALTED, /* CM5 gpio-poweroff: halted */
-    IN_ESTOP,  /* RUN low: e-stop pressed, a broken wire or our own OUT_RUN_LOW */
-    IN_5V_PG,
+    IN_ESTOP,  /* ESTOP_N read back low */
+    IN_5V_PG,  /* the carrier's 5 V buck PG */
     INPUTS
 };
 

@@ -55,8 +55,8 @@ static void start(bool crc, bool button, bool charger)
     sim.tx = capture;
     nrx = 0;
     sim.button = button;
-    sim.chg.vac1 = charger;
-    sim.chg.vac_mv = charger ? 20000 : 0;
+    sim.chg.vbus = charger;
+    sim.chg.vbus_mv = charger ? 20000 : 0;
     power_sim_boot(&sim);
     power_sim_run(&sim, 50);
 }
@@ -107,13 +107,14 @@ static void test_button_wake(bool crc)
     CHECK(sim.bms.cfgupdates == 1);
     CHECK(sim.bms.rejected_writes == 0);
     CHECK(bq76942_sim_mem16(&sim.bms, 0x9304) == 0x0207);
-    CHECK(sim.bms.mem[0x9303 - BQS_MEM_BASE] == 0x01);
     CHECK(sim.bms.mem[0x9308 - BQS_MEM_BASE] == 0x3D);
     CHECK(sim.bms.mem[0x92FE - BQS_MEM_BASE] == 0x00); /* TS2 left for the wake button */
     CHECK(sim.bms.fet_en);
     CHECK(bq76942_sim_fets(&sim.bms) == (BQ_FET_CHG | BQ_FET_DSG));
-    CHECK(!sim.outs[OUT_5V_OFF] && !sim.outs[OUT_SIDE_L_OFF] && !sim.outs[OUT_SIDE_R_OFF]);
-    CHECK(!sim.outs[OUT_SHUTDOWN_REQ] && !sim.outs[OUT_RUN_LOW]);
+    CHECK(!sim.outs[OUT_CM5_OFF]);
+    CHECK(!sim.outs[OUT_SHUTDOWN_REQ] && !sim.outs[OUT_ESTOP]);
+    CHECK(sim.bms.mem[0x92FD - BQS_MEM_BASE] == 0x00); /* no cell thermistor by default */
+    CHECK(sim.bms.mem[0x9303 - BQS_MEM_BASE] == 0x09); /* the die temperature stands in */
     CHECK(bq25798_sim_reg16(&sim.chg, CHG_VREG) == 1660);
     CHECK(bq25798_sim_reg16(&sim.chg, CHG_ICHG) == 300);
 
@@ -133,7 +134,7 @@ static void test_button_wake(bool crc)
     CHECK(pc.cell_mv[0] == 3800 && pc.cell_mv[3] == 3800);
     struct power_detail_msg pd;
     CHECK(can_unpack_power_detail(last(CAN_POWER_DETAIL | POWER_NODE), &pd));
-    CHECK(pd.fets == (BQ_FET_CHG | BQ_FET_DSG) && pd.sides == 3 && pd.inputs == 0);
+    CHECK(pd.fets == (BQ_FET_CHG | BQ_FET_DSG) && !pd.usb);
     CHECK(sim.bms.crc_errors == 0);
 
     /* holding the button that woke it doesn't shut it straight down */
@@ -183,14 +184,14 @@ static void test_charger_wake(void)
     printf("charger wake\n");
     start(false, false, true);
     CHECK(sim.p.state == POWER_CHARGE);
-    CHECK(sim.outs[OUT_5V_OFF] && sim.outs[OUT_SIDE_L_OFF] && sim.outs[OUT_SIDE_R_OFF]);
+    CHECK(sim.outs[OUT_CM5_OFF]);
     CHECK(bq76942_sim_fets(&sim.bms) == (BQ_FET_CHG | BQ_FET_DSG));
     power_sim_run(&sim, 1100);
     CHECK(sim.p.flags & PWR_CHARGER);
     CHECK(sim.p.flags & PWR_CHARGING);
     struct power_detail_msg pd;
     CHECK(can_unpack_power_detail(last(CAN_POWER_DETAIL | POWER_NODE), &pd));
-    CHECK(pd.inputs == 1 && pd.sides == 0 && pd.input_mv == 20000 && pd.chg_stat == CHG_FAST);
+    CHECK(pd.usb && pd.input_mv == 20000 && pd.chg_stat == CHG_FAST);
 
     /* charging the pack moves the gauge */
     float soc = sim.p.gauge.soc;
@@ -207,7 +208,7 @@ static void test_charger_wake(void)
     /* a press while charging turns the robot on */
     press(100);
     CHECK(sim.p.state == POWER_ON);
-    CHECK(!sim.outs[OUT_5V_OFF] && !sim.outs[OUT_SIDE_L_OFF]);
+    CHECK(!sim.outs[OUT_CM5_OFF]);
 
     /* long press with the charger in: back to charging, not off */
     press(2100);
@@ -218,7 +219,7 @@ static void test_charger_wake(void)
     sim.halted = false;
 
     /* unplugged: off after 5 s, SoC saved, BMS shut down */
-    sim.chg.vac1 = false;
+    sim.chg.vbus = false;
     sim.bms.current_ma = 0;
     int saves = sim.saves;
     power_sim_run(&sim, 7000);
@@ -250,14 +251,14 @@ static void test_long_press_shutdown(void)
     power_sim_run(&sim, 200);
     CHECK(sim.p.state == POWER_HALTING);
     CHECK(sim.outs[OUT_SHUTDOWN_REQ]);
-    CHECK(!sim.outs[OUT_5V_OFF]); /* the CM5 is still writing its SD card */
+    CHECK(!sim.outs[OUT_CM5_OFF]); /* the CM5 is still writing its SD card */
     power_sim_run(&sim, 5000);
     sim.halted = true;
     power_sim_run(&sim, 900);
     CHECK(sim.p.state == POWER_HALTING);
     power_sim_run(&sim, 200);
     CHECK(sim.p.state == POWER_OFF);
-    CHECK(sim.outs[OUT_5V_OFF] && sim.outs[OUT_SIDE_L_OFF] && sim.outs[OUT_SIDE_R_OFF]);
+    CHECK(sim.outs[OUT_CM5_OFF]);
     CHECK(bq76942_sim_fets(&sim.bms) == 0);
     CHECK(!sim.bms.shutdown); /* button still held: TS2 low would wake it straight back up */
     sim.button = false;
@@ -349,23 +350,24 @@ static void test_estop(void)
     sim.button = false;
     sync(false);
     power_sim_run(&sim, 10);
-    CHECK(!sim.outs[OUT_RUN_LOW]);
+    CHECK(!sim.outs[OUT_ESTOP]);
     sync(true);
     power_sim_run(&sim, 10);
-    CHECK(sim.outs[OUT_RUN_LOW]);
+    CHECK(sim.outs[OUT_ESTOP]);
     power_sim_run(&sim, 100);
     CHECK(sim.p.flags & PWR_ESTOP);
     sync(false);
     power_sim_run(&sim, 10);
-    CHECK(!sim.outs[OUT_RUN_LOW]);
+    CHECK(!sim.outs[OUT_ESTOP]);
     /* the CM5 went quiet with the flag set: let go, the legs crouch on their own */
     sync(true);
     power_sim_run(&sim, 600);
-    CHECK(!sim.outs[OUT_RUN_LOW]);
-    /* the button's hardware stop shows up as a flag */
-    sim.estop_hw = true;
-    power_sim_run(&sim, 200);
-    CHECK(sim.p.flags & PWR_ESTOP);
+    CHECK(!sim.outs[OUT_ESTOP]);
+    /* a stop while it's shutting down still holds */
+    sync(true);
+    config(OP_WRITE, PKEY_SHUTDOWN, 1, 99);
+    power_sim_run(&sim, 10);
+    CHECK(sim.p.state == POWER_HALTING && sim.outs[OUT_ESTOP]);
 }
 
 static void test_charger_watchdog(void)
@@ -410,11 +412,14 @@ static void test_config(void)
     config(OP_CALIBRATE, 0, 0, 8);
     CHECK(reply(8, ST_BAD_KEY, NULL));
 
-    config(OP_WRITE, PKEY_SIDES, 2, 9);
-    CHECK(reply(9, ST_OK, NULL));
-    CHECK(sim.outs[OUT_SIDE_L_OFF] && !sim.outs[OUT_SIDE_R_OFF]);
-    config(OP_WRITE, PKEY_SIDES, 3, 10);
-    CHECK(!sim.outs[OUT_SIDE_L_OFF]);
+    config(OP_WRITE, PKEY_CELL_NTC, 2, 9);
+    CHECK(reply(9, ST_BAD_VALUE, NULL));
+    int cfgupdates = sim.bms.cfgupdates;
+    config(OP_WRITE, PKEY_CELL_NTC, 1, 10);
+    CHECK(reply(10, ST_OK, NULL));
+    power_sim_run(&sim, 300);
+    CHECK(sim.bms.cfgupdates == cfgupdates); /* not now: that would open the FETs */
+    CHECK(bq76942_sim_fets(&sim.bms) & BQ_FET_DSG);
 
     config(OP_WRITE, PKEY_SOC, 500, 11);
     CHECK(reply(11, ST_OK, NULL));
@@ -505,9 +510,9 @@ static void test_bms_comm_loss(void)
     power_sim_boot(&sim);
     power_sim_run(&sim, 2500);
     CHECK(sim.p.state == POWER_FAULT);
-    CHECK(sim.outs[OUT_5V_OFF]);
+    CHECK(sim.outs[OUT_CM5_OFF]);
     sim.bms.fail_next = 0;
-    sim.chg.vac1 = true;
+    sim.chg.vbus = true;
     power_sim_run(&sim, 6000);
     CHECK(sim.p.state == POWER_CHARGE);
 }
@@ -519,7 +524,7 @@ static void test_5v(void)
     sim.button = false;
     power_sim_run(&sim, 2000);
     CHECK(!(sim.p.faults & PWR_FAULT_5V));
-    sim.outs[OUT_5V_OFF] = true; /* stands in for a dead buck */
+    sim.outs[OUT_CM5_OFF] = true; /* stands in for a dead buck on the carrier */
     power_sim_run(&sim, 600);
     CHECK(sim.p.faults & PWR_FAULT_5V);
 }
@@ -535,13 +540,40 @@ static void test_frames(void)
     CHECK(can_unpack_power_state(&f, &b));
     CHECK(b.pack_mv == 16012 && b.current_ma == -12340 && b.soc_half == 157 && b.temp_c == -5);
     CHECK(b.state == POWER_HALTING && b.flags == (PWR_LOW | PWR_ESTOP) && b.faults == 0x81);
-    struct power_detail_msg d = {.safety_a = 1, .safety_b = 2, .safety_c = 3, .fets = 5, .sides = 2, .inputs = 3,
+    struct power_detail_msg d = {.safety_a = 1, .safety_b = 2, .safety_c = 3, .fets = 5, .usb = true,
                                  .chg_stat = 7, .charger_fault = 9, .input_mv = 19800, .fet_temp_c = -3}, e;
     can_pack_power_detail(&f, &d);
     CHECK(f.id == 0x0A7);
     CHECK(can_unpack_power_detail(&f, &e));
-    CHECK(e.safety_c == 3 && e.fets == 5 && e.sides == 2 && e.inputs == 3 && e.chg_stat == 7);
+    CHECK(e.safety_c == 3 && e.fets == 5 && e.usb && e.chg_stat == 7);
     CHECK(e.input_mv == 19800 && e.fet_temp_c == -3);
+}
+
+static void test_cell_ntc(void)
+{
+    printf("cell thermistor\n");
+    /* none fitted: TS1 open reads as deep cold, the die temperature is used instead */
+    start(false, true, false);
+    sim.button = false;
+    sim.bms.ts1_c = -40;
+    sim.bms.int_c = 31;
+    power_sim_run(&sim, 300);
+    CHECK(sim.p.bat.cell_temp_c == 31);
+    struct power_state_msg ps;
+    CHECK(can_unpack_power_state(last(CAN_POWER_STATE | POWER_NODE), &ps));
+    CHECK(ps.temp_c == 31);
+
+    /* fitted: saved, and the BMS takes it at the next power-up */
+    config(OP_WRITE, PKEY_CELL_NTC, 1, 1);
+    config(OP_SAVE, 0, 0, 2);
+    CHECK(reply(2, ST_OK, NULL));
+    sim.bms.ts1_c = 52;
+    power_sim_boot(&sim);
+    power_sim_run(&sim, 300);
+    CHECK(sim.bms.mem[0x92FD - BQS_MEM_BASE] == 0x07);
+    CHECK(sim.bms.mem[0x9303 - BQS_MEM_BASE] == 0x01);
+    CHECK(sim.p.bat.cell_temp_c == 52);
+    CHECK(sim.p.faults & PWR_FAULT_HOT);
 }
 
 int main(void)
@@ -564,6 +596,7 @@ int main(void)
     test_config();
     test_bms_comm_loss();
     test_5v();
+    test_cell_ntc();
     printf("%d checks, %d failed\n", checks, failures);
     return failures != 0;
 }

@@ -16,7 +16,7 @@
 | 7 | BOOT (op, payload) | CM5 → leg / power | during an update |
 | 8 | BOOT_REPLY (op, status, arg) | leg / power → CM5 | during an update |
 | 9 | POWER_CELLS (4 cell voltages) | power → CM5 | 1 Hz |
-| 10 | POWER_DETAIL (BMS safety status, FETs, sides, charger inputs and status) | power → CM5 | 1 Hz |
+| 10 | POWER_DETAIL (BMS safety status, FETs, USB-C and charger status) | power → CM5 | 1 Hz |
 
 Units: 0.01°, mV, mA, mm. VBAT and the 6 V rail travel in 10 mV steps. ToF: 0 = no sensor or no fresh reading, 65535 = nothing in range.
 
@@ -49,13 +49,13 @@ Self-test (leg off; about 350 ms): buck off, then on for 200 ms with no pulses. 
 
 ## Power board (node 7)
 
-Power state: 0 boot (setting up the BMS), 1 charge (awake only to charge, 5 V and legs off), 2 on, 3 halting (asked the CM5 to shut down, waiting for its halted line, 30 s at most), 4 off (FETs open, BMS going to SHUTDOWN), 5 fault (BMS not answering at boot; retried every 5 s).
+Power state: 0 boot (setting up the BMS), 1 charge (awake only to charge, CM5 off, servo bucks off), 2 on, 3 halting (asked the CM5 to shut down, waiting for its halted line, 30 s at most), 4 off (FETs open, BMS going to SHUTDOWN), 5 fault (BMS not answering at boot; retried every 5 s).
 
-POWER_STATE: current is positive while charging. Flags: charger plugged in, charging, e-stop (the RUN line is low, from the button, a broken wire or ROS), low battery (SoC under 15 % or a cell within 100 mV of the shutdown voltage). Faults: BMS protection tripped, BMS not answering, charger fault, 5 V rail not good, cell under the shutdown voltage, cells more than 100 mV apart, config (flash empty, defaults in use), hot (a cell over 50 °C or the FETs over 80 °C).
+POWER_STATE: current is positive while charging. Flags: charger plugged in, charging, e-stop (ESTOP_N is low), low battery (SoC under 15 % or a cell within 100 mV of the shutdown voltage). Faults: BMS protection tripped, BMS not answering, charger fault, 5 V rail not good, cell under the shutdown voltage, cells more than 100 mV apart, config (flash empty, defaults in use), hot (a cell over 50 °C or the FETs over 80 °C).
 
-POWER_DETAIL: BQ76942 Safety Status A/B/C as they come (A: SCD, OCD2, OCD1, OCC, COV, CUV in bits 7–2; B: OTF, OTINT, OTD, OTC, UTINT, UTD, UTC), FET Status bits 0–3 (CHG, PCHG, DSG, PDSG), BQ25798 CHG_STAT and FAULT_Status_0.
+POWER_DETAIL: BQ76942 Safety Status A/B/C as they come (A: SCD, OCD2, OCD1, OCC, COV, CUV in bits 7–2; B: OTF, OTINT, OTD, OTC, UTINT, UTD, UTC), FET Status bits 0–3 (CHG, PCHG, DSG, PDSG), bit 4 USB-C present, BQ25798 CHG_STAT and FAULT_Status_0, VBUS in 100 mV steps, FET temperature.
 
-The power board sees SYNC too: while its e-stop flag is set (and SYNC keeps coming) it pulls RUN low, so a stop from ROS goes through the same hardware as the button.
+The power board sees SYNC too: while its e-stop flag is set (and SYNC keeps coming) it pulls ESTOP_N low, which holds every leg cell's servo buck off in hardware.
 
 Config uses the leg frames with joint 255 and these keys (16–19 as for a leg):
 
@@ -66,7 +66,7 @@ Config uses the leg frames with joint 255 and these keys (16–19 as for a leg):
 | 34 | charge voltage for the pack, mV | 12000–16800 |
 | 35 | charger input current limit, mA | 100–3300 |
 | 36 | cell voltage that shuts the robot down (10 s below it), mV | 3000–3700 |
-| 37 | side power, bit 0 left, bit 1 right; not saved, both on after a restart | 0–3 |
+| 37 | thermistor on J-NTC: 1 = fitted (TS1 is the cell temperature), 0 = none (the BMS die stands in); saved, applies at the next power-up | 0–1 |
 | 38 | state of charge, 0.1 %; write to correct the gauge | 0–1000 |
 | 39 | read only: BQ76942 data memory, value = address (0x9180–0x93FF), reply = 4 bytes from there | |
 | 40 | write 1: shut down (same as a long press) | |

@@ -47,7 +47,8 @@ enum power_key {
     PKEY_CHARGE_MV,     /* pack charge voltage */
     PKEY_INPUT_MA,      /* charger input current limit */
     PKEY_LOW_MV,        /* cell voltage that shuts the robot down */
-    PKEY_SIDES,         /* bit 0 left, bit 1 right: side power, not saved */
+    PKEY_CELL_NTC,      /* 1 = a thermistor on J-NTC (DIY pack), 0 = none, the BMS die temperature
+                           stands in; saved, applies at the next power-up */
     PKEY_SOC,           /* 0.1 %, write to correct the gauge */
     PKEY_BMS_MEM,       /* read: value = BQ76942 data memory address, reply = 4 bytes from there */
     PKEY_SHUTDOWN,      /* write 1: ask the CM5 to halt, then power off */
@@ -122,11 +123,10 @@ struct power_cells_msg { uint16_t cell_mv[4]; };
 struct power_detail_msg {
     uint8_t safety_a, safety_b, safety_c;
     uint8_t fets;     /* BQ76942 FET Status bits 0-3: CHG, PCHG, DSG, PDSG */
-    uint8_t sides;    /* bit 0 left, bit 1 right */
-    uint8_t inputs;   /* bit 0 DC (VAC1), bit 1 USB-C (VAC2) */
+    bool usb;         /* something on the USB-C port */
     uint8_t chg_stat; /* BQ25798 CHG_STAT */
     uint8_t charger_fault;
-    uint16_t input_mv;
+    uint16_t input_mv; /* USB-C VBUS */
     int8_t fet_temp_c;
 };
 

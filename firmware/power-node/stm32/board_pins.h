@@ -29,30 +29,28 @@
 #define I2C_PORT GPIOB
 #define I2C_PINS (GPIO_PIN_6 | GPIO_PIN_7)
 
-/* Outputs. 5V_OFF and the side cuts drive small N-FETs (gate pull-downs, so a reset or the
-   bootloader leaves everything on): 5V_OFF pulls the buck's EN low, SIDE_x_OFF the LM5069's
-   UVLO. RUN and SHUTDOWN_REQ_N are open drain, active low. */
-#define OUT_5V_OFF_PORT GPIOB
-#define OUT_5V_OFF_PIN GPIO_PIN_0
-#define OUT_SIDE_L_PORT GPIOB
-#define OUT_SIDE_L_PIN GPIO_PIN_1
-#define OUT_SIDE_R_PORT GPIOB
-#define OUT_SIDE_R_PIN GPIO_PIN_2
-#define OUT_RUN_PORT GPIOA
-#define OUT_RUN_PIN GPIO_PIN_8
+/* Outputs. CM5_OFF drives the 2N7002 on the carrier's 5V_EN (gate pull-down, so a reset or
+   the bootloader leaves the CM5 on). ESTOP_N and SHUTDOWN_REQ_N are open drain, active low;
+   ESTOP_N is read back on its own pin. */
+#define OUT_CM5_OFF_PORT GPIOB
+#define OUT_CM5_OFF_PIN GPIO_PIN_0
+#define OUT_ESTOP_PORT GPIOA
+#define OUT_ESTOP_PIN GPIO_PIN_8
 #define OUT_SHUTDOWN_PORT GPIOA
 #define OUT_SHUTDOWN_PIN GPIO_PIN_9
 
 /* Inputs. BUTTON through a diode from the button (which pulls TS2 low), MCU pull-up;
-   HALTED needs a pull-down on the board (the CM5 pin floats until Linux halts);
-   RUN_SENSE low = e-stop; 5V_PG is the LM61460's open-drain PG. */
+   HALTED needs a pull-down on the board (the CM5 pin floats until Linux halts); 5V_PG is the
+   carrier buck's open-drain PG. BMS_ALERT and CHG_INT are wired for later, the firmware polls. */
 #define IN_BUTTON_PORT GPIOA
 #define IN_BUTTON_PIN GPIO_PIN_0
 #define IN_HALTED_PORT GPIOA
 #define IN_HALTED_PIN GPIO_PIN_1
-#define IN_RUN_PORT GPIOA
-#define IN_RUN_PIN GPIO_PIN_4
 #define IN_PG_PORT GPIOA
 #define IN_PG_PIN GPIO_PIN_6
+#define IN_ALERT_PORT GPIOB
+#define IN_ALERT_PIN GPIO_PIN_1
+#define IN_CHG_INT_PORT GPIOB
+#define IN_CHG_INT_PIN GPIO_PIN_2
 
 #endif

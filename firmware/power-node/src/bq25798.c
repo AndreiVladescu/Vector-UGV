@@ -65,14 +65,11 @@ bool bq25798_poll(struct bq25798 *c, struct charger_reading *r)
     r->chg_stat = st[1] >> 5;
     r->fault0 = st[5];
     r->fault1 = st[6];
-    r->vac1 = st[0] & 0x02;
-    r->vac2 = st[0] & 0x04;
+    r->vbus = st[0] & 0x01;
     r->power_good = st[0] & 0x08;
     r->ibus_ma = (int16_t)be16(adc);
     r->ibat_ma = (int16_t)be16(adc + 2);
     r->vbus_mv = be16(adc + 4);
-    r->vac1_mv = be16(adc + 6);
-    r->vac2_mv = be16(adc + 8);
     r->vbat_mv = be16(adc + 10);
     return true;
 }

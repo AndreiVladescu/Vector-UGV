@@ -22,13 +22,13 @@ void board_gpio(void)
     HAL_GPIO_Init(CAN_STBY_PORT, &g);
 #endif
 
-    /* N-FET gates low: 5 V and both sides stay on */
-    HAL_GPIO_WritePin(GPIOB, OUT_5V_OFF_PIN | OUT_SIDE_L_PIN | OUT_SIDE_R_PIN, GPIO_PIN_RESET);
-    g = (GPIO_InitTypeDef){.Pin = OUT_5V_OFF_PIN | OUT_SIDE_L_PIN | OUT_SIDE_R_PIN, .Mode = GPIO_MODE_OUTPUT_PP};
-    HAL_GPIO_Init(GPIOB, &g);
+    /* N-FET gate low: the CM5 stays on */
+    HAL_GPIO_WritePin(OUT_CM5_OFF_PORT, OUT_CM5_OFF_PIN, GPIO_PIN_RESET);
+    g = (GPIO_InitTypeDef){.Pin = OUT_CM5_OFF_PIN, .Mode = GPIO_MODE_OUTPUT_PP};
+    HAL_GPIO_Init(OUT_CM5_OFF_PORT, &g);
     /* open drain released: no e-stop, no shutdown request */
-    HAL_GPIO_WritePin(GPIOA, OUT_RUN_PIN | OUT_SHUTDOWN_PIN, GPIO_PIN_SET);
-    g = (GPIO_InitTypeDef){.Pin = OUT_RUN_PIN | OUT_SHUTDOWN_PIN, .Mode = GPIO_MODE_OUTPUT_OD};
+    HAL_GPIO_WritePin(GPIOA, OUT_ESTOP_PIN | OUT_SHUTDOWN_PIN, GPIO_PIN_SET);
+    g = (GPIO_InitTypeDef){.Pin = OUT_ESTOP_PIN | OUT_SHUTDOWN_PIN, .Mode = GPIO_MODE_OUTPUT_OD};
     HAL_GPIO_Init(GPIOA, &g);
 }
 
