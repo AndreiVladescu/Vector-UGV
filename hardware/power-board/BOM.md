@@ -25,7 +25,7 @@ Parts shared with the side boards use the same MPN and the same 0603 / 1206 foot
 | 1 | PD sink | CYPD3177-24LQXQ (Infineon) | QFN-24 | 1.90 | asks for 20 V, set by resistors; I2C left open (its address 0x08 is the BMS's) |
 | 1 | USB-C receptacle | USB4125-GF-A (GCT) | SMD | 0.50 | power only |
 | 1 | VBUS TVS | SMBJ20A | SMB | 0.30 | |
-| 1 | Charger wake | 2N7002 | SOT-23 | 0.10 | VBUS present pulls TS2 low |
+| 1 | Charger wake | BSS138-7-F | SOT-23 | 0.10 | VBUS present pulls TS2 low |
 | – | Caps | per the EVM | 0603 / 1206 | 1.00 | |
 
 20 V × 3 A ≈ 60 W, about 2.5 h for the pack. A plain 5 V USB-C source still charges, at about 15 W.
@@ -34,8 +34,8 @@ Parts shared with the side boards use the same MPN and the same 0603 / 1206 foot
 
 | Qty | Part | Value / MPN | Package | ~€ | Notes |
 |---|---|---|---|---|---|
-| 1 | Power button | momentary, panel | panel | 0.50 | to BMS TS2 (wake) and through the diode to the MCU |
-| 1 | Button diode | BAT54J | SOD-323F | 0.10 | same part as the leg cells' e-stop diodes |
+| 1 | Power button | momentary, panel | panel | 0.50 | straight to the MCU (PA0), and through the diode to BMS TS2 (wake) |
+| 1 | Button diode | BAT54J | SOD-323F | 0.10 | anode on TS2: the USB-C wake FET doesn't read as a press; same part as the leg cells' e-stop diodes |
 | 1 | CM5 power cut | 2N7002 + 100k gate pull-down | SOT-23 | 0.10 | pulls the carrier's 5V_EN low; the pull-down keeps the CM5 on through an MCU reset |
 | 1 | ESTOP_N series resistor | 100 Ω | 0603 | 0.01 | MCU open-drain pin straight onto ESTOP_N; no buffer, no mushroom button |
 

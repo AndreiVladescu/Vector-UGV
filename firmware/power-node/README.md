@@ -40,7 +40,7 @@ Cell temperature: with a thermistor on J-NTC (DIY pack) set key 37 to 1 and save
 | PB0 | CM5_OFF | 2N7002 on the carrier's 5V_EN (J-SYSCTL pin 5) |
 | PA8 | ESTOP_N, open drain | through 100 Ω to J-CAN pin 4 and J-SYSCTL pin 4; read back on the same pin |
 | PA9 | SHUTDOWN_REQ_N, open drain | J-SYSCTL pin 2 |
-| PA0 | BUTTON, pull-up | through a BAT54J from the button |
+| PA0 | BUTTON, pull-up | on the button; the button wakes TS2 through a BAT54J, so the USB-C wake FET never reads as a press |
 | PA1 | HALTED | J-SYSCTL pin 3 |
 | PA6 | 5V_PG | J-SYSCTL pin 6, the carrier buck's PG |
 | PB1 | BMS_ALERT | wired, not used yet |
