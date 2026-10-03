@@ -136,7 +136,7 @@ def test_power():
     assert re.findall(r'"(\w+)"', re.search(r'power_fault_names.*?\{(.*?)\}', cpp, re.S).group(1)) == LC.POWER_FAULTS
     assert int(re.search(r'#define POWER_NODE (\d+)', open(os.path.join(FW, 'vector_can.h')).read()).group(1)) == LC.POWER
     keys = {'capacity_mah': 'CAPACITY', 'charge_ma': 'CHARGE_MA', 'charge_mv': 'CHARGE_MV', 'input_ma': 'INPUT_MA',
-            'low_mv': 'LOW_MV', 'sides': 'SIDES', 'soc_permille': 'SOC'}
+            'low_mv': 'LOW_MV', 'cell_ntc': 'CELL_NTC', 'soc_permille': 'SOC'}
     assert {k: C['PKEY_' + v] for k, v in keys.items()} == LC.POWER_KEYS
     assert LC.PKEY_BMS_MEM == C['PKEY_BMS_MEM']
     assert (LC.POWER_STATE, LC.POWER_CELLS, LC.POWER_DETAIL) == (

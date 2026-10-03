@@ -2,7 +2,6 @@
 //   battery              sensor_msgs/BatteryState at 10 Hz (current negative while discharging)
 //   /diagnostics         power: battery / board / charger
 //   power/estop          std_msgs/Bool, latched: the e-stop line is low (button, wire or ROS)
-//   power/legs           std_srvs/SetBool: side power on / off
 //   power/shutdown       std_srvs/Trigger: the power board asks the CM5 to halt, then cuts power
 // When the board starts a shutdown, or the charge drops under sentinel_soc while
 // discharging, it asks gait_node to sit down first.
@@ -19,7 +18,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/battery_state.hpp"
 #include "std_msgs/msg/bool.hpp"
-#include "std_srvs/srv/set_bool.hpp"
 #include "std_srvs/srv/trigger.hpp"
 #include "vector_hw/protocol.hpp"
 #include "vector_hw/socketcan.hpp"
@@ -28,7 +26,6 @@ using namespace std::chrono_literals;
 namespace can = vector::can;
 using diagnostic_msgs::msg::DiagnosticStatus;
 using sensor_msgs::msg::BatteryState;
-using std_srvs::srv::SetBool;
 using std_srvs::srv::Trigger;
 
 class PowerMonitor : public rclcpp::Node
@@ -47,16 +44,6 @@ public:
     estop_pub_ = create_publisher<std_msgs::msg::Bool>("power/estop", rclcpp::QoS(1).transient_local());
     sentinel_ = create_client<Trigger>("gait_node/sentinel");
 
-    legs_srv_ = create_service<SetBool>("power/legs",
-      [this](std::shared_ptr<rclcpp::Service<SetBool>> srv, std::shared_ptr<rmw_request_id_t> id,
-      std::shared_ptr<SetBool::Request> req) {
-        request(can::kKeySides, req->data ? 3 : 0, [srv, id](bool ok, const std::string & why) {
-          SetBool::Response res;
-          res.success = ok;
-          res.message = why;
-          srv->send_response(*id, res);
-        });
-      });
     shutdown_srv_ = create_service<Trigger>("power/shutdown",
       [this](std::shared_ptr<rclcpp::Service<Trigger>> srv, std::shared_ptr<rmw_request_id_t> id,
       std::shared_ptr<Trigger::Request>) {
@@ -301,18 +288,15 @@ private:
       kv("state", can::power_state_name(s.state)),
       kv("faults", faults.empty() ? "none" : faults),
       kv("e-stop", s.flags & can::kPwrEstop ? "pressed" : "released"),
-      kv("left side", d.sides & 1 ? "on" : "off"),
-      kv("right side", d.sides & 2 ? "on" : "off"),
       kv("pack FETs", std::string(d.fets & 1 ? "CHG " : "") + (d.fets & 4 ? "DSG" : "")),
     };
 
     const bool plugged = s.flags & can::kPwrCharger;
     chg.level = s.faults & can::kPwrFaultCharger ? DiagnosticStatus::WARN : DiagnosticStatus::OK;
     chg.message = !plugged ? "not plugged in" :
-      std::string(d.inputs & 1 ? "DC " : "USB-C ") + fixed(d.input_mv / 1000.0, 1) + " V, " +
+      "USB-C " + fixed(d.input_mv / 1000.0, 1) + " V, " +
       can::charge_status_name(d.charge_status);
     chg.values = {
-      kv("input", !plugged ? "none" : d.inputs == 3 ? "DC and USB-C" : d.inputs & 1 ? "DC" : "USB-C"),
       kv("input (V)", fixed(d.input_mv / 1000.0, 1)),
       kv("status", can::charge_status_name(d.charge_status)),
       kv("fault register", std::to_string(d.charger_fault)),
@@ -338,7 +322,6 @@ private:
   rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diag_pub_;
   rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr estop_pub_;
   rclcpp::Client<Trigger>::SharedPtr sentinel_;
-  rclcpp::Service<SetBool>::SharedPtr legs_srv_;
   rclcpp::Service<Trigger>::SharedPtr shutdown_srv_;
   rclcpp::TimerBase::SharedPtr poll_timer_, report_timer_;
 };

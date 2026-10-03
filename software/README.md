@@ -127,13 +127,13 @@ Fault changes also go to the log as they happen. The `<leg>_tof` frames sit on t
 ```sh
 ros2 run vector_hw sim_power vcan0 --soc 40          # ends when the board switches itself off
 ros2 topic echo /battery                             # BatteryState at 10 Hz, current negative while discharging
-ros2 service call /power/legs std_srvs/srv/SetBool "{data: false}"   # both sides off
 ros2 service call /power/shutdown std_srvs/srv/Trigger              # the board asks the CM5 to halt
 ros2 run vector_hw leg_config.py --channel vcan0 power              # state, cells, charger, settings
 ros2 run vector_hw leg_config.py --channel vcan0 power set charge_ma 2500 --save
+ros2 run vector_hw leg_config.py --channel vcan0 power set cell_ntc 1 --save   # DIY pack with a thermistor; next power-up
 ```
 
-`power_monitor` also puts battery, board and charger entries in `/diagnostics` and a latched `power/estop`. When the board starts a shutdown, or the charge falls under `sentinel_soc` (10 %) while discharging, it calls `gait_node/sentinel` so the robot sits down before the power goes. `kill -USR1` / `-USR2` on `sim_power` press the power button and plug / unplug the charger.
+`power_monitor` also puts battery, board and charger entries in `/diagnostics` and a latched `power/estop`. When the board starts a shutdown, or the charge falls under `sentinel_soc` (10 %) while discharging, it calls `gait_node/sentinel` so the robot sits down before the power goes. `kill -USR1` / `-USR2` on `sim_power` press the power button and plug / unplug USB-C.
 
 ## Radio and links
 

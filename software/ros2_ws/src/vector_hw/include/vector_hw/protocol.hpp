@@ -76,7 +76,7 @@ constexpr uint8_t kPwrFaultBms = 0x01, kPwrFaultBmsComm = 0x02, kPwrFaultCharger
   kPwrFaultLowCell = 0x10, kPwrFaultImbalance = 0x20, kPwrFaultConfig = 0x40, kPwrFaultHot = 0x80;
 // Config keys on the power node (joint 255)
 enum PowerKey : uint8_t {
-  kKeyCapacity = 32, kKeyChargeMa, kKeyChargeMv, kKeyInputMa, kKeyLowMv, kKeySides, kKeySoc, kKeyBmsMem, kKeyShutdown
+  kKeyCapacity = 32, kKeyChargeMa, kKeyChargeMv, kKeyInputMa, kKeyLowMv, kKeyCellNtc, kKeySoc, kKeyBmsMem, kKeyShutdown
 };
 enum ConfigOp : uint8_t { kOpRead, kOpWrite, kOpSave, kOpCalibrate, kOpDefaults, kOpSelftest };
 enum ConfigStatus : uint8_t { kStOk, kStBadKey, kStBadValue, kStBusy };
@@ -99,8 +99,7 @@ struct PowerDetail
 {
   uint8_t safety_a = 0, safety_b = 0, safety_c = 0;
   uint8_t fets = 0;    // CHG, PCHG, DSG, PDSG
-  uint8_t sides = 0;   // bit 0 left, bit 1 right
-  uint8_t inputs = 0;  // bit 0 DC, bit 1 USB-C
+  bool usb = false;    // something on the USB-C port
   uint8_t charge_status = 0;
   uint8_t charger_fault = 0;
   uint16_t input_mv = 0;

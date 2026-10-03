@@ -18,7 +18,7 @@ from ament_index_python.packages import get_package_share_directory
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus
 from launch.actions import ExecuteProcess
 from sensor_msgs.msg import BatteryState
-from std_srvs.srv import SetBool, Trigger
+from std_srvs.srv import Trigger
 
 HAVE_VCAN = os.path.exists('/sys/class/net/vcan0')
 LIB = os.path.join(get_package_share_directory('vector_hw'), '..', '..', 'lib', 'vector_hw')
@@ -88,7 +88,7 @@ class TestCanSimPower(unittest.TestCase):
         b = self.battery
         self.assertAlmostEqual(b.percentage, 0.5, delta=0.02)
         self.assertTrue(14.0 < b.voltage < 16.0, b.voltage)
-        self.assertLess(b.current, 0)  # 5 V and both sides on
+        self.assertLess(b.current, 0)  # the CM5 and the legs on
         self.assertEqual(len(b.cell_voltage), 4)
         self.assertEqual(b.power_supply_status, BatteryState.POWER_SUPPLY_STATUS_DISCHARGING)
         self.assertTrue(self.spin_until(lambda: self.battery.capacity > 0, 5))
@@ -99,14 +99,13 @@ class TestCanSimPower(unittest.TestCase):
         self.assertEqual(self.diag['power: battery'].level, DiagnosticStatus.OK)
         self.assertEqual(self.diag['power: charger'].message, 'not plugged in')
 
-    def test_2_legs_service(self):
-        side = lambda: {v.key: v.value for v in self.diag['power: board'].values}.get('left side')
-        res = self.call(SetBool, '/power/legs', SetBool.Request(data=False))
-        self.assertTrue(res.success, res.message)
-        self.assertTrue(self.spin_until(lambda: side() == 'off', 3))
-        res = self.call(SetBool, '/power/legs', SetBool.Request(data=True))
-        self.assertTrue(res.success, res.message)
-        self.assertTrue(self.spin_until(lambda: side() == 'on', 3))
+    def test_2_cell_ntc_setting(self):
+        r = subprocess.run(['python3', os.path.join(LIB, 'leg_config.py'), '--channel', 'vcan0', 'power', 'set',
+                            'cell_ntc', '1'], capture_output=True, text=True, timeout=30)
+        self.assertIn('cell_ntc = 1: ok', r.stdout, r.stdout + r.stderr)
+        r = subprocess.run(['python3', os.path.join(LIB, 'leg_config.py'), '--channel', 'vcan0', 'power', 'set',
+                            'cell_ntc', '5'], capture_output=True, text=True, timeout=30)
+        self.assertIn('bad value', r.stdout)
 
     def test_3_leg_config_power(self):
         r = subprocess.run(['python3', os.path.join(LIB, 'leg_config.py'), '--channel', 'vcan0', 'power'],

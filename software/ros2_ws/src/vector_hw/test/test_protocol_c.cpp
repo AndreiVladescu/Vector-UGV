@@ -154,7 +154,7 @@ TEST(ProtocolC, Power)
     }
 
     power_detail_msg d{static_cast<uint8_t>(u(255)), static_cast<uint8_t>(u(255)), static_cast<uint8_t>(u(255)),
-      static_cast<uint8_t>(u(15)), static_cast<uint8_t>(u(3)), static_cast<uint8_t>(u(3)), static_cast<uint8_t>(u(7)),
+      static_cast<uint8_t>(u(15)), u(1) == 1, static_cast<uint8_t>(u(7)),
       static_cast<uint8_t>(u(255)), static_cast<uint16_t>(u(25500)), static_cast<int8_t>(static_cast<int>(u(255)) - 128)};
     can_pack_power_detail(&c, &d);
     const auto det = vector::can::decode_power_detail(from_c(c));
@@ -162,8 +162,7 @@ TEST(ProtocolC, Power)
     EXPECT_EQ(det->safety_a, d.safety_a);
     EXPECT_EQ(det->safety_c, d.safety_c);
     EXPECT_EQ(det->fets, d.fets);
-    EXPECT_EQ(det->sides, d.sides);
-    EXPECT_EQ(det->inputs, d.inputs);
+    EXPECT_EQ(det->usb, d.usb);
     EXPECT_EQ(det->charge_status, d.chg_stat);
     EXPECT_EQ(det->charger_fault, d.charger_fault);
     EXPECT_EQ(det->input_mv, d.input_mv / 100 * 100);
@@ -205,7 +204,7 @@ TEST(ProtocolC, PowerEnums)
   EXPECT_EQ(vector::can::kPwrLow, PWR_LOW);
   EXPECT_EQ(vector::can::kPwrFaultHot, PWR_FAULT_HOT);
   EXPECT_EQ(vector::can::kPwrFault5v, PWR_FAULT_5V);
-  EXPECT_EQ(vector::can::kKeySides, PKEY_SIDES);
+  EXPECT_EQ(vector::can::kKeyCellNtc, PKEY_CELL_NTC);
   EXPECT_EQ(vector::can::kKeyShutdown, PKEY_SHUTDOWN);
   EXPECT_EQ(vector::can::kOpDefaults, OP_DEFAULTS);
   EXPECT_EQ(vector::can::kStBusy, ST_BUSY);

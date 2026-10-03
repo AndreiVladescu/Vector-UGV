@@ -179,8 +179,7 @@ std::optional<PowerDetail> decode_power_detail(const Frame & f)
   d.safety_b = f.data[1];
   d.safety_c = f.data[2];
   d.fets = f.data[3] & 0x0F;
-  d.sides = (f.data[3] >> 4) & 3;
-  d.inputs = f.data[3] >> 6;
+  d.usb = f.data[3] & 0x10;
   d.charge_status = f.data[4] & 7;
   d.charger_fault = f.data[5];
   d.input_mv = static_cast<uint16_t>(f.data[6] * 100);

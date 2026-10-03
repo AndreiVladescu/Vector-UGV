@@ -64,7 +64,7 @@ POWER_STATES = ['boot', 'charge', 'on', 'halting', 'off', 'fault']
 POWER_FAULTS = ['bms', 'bms_comm', 'charger', '5v', 'low_cell', 'imbalance', 'config', 'hot']
 POWER_FLAGS = ['charger', 'charging', 'estop', 'low']
 # settings that can be written: name -> key
-POWER_KEYS = {'capacity_mah': 32, 'charge_ma': 33, 'charge_mv': 34, 'input_ma': 35, 'low_mv': 36, 'sides': 37,
+POWER_KEYS = {'capacity_mah': 32, 'charge_ma': 33, 'charge_mv': 34, 'input_ma': 35, 'low_mv': 36, 'cell_ntc': 37,
               'soc_permille': 38}
 PKEY_BMS_MEM = 39
 CHARGE_STATUS = ['not charging', 'trickle', 'pre-charge', 'fast', 'taper', '?', 'top-off', 'done']
@@ -334,10 +334,9 @@ def cmd_power(bus, args):
         print('  cells ' + ' '.join(f'{int.from_bytes(c[i:i + 2], "little") / 1000:.3f}' for i in range(0, 8, 2)) + ' V')
     if POWER_DETAIL in frames:
         x = frames[POWER_DETAIL]
-        inputs = [n for i, n in enumerate(['DC', 'USB-C']) if x[3] >> 6 & (1 << i)]
         print(f'  BMS safety {x[0]:02x} {x[1]:02x} {x[2]:02x}, FETs {"CHG " if x[3] & 1 else ""}'
-              f'{"DSG" if x[3] & 4 else ""}, sides {"L" if x[3] & 0x10 else "-"}{"R" if x[3] & 0x20 else "-"}, '
-              f'charger {"+".join(inputs) or "unplugged"} {x[6] / 10:.1f} V {CHARGE_STATUS[x[4] & 7]}')
+              f'{"DSG" if x[3] & 4 else ""}, USB-C {f"{x[6] / 10:.1f} V" if x[3] & 0x10 else "unplugged"}, '
+              f'charger {CHARGE_STATUS[x[4] & 7]}')
     info = leg_info(bus, POWER)
     v = info['version']
     rc = info['reset_cause'] or 0
