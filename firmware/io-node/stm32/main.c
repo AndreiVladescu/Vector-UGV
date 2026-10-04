@@ -109,7 +109,7 @@ static void uarts_init(void)
     __HAL_RCC_USART4_CLK_ENABLE();
     uart_init(&uarts[PORT_HOST], 1000000, true);
     uart_init(&uarts[PORT_ELRS], 420000, true);
-    uart_init(&uarts[PORT_LIDAR], 230400, false);
+    uart_init(&uarts[PORT_LIDAR], 115200, false); /* LDS01RR, XV-11 protocol */
     uart_init(&uarts[PORT_GNSS], 9600, true); /* the MAX-M10S default */
     HAL_NVIC_SetPriority(USART1_IRQn, 1, 0);
     HAL_NVIC_SetPriority(USART2_IRQn, 0, 0); /* 420 kbaud, the shortest byte time */
@@ -192,7 +192,7 @@ static uint32_t adc_raw(uint32_t ch)
     return sum / 8;
 }
 
-/* ---- timers: TIM3_CH4 lidar PWM at 30 kHz, TIM14_CH1 buzzer from a 1 MHz count ---- */
+/* ---- timers: TIM3_CH4 lidar motor PWM at 30 kHz, TIM14_CH1 buzzer from a 1 MHz count ---- */
 
 #define LIDAR_PWM_ARR 1599u
 

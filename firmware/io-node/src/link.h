@@ -17,13 +17,13 @@ enum link_type {
     /* IO MCU -> CM5 */
     MSG_STATUS = 0x01,  /* 10 Hz, struct below */
     MSG_CRSF = 0x02,    /* a CRSF frame from the receiver, sync to CRC */
-    MSG_LIDAR = 0x03,   /* an LD19 packet, 47 bytes */
+    MSG_LIDAR = 0x03,   /* an XV-11 packet from the LDS01RR, 22 bytes */
     MSG_NMEA = 0x04,    /* an NMEA sentence, '$' to the checksum, no CR LF */
     MSG_LORA_RX = 0x05, /* i16 RSSI dBm, i8 SNR x4, the packet */
     MSG_LORA_TX = 0x06, /* u8 0 sent, 1 radio busy, 2 duty cycle, 3 no radio */
     /* CM5 -> IO MCU */
     MSG_CRSF_OUT = 0x81,  /* a CRSF frame for the receiver (telemetry) */
-    MSG_LIDAR_PWM = 0x82, /* u16 duty in 0.1 %, 0 = pin low, the LD19 runs its own 10 Hz */
+    MSG_LIDAR_RPM = 0x82, /* u16 motor speed target in rpm (180-349 for valid data), 0 = motor off */
     MSG_BEEP = 0x83,      /* u16 Hz, u16 on ms, u16 off ms, u8 count; count 0 stops */
     MSG_LTE_POWER = 0x84, /* u8 on */
     MSG_LORA_SEND = 0x85, /* the packet, up to 64 bytes */
@@ -35,7 +35,7 @@ enum status_flag {
     ST_LTE_EN = 1 << 0,
     ST_LTE_STATUS = 1 << 1,
     ST_CRSF = 1 << 2,  /* RC channels in the last 500 ms */
-    ST_LIDAR = 1 << 3, /* a good LD19 packet in the last 500 ms */
+    ST_LIDAR = 1 << 3, /* a good lidar packet in the last 500 ms */
     ST_GNSS = 1 << 4,  /* a sentence in the last 2 s */
     ST_FIX = 1 << 5,   /* GGA fix quality > 0 */
     ST_LORA = 1 << 6,  /* the RFM95W answered at start-up */

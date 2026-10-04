@@ -8,7 +8,7 @@
 #include "link.h"
 #include "sx1276.h"
 
-/* The IO co-processor on the CM5 carrier: ELRS (CRSF), LD19 lidar, GNSS, the RFM95W, ADC
+/* The IO co-processor on the CM5 carrier: ELRS (CRSF), LDS01RR lidar, GNSS, the RFM95W, ADC
    housekeeping, buzzer and the LTE supply, all behind one UART to the CM5. */
 
 enum io_port { PORT_HOST, PORT_ELRS, PORT_LIDAR, PORT_GNSS, PORTS };
@@ -24,13 +24,14 @@ struct io_hal {
     uint32_t (*adc_mv)(void *ctx, enum io_adc ch); /* at the pin */
     void (*out)(void *ctx, enum io_out pin, bool on);
     bool (*in)(void *ctx, enum io_in pin);
-    void (*lidar_pwm)(void *ctx, uint16_t permille);
+    void (*lidar_pwm)(void *ctx, uint16_t permille); /* lidar motor drive, 0-1000 */
     void (*buzzer)(void *ctx, uint16_t hz); /* 0 = off */
     void (*bootloader)(void *ctx);          /* doesn't return on the board */
     const struct sx1276_io *radio;
     uint32_t version, reset_cause;
 };
 
+#define LIDAR_RPM_DEFAULT 300 /* 5 turns a second */
 #define BEACON_LEN 16
 #define BEACON_DEFAULT_S 30
 #define LORA_DUTY 10 /* percent, g3 sub-band */
@@ -39,7 +40,7 @@ struct io {
     const struct io_hal *hal;
     struct link_dec dec;
     struct crsf crsf;
-    struct ld19 ld19;
+    struct xv11 xv11;
     struct nmea nmea;
     struct sx1276 radio;
     struct gga gga;        /* the last GGA */
@@ -55,6 +56,12 @@ struct io {
     bool beep_sounding;
     uint32_t beep_t;
     uint32_t dropped;
+    /* lidar motor: closed loop on the speed in the packets */
+    uint16_t lidar_rpm;      /* target, 0 = off */
+    uint16_t lidar_meas64;   /* last measured speed, 1/64 rpm */
+    uint32_t t_motor;
+    float lidar_i;           /* integral part of the duty, permille */
+    uint16_t lidar_duty;
 };
 
 void io_init(struct io *io, const struct io_hal *hal);

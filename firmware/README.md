@@ -6,6 +6,6 @@ STM32C092 for all nodes, bare-metal on ST's HAL, built with CMake and arm-none-e
 - `stm32c0/`: shared by every node: clocks and FDCAN (`mcu.c`, `MCU_NO_HSE` for a board without a crystal), the CAN bootloader, flash map and linker scripts, the build helper (`stm32c0.cmake`), `flash_swd.sh`
 - `leg-node/`: servo PWM, pot and current ADC, ToF, wake, calibration, protection, self-test
 - `power-node/`: BQ76942 setup, BQ25798 charger, state of charge, power states, soft power and the ROS e-stop
-- `io-node/`: the carrier's IO co-processor: ELRS, LD19, GNSS, LoRa beacon, ADC, buzzer, LTE supply, one UART to the CM5 (no CAN, flashed through ST's ROM bootloader)
+- `io-node/`: the carrier's IO co-processor: ELRS, LDS01RR lidar, GNSS, LoRa beacon, ADC, buzzer, LTE supply, one UART to the CM5 (no CAN, flashed through ST's ROM bootloader)
 
 First flash over SWD with `stm32c0/flash_swd.sh`, then over CAN with `leg_config.py flash`. A node with a broken application can still be reached through the bootloader's 200 ms window after reset.

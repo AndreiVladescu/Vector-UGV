@@ -1,6 +1,6 @@
 # IO node
 
-The STM32C092KCT6 on the CM5 carrier (U30, sheet `io_mcu`). It takes the slow serial devices off the CM5 and talks to it over one UART: ExpressLRS (CRSF), the LD19 lidar, the MAX-M10S GNSS, the RFM95W LoRa module, battery / 5 V / NTC sensing, the buzzer and the LTE supply. It also sends a LoRa position beacon on its own, so the robot can be found with the CM5 down.
+The STM32C092KCT6 on the CM5 carrier (U30, sheet `io_mcu`). It takes the slow serial devices off the CM5 and talks to it over one UART: ExpressLRS (CRSF), the LDS01RR lidar (Roborock vacuum part), the MAX-M10S GNSS, the RFM95W LoRa module, battery / 5 V / NTC sensing, the buzzer and the LTE supply. It also sends a LoRa position beacon on its own, so the robot can be found with the CM5 down.
 
 Runs on the 48 MHz HSI (no crystal, no CAN), linked at the start of flash without the CAN bootloader. Logic in `src/`, tested on the PC (`test/test_io.c`, with a simulated SX1276 in `sim/`); `stm32/` holds the drivers (register-level UARTs, SPI, ADC and timers) and the pin map.
 
@@ -15,10 +15,10 @@ cmake -S firmware/io-node/stm32 -B build/io-stm32 && cmake --build build/io-stm3
 |---|---|---|
 | 19, 21 | PA9, PA10 | USART1 to the CM5 (GPIO4/5, its UART2), 1 Mbaud; ROM bootloader |
 | 9, 10 | PA2, PA3 | USART2 to the ELRS receiver, CRSF 420 kbaud |
-| 8 | PA1 | USART4 RX from the LD19, 230400 baud |
+| 8 | PA1 | USART4 RX from the LDS01RR, 115200 baud (XV-11 protocol) |
 | 32, 1 | PB8, PB9 | USART3 to the MAX-M10S, 9600 baud NMEA |
 | 2 | PC14 | GNSS PPS (input, unused for now) |
-| 16 | PB1 | TIM3_CH4, LD19 speed PWM at 30 kHz |
+| 16 | PB1 | TIM3_CH4, lidar motor PWM at 30 kHz (low-side FET, motor from 5 V) |
 | 11 | PA4 | TIM14_CH1, buzzer |
 | 26–29 | PA15, PB3–5 | RFM95W NSS, SCK, MISO, MOSI (SPI1, 6 MHz) |
 | 23, 22, 20 | PA12, PA11, PC6 | RFM95W NRST, DIO0, DIO1 |
@@ -32,21 +32,25 @@ UART2 on the CM5 (`dtoverlay=uart2-pi5`, `/dev/ttyAMA2`), 1 Mbaud 8N1. A message
 
 | Type | Direction | Payload |
 |---|---|---|
-| 0x01 STATUS | to CM5, 10 Hz | u32 firmware, u32 uptime ms, u8 reset cause, u8 flags, u16 VBAT mV, u16 5 V mV, i16 NTC 0.1 °C (-32768 = open/short), u8 sats, u8 fix quality, u16 beacons sent, u16 messages dropped, u16 bad CRSF / LD19 / NMEA / link |
+| 0x01 STATUS | to CM5, 10 Hz | u32 firmware, u32 uptime ms, u8 reset cause, u8 flags, u16 VBAT mV, u16 5 V mV, i16 NTC 0.1 °C (-32768 = open/short), u8 sats, u8 fix quality, u16 beacons sent, u16 messages dropped, u16 bad CRSF / lidar / NMEA / link |
 | 0x02 CRSF | to CM5 | a CRSF frame, sync to CRC |
-| 0x03 LIDAR | to CM5 | an LD19 packet, 47 bytes |
+| 0x03 LIDAR | to CM5 | an XV-11 packet, 22 bytes: 0xFA, index 0xA0–0xF9 (4° each), speed in 1/64 rpm, 4 × (distance mm, bit 15 invalid; strength), 15-bit checksum |
 | 0x04 NMEA | to CM5 | a sentence, `$` to the checksum |
 | 0x05 LORA_RX | to CM5 | i16 RSSI dBm, i8 SNR × 4, the packet |
 | 0x06 LORA_TX | to CM5 | u8 result of a LORA_SEND: 0 sent, 1 busy, 2 duty-cycle wait, 3 no radio |
 | 0x81 CRSF_OUT | to IO | a CRSF frame for the receiver (telemetry) |
-| 0x82 LIDAR_PWM | to IO | u16 duty in 0.1 %; 0 holds the pin low and the LD19 runs its own 10 Hz |
+| 0x82 LIDAR_RPM | to IO | u16 motor speed in rpm (180–349 gives data; 300 = 5 turns/s), 0 = off |
 | 0x83 BEEP | to IO | u16 Hz, u16 on ms, u16 off ms, u8 count (0 stops) |
 | 0x84 LTE_POWER | to IO | u8 on |
 | 0x85 LORA_SEND | to IO | up to 64 bytes |
 | 0x86 BEACON | to IO | u16 interval in s, 0 = off (default 30) |
 | 0x87 BOOTLOADER | to IO | u32 0x746f6f62 ("boot"): reset into ST's ROM bootloader |
 
-Status flags: bit 0 LTE_EN, 1 LTE_STATUS, 2 RC channels in the last 0.5 s, 3 LD19 packet in the last 0.5 s, 4 NMEA in the last 2 s, 5 GGA fix, 6 RFM95W found, 7 a message from the CM5 in the last 2 s.
+Status flags: bit 0 LTE_EN, 1 LTE_STATUS, 2 RC channels in the last 0.5 s, 3 lidar packet in the last 0.5 s, 4 NMEA in the last 2 s, 5 GGA fix, 6 RFM95W found, 7 a message from the CM5 in the last 2 s.
+
+## Lidar
+
+The LDS01RR's motor is the host's to drive: the IO MCU starts it at 60 % duty, then holds the asked speed with a PI loop on the speed field of every packet (about 2 s to settle, ±1 rpm). The motor is off until the CM5 sends LIDAR_RPM, so it doesn't spin with Linux down.
 
 ## LoRa
 

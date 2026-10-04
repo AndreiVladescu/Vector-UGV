@@ -11,7 +11,7 @@
 #define ELRS_PORT GPIOA
 #define ELRS_PINS (GPIO_PIN_2 | GPIO_PIN_3)
 #define ELRS_AF GPIO_AF1_USART2
-/* USART4 RX from the LD19 (TX unused) */
+/* USART4 RX from the LDS01RR, 115200 (its RX unused) */
 #define LIDAR_PORT GPIOA
 #define LIDAR_PIN GPIO_PIN_1
 #define LIDAR_AF GPIO_AF9_USART4
@@ -24,7 +24,7 @@
 #define GNSS_PPS_PORT GPIOC
 #define GNSS_PPS_PIN GPIO_PIN_14
 
-/* TIM3_CH4 lidar speed PWM, TIM14_CH1 buzzer (MMBT3904 low side) */
+/* TIM3_CH4 lidar motor PWM (low-side FET from 5 V), TIM14_CH1 buzzer (MMBT3904 low side) */
 #define LIDAR_PWM_PORT GPIOB
 #define LIDAR_PWM_PIN GPIO_PIN_1
 #define LIDAR_PWM_AF GPIO_AF1_TIM3

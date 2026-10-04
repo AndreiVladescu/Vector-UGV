@@ -14,7 +14,14 @@ static uint8_t crc8(uint8_t poly, const uint8_t *p, int n)
 }
 
 uint8_t crsf_crc8(const uint8_t *p, int n) { return crc8(0xD5, p, n); }
-uint8_t ld19_crc8(const uint8_t *p, int n) { return crc8(0x4D, p, n); }
+
+uint16_t xv11_checksum(const uint8_t *p)
+{
+    uint32_t c = 0;
+    for (int i = 0; i < 10; i++)
+        c = (c << 1) + (uint32_t)(p[2 * i] | p[2 * i + 1] << 8);
+    return (uint16_t)(((c & 0x7FFF) + (c >> 15)) & 0x7FFF);
+}
 
 /* drop the first byte and look for the next start in what is left */
 static int resync(uint8_t *buf, int n, uint8_t start)
@@ -51,19 +58,19 @@ bool crsf_feed(struct crsf *c, uint8_t b)
     }
 }
 
-bool ld19_feed(struct ld19 *l, uint8_t b)
+bool xv11_feed(struct xv11 *l, uint8_t b)
 {
-    if ((l->n == 0 && b != 0x54) || (l->n == 1 && b != 0x2C)) {
-        l->n = b == 0x54;
+    if ((l->n == 0 && b != 0xFA) || (l->n == 1 && (b < 0xA0 || b > 0xF9))) {
+        l->n = b == 0xFA;
         if (l->n)
             l->buf[0] = b;
         return false;
     }
     l->buf[l->n++] = b;
-    if (l->n < LD19_LEN)
+    if (l->n < XV11_LEN)
         return false;
     l->n = 0;
-    if (ld19_crc8(l->buf, LD19_LEN - 1) == l->buf[LD19_LEN - 1])
+    if (xv11_checksum(l->buf) == (uint16_t)(l->buf[20] | l->buf[21] << 8))
         return true;
     l->bad++;
     return false;

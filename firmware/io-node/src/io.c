@@ -9,6 +9,11 @@
 #define GNSS_TIMEOUT_MS 2000
 #define HOST_TIMEOUT_MS 2000
 #define BUZZER_HZ 2700 /* start-up chirp, near the buzzer's resonance */
+/* lidar motor: about 0.36 rpm per permille from 5 V (240 rpm at 3.3 V); PI on the packets' speed */
+#define MOTOR_MS 50
+#define MOTOR_START 600   /* open-loop duty until packets arrive */
+#define MOTOR_KP 2.0f     /* permille per rpm */
+#define MOTOR_KI 8.0f     /* permille per rpm and second */
 
 static uint32_t now(const struct io *io) { return io->hal->now_ms(io->hal->ctx); }
 static bool recent(bool seen, uint32_t t, uint32_t now, uint32_t ms) { return seen && now - t < ms; }
@@ -87,10 +92,10 @@ static void host_msg(struct io *io, const uint8_t *m, int len)
         if (n >= 4 && p[0] == CRSF_SYNC && p[1] == n - 2)
             io->hal->write(io->hal->ctx, PORT_ELRS, p, n);
         break;
-    case MSG_LIDAR_PWM:
+    case MSG_LIDAR_RPM:
         if (n >= 2) {
-            const uint16_t d = get_u16(p);
-            io->hal->lidar_pwm(io->hal->ctx, d > 1000 ? 1000 : d);
+            const uint16_t r = get_u16(p);
+            io->lidar_rpm = r > 400 ? 400 : r;
         }
         break;
     case MSG_BEEP:
@@ -144,10 +149,11 @@ void io_rx(struct io *io, enum io_port port, const uint8_t *data, int n)
             }
             break;
         case PORT_LIDAR:
-            if (ld19_feed(&io->ld19, b)) {
+            if (xv11_feed(&io->xv11, b)) {
                 io->lidar_seen = true;
                 io->t_lidar = t;
-                send(io, MSG_LIDAR, io->ld19.buf, LD19_LEN);
+                io->lidar_meas64 = xv11_rpm64(io->xv11.buf);
+                send(io, MSG_LIDAR, io->xv11.buf, XV11_LEN);
             }
             break;
         case PORT_GNSS:
@@ -200,7 +206,7 @@ void io_status(const struct io *io, struct io_status *s)
     s->beacons = io->beacons;
     s->dropped = (uint16_t)io->dropped;
     s->bad_crsf = (uint16_t)io->crsf.bad;
-    s->bad_lidar = (uint16_t)io->ld19.bad;
+    s->bad_lidar = (uint16_t)io->xv11.bad;
     s->bad_nmea = (uint16_t)io->nmea.bad;
     s->bad_link = (uint16_t)io->dec.bad;
 }
@@ -220,6 +226,24 @@ int io_beacon(const struct io *io, uint8_t out[BEACON_LEN])
     p = put_u16(p, (uint16_t)(int16_t)(alt < INT16_MIN ? INT16_MIN : alt > INT16_MAX ? INT16_MAX : alt));
     put_u16(p, (uint16_t)(vbat_mv(io) / 10));
     return BEACON_LEN;
+}
+
+/* The LDS01RR's motor is ours to drive: open loop until packets come in, then PI on their speed */
+static void motor_poll(struct io *io, uint32_t t)
+{
+    float duty = 0;
+    if (!io->lidar_rpm) {
+        io->lidar_i = 0;
+    } else if (!recent(io->lidar_seen, io->t_lidar, t, 300)) {
+        io->lidar_i = duty = MOTOR_START;
+    } else {
+        const float err = io->lidar_rpm - io->lidar_meas64 / 64.0f;
+        io->lidar_i += MOTOR_KI * err * MOTOR_MS / 1000.0f;
+        io->lidar_i = io->lidar_i < 0 ? 0 : io->lidar_i > 1000 ? 1000 : io->lidar_i;
+        duty = io->lidar_i + MOTOR_KP * err;
+    }
+    io->lidar_duty = (uint16_t)(duty < 0 ? 0 : duty > 1000 ? 1000 : duty);
+    io->hal->lidar_pwm(io->hal->ctx, io->lidar_duty);
 }
 
 void io_poll(struct io *io)
@@ -261,6 +285,11 @@ void io_poll(struct io *io)
     }
 
     beep_poll(io, t);
+
+    if (t - io->t_motor >= MOTOR_MS) {
+        io->t_motor = t;
+        motor_poll(io, t);
+    }
 
     /* LED: slow blink with the CM5 talking, fast without */
     const uint32_t half = recent(io->host_seen, io->t_host, t, HOST_TIMEOUT_MS) ? 500 : 125;

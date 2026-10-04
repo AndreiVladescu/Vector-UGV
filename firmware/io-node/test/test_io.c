@@ -134,18 +134,19 @@ static int crsf_frame(uint8_t type, const uint8_t *p, int n, uint8_t *out)
     return n + 4;
 }
 
-static void ld19_packet(uint8_t *p, uint16_t start_deg100)
+/* an XV-11 packet: index 0-89, speed in rpm, the same distance (mm) at all four angles */
+static void xv11_packet(uint8_t *p, int index, float rpm, uint16_t mm)
 {
-    memset(p, 0, LD19_LEN);
-    p[0] = 0x54;
-    p[1] = 0x2C;
-    p[2] = 0x10; p[3] = 0x0E; /* 3600 deg/s */
-    p[4] = start_deg100 & 0xFF; p[5] = start_deg100 >> 8;
-    for (int i = 0; i < 12; i++) {
-        p[6 + 3 * i] = 0xE8; p[7 + 3 * i] = 0x03; p[8 + 3 * i] = 200; /* 1000 mm */
+    memset(p, 0, XV11_LEN);
+    p[0] = 0xFA;
+    p[1] = (uint8_t)(0xA0 + index);
+    const uint16_t s = (uint16_t)(rpm * 64);
+    p[2] = s & 0xFF; p[3] = s >> 8;
+    for (int i = 0; i < 4; i++) {
+        p[4 + 4 * i] = mm & 0xFF; p[5 + 4 * i] = (mm >> 8) & 0x3F; p[6 + 4 * i] = 100;
     }
-    p[42] = (start_deg100 + 800) & 0xFF; p[43] = (start_deg100 + 800) >> 8;
-    p[46] = ld19_crc8(p, LD19_LEN - 1);
+    const uint16_t c = xv11_checksum(p);
+    p[20] = c & 0xFF; p[21] = c >> 8;
 }
 
 /* "$<body>*HH\r\n" with a good checksum */
@@ -258,31 +259,65 @@ static void test_crsf(void)
 
 static void test_lidar(void)
 {
-    printf("LD19 packets\n");
+    printf("LDS01RR packets\n");
     start(true);
-    uint8_t p[LD19_LEN], stream[4 * LD19_LEN + 8];
+    uint8_t p[XV11_LEN], stream[4 * XV11_LEN + 8];
     int k = 0;
-    stream[k++] = 0x54; stream[k++] = 0x54; stream[k++] = 0x00;
+    stream[k++] = 0xFA; stream[k++] = 0x12; /* a start byte with a bad index */
     for (int i = 0; i < 4; i++) {
-        ld19_packet(p, (uint16_t)(i * 900));
+        xv11_packet(p, i, 300, 1000);
         if (i == 2)
-            p[20] ^= 0x40;
-        memcpy(stream + k, p, LD19_LEN);
-        k += LD19_LEN;
+            p[9] ^= 0x40;
+        memcpy(stream + k, p, XV11_LEN);
+        k += XV11_LEN;
     }
     for (int i = 0; i < k; i += 5)
         io_rx(&io, PORT_LIDAR, stream + i, k - i < 5 ? k - i : 5);
     CHECK_EQ(count(MSG_LIDAR), 3);
-    CHECK_EQ(io.ld19.bad, 1);
-    ld19_packet(p, 2700);
+    CHECK_EQ(io.xv11.bad, 1);
+    xv11_packet(p, 3, 300, 1000);
     const struct msg *m = last(MSG_LIDAR);
-    CHECK(m && m->n == LD19_LEN && !memcmp(m->p, p, LD19_LEN));
+    CHECK(m && m->n == XV11_LEN && !memcmp(m->p, p, XV11_LEN));
     CHECK(status().flags & ST_LIDAR);
+    CHECK_EQ(io.lidar_meas64, 300 * 64);
 
-    host(MSG_LIDAR_PWM, (const uint8_t *)"\x2c\x01", 2);
-    CHECK_EQ(b.pwm, 300);
-    host(MSG_LIDAR_PWM, (const uint8_t *)"\xff\xff", 2);
-    CHECK_EQ(b.pwm, 1000);
+    /* the same check value as vector_io/lidar.py (test_lidar.py) */
+    xv11_packet(p, 0, 300, 1000);
+    CHECK_EQ(xv11_checksum(p), 0x3063);
+}
+
+/* the motor: about 0.36 rpm per permille, 0.3 s time constant; packets carry its speed */
+static void test_lidar_motor(void)
+{
+    printf("LDS01RR motor loop\n");
+    start(true);
+    float rpm = 0, due = 0;
+    int idx = 0;
+    uint8_t target[2] = {0x2C, 0x01}; /* 300 rpm */
+    host(MSG_LIDAR_RPM, target, 2);
+    float worst = 0;
+    for (int ms = 0; ms < 6000; ms++) {
+        b.t++;
+        io_poll(&io);
+        rpm += (0.36f * b.pwm - rpm) * 0.001f / 0.3f;
+        if (rpm > 60) {
+            due += rpm * 90 / 60000.0f; /* packets per ms */
+            while (due >= 1) {
+                uint8_t p[XV11_LEN];
+                xv11_packet(p, idx, rpm, 1500);
+                idx = (idx + 1) % 90;
+                io_rx(&io, PORT_LIDAR, p, XV11_LEN);
+                due -= 1;
+            }
+        }
+        if (ms > 3000 && fabsf(rpm - 300) > worst)
+            worst = fabsf(rpm - 300);
+    }
+    CHECK(worst < 5);
+    CHECK(b.pwm > 700 && b.pwm < 950); /* about 300 / 0.36 */
+    host(MSG_LIDAR_RPM, (const uint8_t *)"\0\0", 2);
+    run(100);
+    CHECK_EQ(b.pwm, 0);
 }
 
 static void test_gnss(void)
@@ -506,6 +541,7 @@ int main(void)
     test_link();
     test_crsf();
     test_lidar();
+    test_lidar_motor();
     test_gnss();
     test_status();
     test_outputs();

@@ -22,17 +22,19 @@ struct crsf {
 bool crsf_feed(struct crsf *c, uint8_t b); /* frame in buf[0 .. buf[1] + 1] */
 uint8_t crsf_crc8(const uint8_t *p, int n);
 
-/* LD19 lidar: 0x54 0x2C, speed, start angle, 12 points, end angle, timestamp, CRC-8 0x4D */
-#define LD19_LEN 47
+/* Neato XV-11 protocol (Roborock LDS01RR): 0xFA, index 0xA0-0xF9 (90 packets a turn, 4 degrees
+   each), speed in 1/64 rpm, 4 x (distance 14 bits + flags, strength), 15-bit checksum */
+#define XV11_LEN 22
 
-struct ld19 {
-    uint8_t buf[LD19_LEN];
+struct xv11 {
+    uint8_t buf[XV11_LEN];
     int n;
     uint32_t bad;
 };
 
-bool ld19_feed(struct ld19 *l, uint8_t b);
-uint8_t ld19_crc8(const uint8_t *p, int n);
+bool xv11_feed(struct xv11 *l, uint8_t b);
+uint16_t xv11_checksum(const uint8_t *p); /* over the first 20 bytes */
+static inline uint16_t xv11_rpm64(const uint8_t *p) { return (uint16_t)(p[2] | p[3] << 8); }
 
 /* NMEA 0183: '$' ... '*' two hex digits, CR LF */
 #define NMEA_MAX 96
