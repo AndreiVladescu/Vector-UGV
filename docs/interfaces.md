@@ -60,16 +60,20 @@ J-SYSCTL and the power board's J-CAN may merge into one 10-pin JST-GH (one cable
 
 ## J-NOSE pinout
 
+The same numbering on the carrier and on the nose board's J1, joined by a straight 1:1 JST-GH cable.
+
 | Pin | Signal | Nose board side |
 |---|---|---|
-| 1 | 3V3 | VL53L8CX AVDD, 1.8 V LDO in, compass |
-| 2 | GND | |
-| 3 | SDA | 3.3 V side of the PCA9306; the compass sits on this side |
-| 4 | SCL | as SDA |
-| 5 | TOF_LPN | CM5 GPIO → BSS138 → LPn (sensor restart) |
-| 6 | TOF_INT | INT → BSS138 → CM5 GPIO |
-| 7 | MAG_INT | compass data ready, optional |
-| 8 | LED | status LED, optional |
+| 1 | LED | status LED, optional; not connected on the carrier |
+| 2 | MAG_INT | compass data ready, optional |
+| 3 | TOF_INT | INT → BSS138 → CM5 GPIO |
+| 4 | TOF_LPN | CM5 GPIO → BSS138 → LPn (sensor restart) |
+| 5 | SCL | 3.3 V side of the PCA9306; the compass sits on this side |
+| 6 | SDA | as SCL |
+| 7 | GND | |
+| 8 | 3V3 | VL53L8CX AVDD, 1.8 V LDO in, compass |
+
+The nose board has two footprints on the same pads: J1 on the back (the one fitted) and J2 on the front, for a cable from the front instead. Only one is ever fitted. J2 is the same part flipped, so its pin 1 sits where J1's pin 8 is: it needs a reversed cable (pin 1 ↔ 8), never the straight one.
 
 Keep the cable under ~30 cm for 1 MHz I2C.
 
