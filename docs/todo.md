@@ -16,7 +16,7 @@
 
 - Decide whether J-SYSCTL and the power board's J-CAN merge into one 10-pin JST-GH to the carrier.
 - Side boards: add the e-stop diode (BAT54J, BUCK_EN → ESTOP_N) and the 1k in series with PB0 on each leg cell.
-- Carrier: check the LR1262-free RFM95W footprint against a module, pick the 4.7 µH 3.8 V buck inductor, then layout (CM5 placement and the 90/100 Ω pairs from the CM5 IO board).
+- Carrier: pick the 4.7 µH inductor for the LTE buck, then layout (CM5 placement and the 90/100 Ω pairs from the CM5 IO board).
 - XT60 / XT30 aren't on Mouser: order from TME.
 
 ## Mechanical
