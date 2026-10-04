@@ -5,7 +5,8 @@ pty, default /tmp/vector-io-sim) and follows the robot's own motion (odom/legs):
 
   GNSS   GGA and RMC at 1 Hz from a start point, moved by the leg odometry (gnss_scale to
          exaggerate it); satellites wander between 7 and 12
-  lidar  LD19 packets, 10 turns a second, of a rectangular yard around the start point
+  lidar  LDS01RR (XV-11) packets of a rectangular yard around the start point; the motor
+         spins at the rpm the bridge asks for (0 = stopped, no packets)
   ELRS   RC channels at 50 Hz (sticks centred, not armed) and link statistics with a wandering LQ
   LoRa   a packet "base: ping N" every 20 s, LORA_TX answers, the beacon count
   status battery voltage draining with the walking current, 5 V rail, board temperature
@@ -13,7 +14,7 @@ pty, default /tmp/vector-io-sim) and follows the robot's own motion (odom/legs):
 It also publishes battery (BatteryState) from the same voltage, standing in for the power board.
 Break things live, e.g.  ros2 param set /sim_io gnss false  (radio, lidar, gnss, lora too),
 ros2 param set /sim_io vbat 13.4,  ros2 param set /sim_io gnss_scale 20.
-Commands from the bridge (beep, LTE power, LoRa send, lidar PWM, bootloader) are logged.
+Commands from the bridge (beep, LTE power, LoRa send, lidar speed, bootloader) are logged.
 """
 import math
 import os
@@ -74,7 +75,7 @@ class SimIo(Node):
         self.t0 = time.monotonic()
         self.lte_en, self.lte_on_at = False, None
         self.beacon_s, self.beacons, self.next_beacon = 30, 0, time.monotonic() + 30
-        self.lidar_pwm, self.lidar_angle, self.lidar_due = 0, 0.0, 0.0
+        self.lidar_rpm, self.lidar_index, self.lidar_due = 0, 0, 0.0
         self.lq, self.sats, self.ping_n, self.next_ping = 99.0, 9, 0, time.monotonic() + 10
         self.silent_until = 0.0
         self.last_t = time.monotonic()
@@ -131,8 +132,9 @@ class SimIo(Node):
                 ok = self.prm('lora')
                 self.send(link.LORA_TX, bytes([0 if ok else 3]))
                 log.info(f'LoRa out: {p!r}' + ('' if ok else ' (no radio)'))
-            elif mtype == link.LIDAR_PWM and len(p) >= 2:
-                self.lidar_pwm = struct.unpack('<H', p[:2])[0]
+            elif mtype == link.LIDAR_RPM and len(p) >= 2:
+                self.lidar_rpm = struct.unpack('<H', p[:2])[0]
+                log.info(f'lidar motor {self.lidar_rpm} rpm')
             elif mtype == link.BEACON and len(p) >= 2:
                 self.beacon_s = struct.unpack('<H', p[:2])[0]
             elif mtype == link.BOOTLOADER:
@@ -163,28 +165,27 @@ class SimIo(Node):
                 stats = struct.pack('<BBBbBBBBBb', rssi, rssi + 3, int(self.lq), 9, 0, 4, 2, rssi + 5, 100, 7)
                 self.send(link.CRSF, crsf_frame(CRSF_STATS, stats))
 
-        # 450 packets a second (10 turns of 45), by the clock: the timer runs a little late
-        self.lidar_due = min(self.lidar_due + 450 * dt, 45)
+        # 90 packets a turn at the asked speed, by the clock: the timer runs a little late
+        self.lidar_due = min(self.lidar_due + self.lidar_rpm * 90 / 60 * dt, 90)
         while self.lidar_due >= 1:
             self.lidar_due -= 1
             if self.prm('lidar'):
                 self.send(link.LIDAR, self.lidar_packet())
 
     def lidar_packet(self):
-        a0 = self.lidar_angle
-        self.lidar_angle = (a0 + 8.0) % 360
+        index = self.lidar_index
+        self.lidar_index = (index + 1) % 90
         hx, hy = self.prm('yard_x') / 2, self.prm('yard_y') / 2
         ranges = []
-        for i in range(12):
-            cw = math.radians(a0 + 8.0 / 11 * i)
-            ang = self.yaw - cw  # the LD19 turns clockwise
+        for j in range(4):
+            ang = self.yaw + math.radians(4 * index + j)  # counter-clockwise, as Turns expects by default
             dx, dy = math.cos(ang), math.sin(ang)
             ts = [t for t in ((hx - self.x) / dx if dx > 1e-9 else None, (-hx - self.x) / dx if dx < -1e-9 else None,
                               (hy - self.y) / dy if dy > 1e-9 else None, (-hy - self.y) / dy if dy < -1e-9 else None)
                   if t is not None and t > 0]
             r = min(ts) if ts else 0.0
-            ranges.append(r + random.gauss(0, 0.01) if 0.05 < r < 12 else 0.0)
-        return lidar.packet(3600, a0, ranges, end=(a0 + 8.0) % 360, ts=int(time.monotonic() * 1000) & 0xFFFF)
+            ranges.append(r + random.gauss(0, 0.01) if 0.15 < r < 6 else 0.0)
+        return lidar.packet(self.lidar_rpm + random.uniform(-2, 2), index, ranges)
 
     def status(self):
         now = time.monotonic()

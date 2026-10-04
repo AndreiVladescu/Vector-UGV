@@ -190,12 +190,12 @@ On the Pi (or the robot) in Docker: `DEMO=true` in `/etc/vector.env` (or `sudo D
 
 ## Carrier IO MCU and IMU
 
-The STM32C092 next to the CM5 (`firmware/io-node`) carries the ELRS receiver, the LD19 lidar, the MAX-M10S, the RFM95W and the battery / 5 V / NTC sensing, and talks to the CM5 on UART2 at 1 Mbaud. `io_bridge.py` turns that into `scan` (LaserScan, frame `lidar`), `gnss/nmea_sentence` (and through `nmea_topic_driver` the usual `gnss/fix`, `gnss/vel`), `io/crsf` for `elrs.py`, `lora/rx` / `lora/tx` and an `io: mcu` entry in `/diagnostics`. The MCU sends a LoRa position beacon every 30 s on its own (`beacon_s`, 0 = off), so a lost robot can be found with any SX127x receiver.
+The STM32C092 next to the CM5 (`firmware/io-node`) carries the ELRS receiver, the LDS01RR lidar, the MAX-M10S, the RFM95W and the battery / 5 V / NTC sensing, and talks to the CM5 on UART2 at 1 Mbaud. `io_bridge.py` turns that into `scan` (LaserScan, frame `lidar`), `gnss/nmea_sentence` (and through `nmea_topic_driver` the usual `gnss/fix`, `gnss/vel`), `io/crsf` for `elrs.py`, `lora/rx` / `lora/tx` and an `io: mcu` entry in `/diagnostics`. The MCU sends a LoRa position beacon every 30 s on its own (`beacon_s`, 0 = off), so a lost robot can be found with any SX127x receiver.
 
 ```sh
 ros2 launch vector_bringup robot.launch.py hardware:=can io_port:=/dev/ttyAMA2 elrs_port:=io imu:=true nav:=true
 ros2 service call /io/lte_power std_srvs/srv/SetBool "{data: true}"
-ros2 param set /io_bridge lidar_pwm 0                      # 0 = the LD19's own 10 Hz
+ros2 param set /io_bridge lidar_rpm 0                      # lidar motor off (300 = 5 scans/s)
 ros2 run vector_io io_flash.py io-node.bin                 # new IO firmware through the ROM bootloader
 ```
 

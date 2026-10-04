@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """The carrier's IO MCU on UART2 (firmware/io-node) -> ROS.
 
-Publishes scan (LaserScan from the LD19), gnss/nmea_sentence (for nmea_topic_driver), io/crsf
+Publishes scan (LaserScan from the LDS01RR), gnss/nmea_sentence (for nmea_topic_driver), io/crsf
 (the receiver's CRSF frames, for elrs.py with port:=io), lora/rx and the MCU's housekeeping
 in /diagnostics. Takes io/crsf_out (telemetry to the receiver) and lora/tx. Services:
 io/lte_power (SetBool), io/beep (Trigger, two short beeps), io/bootloader (Trigger: resets
 the MCU into ST's ROM bootloader and lets go of the port for release_s, for io_flash.py).
-Parameters lidar_pwm (0.1 %, 0 = the LD19's own 10 Hz) and beacon_s are sent again
+Parameters lidar_rpm (the LDS01RR's motor, the IO MCU holds it; 180-349 gives data, 0 = off)
+and beacon_s are sent again
 whenever the MCU restarts.
 """
 import struct
@@ -33,8 +34,8 @@ class IoBridge(Node):
         p = lambda name, default: self.declare_parameter(name, default).value  # noqa: E731
         self.port, self.baud = p('port', '/dev/ttyAMA2'), p('baud', 1000000)
         self.lidar_frame, self.gnss_frame = p('lidar_frame', 'lidar'), p('gnss_frame', 'gnss')
-        self.turns = lidar.Turns(bins=p('lidar_bins', 450), yaw=p('lidar_yaw', 0.0))
-        self.lidar_pwm, self.beacon_s = p('lidar_pwm', 0), p('beacon_s', 30)
+        self.turns = lidar.Turns(bins=p('lidar_bins', 360), yaw=p('lidar_yaw', 0.0), clockwise=p('lidar_clockwise', False))
+        self.lidar_rpm, self.beacon_s = p('lidar_rpm', 300), p('beacon_s', 30)
         self.release_s = p('release_s', 120.0)
         self.add_on_set_parameters_callback(self.on_params)
 
@@ -70,13 +71,13 @@ class IoBridge(Node):
                 return False
 
     def configure(self):
-        self.send(link.LIDAR_PWM, struct.pack('<H', max(0, min(1000, self.lidar_pwm))))
+        self.send(link.LIDAR_RPM, struct.pack('<H', max(0, min(400, self.lidar_rpm))))
         self.send(link.BEACON, struct.pack('<H', max(0, min(65535, self.beacon_s))))
 
     def on_params(self, params):
         for prm in params:
-            if prm.name == 'lidar_pwm':
-                self.lidar_pwm = prm.value
+            if prm.name == 'lidar_rpm':
+                self.lidar_rpm = prm.value
             elif prm.name == 'beacon_s':
                 self.beacon_s = prm.value
         self.configure()
@@ -158,13 +159,13 @@ class IoBridge(Node):
                 self.get_logger().warn(f'LoRa packet not sent: {link.LORA_RESULT.get(p[0], p[0])}')
 
     def publish_scan(self, turn, stamp):
-        ranges, intens, speed = turn
+        ranges, intens, rpm = turn
         n = len(ranges)
         m = LaserScan()
         m.header.stamp, m.header.frame_id = stamp, self.lidar_frame
         m.angle_min, m.angle_increment = 0.0, 2 * 3.141592653589793 / n
         m.angle_max = m.angle_min + m.angle_increment * (n - 1)
-        m.scan_time = 360.0 / speed if speed else 0.1
+        m.scan_time = 60.0 / rpm if rpm else 0.2
         m.time_increment = m.scan_time / n
         m.range_min, m.range_max = self.turns.range_min, self.turns.range_max
         m.ranges, m.intensities = ranges, intens

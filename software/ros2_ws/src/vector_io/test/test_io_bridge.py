@@ -35,7 +35,7 @@ PORT = os.ttyname(SLAVE)
 @pytest.mark.launch_test
 def generate_test_description():
     bridge = launch_ros.actions.Node(package='vector_io', executable='io_bridge.py', output='screen',
-                                     parameters=[{'port': PORT, 'lidar_pwm': 400, 'release_s': 3.0}])
+                                     parameters=[{'port': PORT, 'lidar_rpm': 280, 'release_s': 3.0}])
     radio = launch_ros.actions.Node(package='vector_link', executable='elrs.py', output='screen',
                                     parameters=[{'port': 'io'}])
     return launch.LaunchDescription([bridge, radio, launch_testing.actions.ReadyToTest()])
@@ -103,7 +103,7 @@ class TestIoBridge(unittest.TestCase):
     def test_1_status_and_config(self):
         # the bridge sends its settings when it first hears from the MCU
         self.assertTrue(self.spin(15, lambda: self.sent(link.BEACON), self.status))
-        self.assertEqual(struct.unpack('<H', self.sent(link.LIDAR_PWM)[-1])[0], 400)
+        self.assertEqual(struct.unpack('<H', self.sent(link.LIDAR_RPM)[-1])[0], 280)
         self.assertEqual(struct.unpack('<H', self.sent(link.BEACON)[-1])[0], 30)
         self.assertTrue(self.spin(5, lambda: self.got['diag'] and self.got['diag'][-1].level == b'\x00', self.status))
         d = self.got['diag'][-1]
@@ -113,25 +113,22 @@ class TestIoBridge(unittest.TestCase):
         # the parameter goes out at once
         cli = self.node.create_client(SetParameters, '/io_bridge/set_parameters')
         self.assertTrue(cli.wait_for_service(timeout_sec=5))
-        fut = cli.call_async(SetParameters.Request(parameters=[Parameter('lidar_pwm', value=0).to_parameter_msg()]))
-        self.assertTrue(self.spin(5, lambda: fut.done() and struct.unpack('<H', self.sent(link.LIDAR_PWM)[-1])[0] == 0))
+        fut = cli.call_async(SetParameters.Request(parameters=[Parameter('lidar_rpm', value=0).to_parameter_msg()]))
+        self.assertTrue(self.spin(5, lambda: fut.done() and struct.unpack('<H', self.sent(link.LIDAR_RPM)[-1])[0] == 0))
 
     def test_2_scan(self):
         wall = lambda a: 2.0 if 30 <= a <= 60 else 0.0  # noqa: E731
         for _ in range(3):
-            for k in range(45):
-                a0 = k * 8.0
-                self.mcu(link.LIDAR, lidar.packet(3600, a0, [wall((a0 + 8 / 11 * i) % 360) for i in range(12)],
-                                                  end=(a0 + 8) % 360))
+            for i in range(90):
+                self.mcu(link.LIDAR, lidar.packet(300, i, [wall(4 * i + j) for j in range(4)]))
             self.spin(0.05)
         self.assertTrue(self.spin(5, lambda: self.got['scan']))
         s = self.got['scan'][-1]
         self.assertEqual(s.header.frame_id, 'lidar')
-        self.assertEqual(len(s.ranges), 450)
-        self.assertAlmostEqual(s.scan_time, 0.1)
-        k = round(315 / 360 * 450)
-        self.assertAlmostEqual(s.ranges[k], 2.0)
-        self.assertEqual(s.ranges[round(45 / 360 * 450)], float('inf'))
+        self.assertEqual(len(s.ranges), 360)
+        self.assertAlmostEqual(s.scan_time, 0.2)
+        self.assertAlmostEqual(s.ranges[45], 2.0)
+        self.assertEqual(s.ranges[315], float('inf'))
 
     def test_3_nmea(self):
         body = 'GNGGA,101010.00,4426.16140,N,02606.16800,E,1,09,1.0,80.5,M,36.0,M,,'

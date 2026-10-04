@@ -2,7 +2,7 @@
 <package format="3">
   <name>vector_io</name>
   <version>0.1.0</version>
-  <description>The CM5 carrier's IO MCU (ELRS, LD19 lidar, GNSS, LoRa, housekeeping) over its UART</description>
+  <description>The CM5 carrier's IO MCU (ELRS, LDS01RR lidar, GNSS, LoRa, housekeeping) over its UART</description>
   <maintainer email="avladescu2000@gmail.com">Andrei Vladescu</maintainer>
   <license>TBD</license>
 
