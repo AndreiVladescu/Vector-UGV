@@ -3,7 +3,7 @@
 	(generator "eeschema")
 	(generator_version "10.0")
 	(uuid "e63e39d7-6ac0-4ffd-8aa3-1841a4541b55")
-	(paper "A4")
+	(paper "A3")
 	(title_block
 		(title "V.E.C.T.O.R. - CM5 Carrier")
 		(rev "1")
@@ -146,7 +146,7 @@
 		)
 		(uuid "5a31003d-a6de-4760-8dcd-b2cd0bb97a8e")
 	)
-	(text "USB 3.0 - USB-C - LTE"
+	(text "USB 3.0 - USB-C - CSI"
 		(exclude_from_sim no)
 		(at 123.19 73.66 0)
 		(effects
@@ -947,6 +947,66 @@
 				(justify right)
 			)
 		)
+		(pin "IO_TXD" bidirectional
+			(at 165.1 134.62 0)
+			(uuid "33288225-865b-4a2b-b402-26d6f3c0073b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "IO_RXD" bidirectional
+			(at 165.1 137.16 0)
+			(uuid "8dd7dfab-ba31-4cf2-a7ef-4036a7f2fdfb")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "SWDREC_SWDIO" bidirectional
+			(at 165.1 139.7 0)
+			(uuid "791b24f9-7bea-4b79-863f-b836aa77b13d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "SWDREC_SWCLK" bidirectional
+			(at 165.1 142.24 0)
+			(uuid "10fe1b0a-70d4-4781-97b8-bc0ecbc320ba")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "SWDREC_NRST" bidirectional
+			(at 165.1 144.78 0)
+			(uuid "d73e4075-6aaf-46e7-8799-194e387e8c27")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "GNSS_PPS" bidirectional
+			(at 165.1 147.32 0)
+			(uuid "de440f9d-7ee6-4663-825a-c2b229debf90")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
 		(instances
 			(project "carrier-cm5"
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -1387,6 +1447,26 @@
 				(justify left top)
 			)
 		)
+		(pin "VBAT" bidirectional
+			(at 71.12 48.26 0)
+			(uuid "a6a83c40-199c-48ec-ad25-a799bb6132d7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "NTC_SENSE" bidirectional
+			(at 71.12 50.8 0)
+			(uuid "5a517fe4-5675-42d7-adbd-6379241e92de")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
 		(instances
 			(project "carrier-cm5"
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -1720,6 +1800,524 @@
 				)
 			)
 		)
+	)
+	(wire
+		(pts
+			(xy 165.1 134.62) (xy 203.2 134.62)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1fffe133-93f0-4235-8eb2-34e95a953f7b")
+	)
+	(wire
+		(pts
+			(xy 165.1 137.16) (xy 203.2 137.16)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a94046d3-d1c9-4b02-b911-58e8967d9dbf")
+	)
+	(wire
+		(pts
+			(xy 165.1 139.7) (xy 203.2 139.7)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c8c90570-2232-448d-b29b-5b678368f62a")
+	)
+	(wire
+		(pts
+			(xy 165.1 142.24) (xy 203.2 142.24)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "268a135e-084c-43ad-9fe4-cada72ac053e")
+	)
+	(wire
+		(pts
+			(xy 165.1 144.78) (xy 203.2 144.78)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4dd53e34-7ac2-46f1-8872-02bdf0b8b801")
+	)
+	(wire
+		(pts
+			(xy 165.1 147.32) (xy 184.15 147.32)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0a8e96ea-38fa-4705-af8a-9b74023a5ba3")
+	)
+	(wire
+		(pts
+			(xy 184.15 147.32) (xy 203.2 147.32)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1b3e77ac-ae98-4edb-b34c-05aae3404b22")
+	)
+	(label "GNSS_PPS"
+		(at 184.15 147.32 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "58757f73-49b5-4d0b-9c6d-4f3121c16775")
+	)
+	(wire
+		(pts
+			(xy 203.2 149.86) (xy 195.58 149.86)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4450c4bd-9d17-4b5b-891c-968042892f8b")
+	)
+	(label "GNSS_TXD"
+		(at 195.58 149.86 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "1b4a6f2d-1f0f-4d19-a149-44b6162adf68")
+	)
+	(wire
+		(pts
+			(xy 203.2 152.4) (xy 195.58 152.4)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d296e1d1-a0e4-4ad8-ab56-d5d6b71fd313")
+	)
+	(label "GNSS_RXD"
+		(at 195.58 152.4 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "d8da0290-daef-4f54-a36c-babf43149042")
+	)
+	(wire
+		(pts
+			(xy 203.2 154.94) (xy 195.58 154.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "80eb6d6a-be91-4ee7-87b0-4e77c27746cb")
+	)
+	(label "VBAT"
+		(at 195.58 154.94 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "ad278cb0-e5c8-4b41-9440-a96429793a86")
+	)
+	(wire
+		(pts
+			(xy 203.2 157.48) (xy 195.58 157.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3c7a4814-a82f-4852-bfcf-897a46ede100")
+	)
+	(label "NTC_SENSE"
+		(at 195.58 157.48 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "82bfb265-b582-45df-9dbf-e9d9a5ff3dc8")
+	)
+	(wire
+		(pts
+			(xy 274.32 134.62) (xy 266.7 134.62)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4e805f4e-b9cd-496f-b016-0b844cad9417")
+	)
+	(label "GNSS_TXD"
+		(at 266.7 134.62 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "e8f0485a-adcf-4ecb-bb03-3a99a70c6107")
+	)
+	(wire
+		(pts
+			(xy 274.32 137.16) (xy 266.7 137.16)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8e73d844-8823-4edf-82b5-78a0a90ecdad")
+	)
+	(label "GNSS_RXD"
+		(at 266.7 137.16 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "b1810b84-6655-4837-a40c-28a23031b070")
+	)
+	(wire
+		(pts
+			(xy 274.32 139.7) (xy 266.7 139.7)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f41b023d-1ea9-4041-aa55-2aeb79efb707")
+	)
+	(label "GNSS_PPS"
+		(at 266.7 139.7 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "7b5e92dc-41a5-412b-a819-c225a1ddf443")
+	)
+	(wire
+		(pts
+			(xy 71.12 48.26) (xy 73.66 48.26)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9d42dbc0-6db6-4be9-899a-ab8d771a1dae")
+	)
+	(label "VBAT"
+		(at 73.66 48.26 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "1b9a4985-8c75-49f6-bb14-59359f825cb2")
+	)
+	(wire
+		(pts
+			(xy 71.12 50.8) (xy 73.66 50.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2b1a1515-b17b-427c-b4a7-2cf1783e8b5a")
+	)
+	(label "NTC_SENSE"
+		(at 73.66 50.8 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "8b18e274-c759-4274-bd04-b1d442a28466")
+	)
+	(sheet
+		(at 203.2 132.08)
+		(size 50.8 30.48)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.152)
+			(type solid)
+			(color 132 0 132 1)
+		)
+		(fill
+			(color 255 255 255 0)
+		)
+		(uuid "dc0c6157-ca13-48c5-94d6-c9851ba60b87")
+		(property "Sheetname" "IO_MCU"
+			(at 203.2 131.3686 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "io_mcu.kicad_sch"
+			(at 203.2 163.2744 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "IO_TXD" bidirectional
+			(at 203.2 134.62 180)
+			(uuid "ec583651-55ee-49df-8b75-a66e5812a385")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "IO_RXD" bidirectional
+			(at 203.2 137.16 180)
+			(uuid "a96ee424-bb4e-41a0-87a8-f026b547b0a8")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "SWDREC_SWDIO" bidirectional
+			(at 203.2 139.7 180)
+			(uuid "432f4a56-e29f-4f23-886c-1ffd03cdba51")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "SWDREC_SWCLK" bidirectional
+			(at 203.2 142.24 180)
+			(uuid "daa53aa9-5f14-46ab-bf6f-adce1a9d746e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "SWDREC_NRST" bidirectional
+			(at 203.2 144.78 180)
+			(uuid "9636fb5b-2d8a-4f30-be7e-b4dc93e5790e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GNSS_PPS" bidirectional
+			(at 203.2 147.32 180)
+			(uuid "3b9cbb94-9d3f-4817-b3fe-79369a03e821")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GNSS_TXD" bidirectional
+			(at 203.2 149.86 180)
+			(uuid "3ccba8d8-5cd8-4e9e-97be-d4023835e510")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GNSS_RXD" bidirectional
+			(at 203.2 152.4 180)
+			(uuid "566d65d1-38ec-49b0-8e73-d5657d42abe7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "VBAT" bidirectional
+			(at 203.2 154.94 180)
+			(uuid "cdf13fb4-8c5e-49ad-90c8-a0a09074c012")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "NTC_SENSE" bidirectional
+			(at 203.2 157.48 180)
+			(uuid "d2868af3-60eb-4205-89ed-c5e843d19705")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(instances
+			(project "carrier-cm5"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+					(page "6")
+				)
+			)
+		)
+	)
+	(text "IO MCU - ELRS - LoRa"
+		(exclude_from_sim no)
+		(at 236.22 158.75 0)
+		(effects
+			(font
+				(size 1.905 1.905)
+				(thickness 0.381)
+				(bold yes)
+			)
+		)
+		(uuid "d9874f8b-661d-48ce-9977-d29ea651e359")
+	)
+	(sheet
+		(at 274.32 132.08)
+		(size 38.1 15.24)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.152)
+			(type solid)
+			(color 132 0 132 1)
+		)
+		(fill
+			(color 255 255 255 0)
+		)
+		(uuid "0f8f54fe-5f77-4ab7-a4c2-ce4b85bdda31")
+		(property "Sheetname" "GNSS"
+			(at 274.32 131.3686 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "gnss.kicad_sch"
+			(at 274.32 148.0344 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "GNSS_TXD" bidirectional
+			(at 274.32 134.62 180)
+			(uuid "6ff0f0d1-55f1-49f5-bf04-d4a6210e5539")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GNSS_RXD" bidirectional
+			(at 274.32 137.16 180)
+			(uuid "c36e399f-0f88-4f9a-aaa4-9eaa610c4273")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GNSS_PPS" bidirectional
+			(at 274.32 139.7 180)
+			(uuid "793e1bad-d944-4cc2-b856-e67248b2dc1f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(instances
+			(project "carrier-cm5"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+					(page "7")
+				)
+			)
+		)
+	)
+	(text "GNSS"
+		(exclude_from_sim no)
+		(at 293.37 139.7 0)
+		(effects
+			(font
+				(size 1.905 1.905)
+				(thickness 0.381)
+				(bold yes)
+			)
+		)
+		(uuid "59a37df1-2d4c-4dfb-8192-220a71e59f87")
 	)
 	(sheet_instances
 		(path "/"

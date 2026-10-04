@@ -8058,4 +8058,70 @@
 		)
 		(uuid "f74caf34-3aa1-427c-ac89-f251cdfd1afb")
 	)
+	(hierarchical_label "VBAT"
+		(shape bidirectional)
+		(at 302.26 160.02 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "dda5cac3-7de3-4336-aa77-714fa90cd2c1")
+	)
+	(wire
+		(pts
+			(xy 302.26 160.02) (xy 312.42 160.02)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "88d731b4-b231-4f31-8041-d46fad010307")
+	)
+	(label "VBAT"
+		(at 312.42 160.02 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "7184374d-2d64-464f-ade3-d0f27f9d74e2")
+	)
+	(hierarchical_label "NTC_SENSE"
+		(shape bidirectional)
+		(at 302.26 163.83 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "bca6043c-c0f3-4efc-b9b4-040dcfd41079")
+	)
+	(wire
+		(pts
+			(xy 302.26 163.83) (xy 312.42 163.83)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3a80ae58-b3a7-475a-aaf5-899c7da829c5")
+	)
+	(label "NTC_SENSE"
+		(at 312.42 163.83 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "24193e45-ddba-40ed-9119-7fe75f3d23d9")
+	)
 )

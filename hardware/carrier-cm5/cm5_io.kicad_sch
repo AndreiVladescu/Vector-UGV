@@ -12656,7 +12656,7 @@
 		)
 		(uuid "06b82a69-18c7-4b7c-80e9-2ba1579b5ef8")
 	)
-	(label "GPIO5"
+	(label "IO_TXD"
 		(at 56.515 79.375 180)
 		(effects
 			(font
@@ -12756,7 +12756,7 @@
 		)
 		(uuid "1427beee-3bac-4761-90c7-1d211b9ad51c")
 	)
-	(label "GPIO10"
+	(label "SWDREC_SWDIO"
 		(at 56.515 92.075 180)
 		(effects
 			(font
@@ -12866,7 +12866,7 @@
 		)
 		(uuid "1e3fd3d5-91a2-4915-bf3d-e5e3d46d180b")
 	)
-	(label "GPIO7"
+	(label "GNSS_PPS"
 		(at 125.095 84.455 0)
 		(effects
 			(font
@@ -12956,7 +12956,7 @@
 		)
 		(uuid "2e95b89a-d151-4ceb-8ea1-75ed88f1541e")
 	)
-	(label "GPIO4"
+	(label "IO_RXD"
 		(at 56.515 104.775 180)
 		(effects
 			(font
@@ -13286,7 +13286,7 @@
 		)
 		(uuid "7ea5fa02-788a-478b-aebb-c1380934d36b")
 	)
-	(label "GPIO8"
+	(label "SWDREC_NRST"
 		(at 125.095 86.995 0)
 		(effects
 			(font
@@ -13486,7 +13486,7 @@
 		)
 		(uuid "be0005d6-fe27-4790-8dca-71a7c48d5d83")
 	)
-	(label "GPIO11"
+	(label "SWDREC_SWCLK"
 		(at 56.515 84.455 180)
 		(effects
 			(font
@@ -25581,239 +25581,202 @@
 		)
 		(uuid "4d8e1048-af8d-4337-8980-09e9c83a4642")
 	)
-	(rectangle
-		(start 210.82 160.02)
-		(end 238.76 195.58)
-		(stroke
-			(width 0)
-			(type dash)
-		)
-		(fill
-			(type none)
-		)
-		(uuid "bf2e9358-ee48-4bf8-810c-369835d8a850")
-	)
-	(text "Lidar"
-		(exclude_from_sim no)
-		(at 213.36 165.1 0)
-		(effects
-			(font
-				(size 1.905 1.905)
-				(thickness 0.381)
-				(bold yes)
-			)
-			(justify left bottom)
-		)
-		(uuid "789735cd-1a5b-467a-ae65-f809521f5753")
-	)
-	(symbol
-		(lib_id "Connector_Generic:Conn_01x04")
-		(at 231.14 180.34 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp yes)
-		(uuid "d5343df1-2490-4050-9a1b-37d4eb99518d")
-		(property "Reference" "J22"
-			(at 226.06 168.91 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "J-LIDAR"
-			(at 226.06 171.45 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Connector_JST:JST_GH_SM04B-GHS-TB_1x04-1MP_P1.25mm_Horizontal"
-			(at 231.14 180.34 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 231.14 180.34 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "f8b4161a-446c-425c-a51b-8a3d30592392")
-		)
-		(pin "2"
-			(uuid "dd680340-1593-4382-8a3e-34f06d028740")
-		)
-		(pin "3"
-			(uuid "92372aed-1132-41cb-9108-eb844f6be2d4")
-		)
-		(pin "4"
-			(uuid "21f57b83-631a-48d8-a499-9fb58961142d")
-		)
-		(instances
-			(project "carrier-cm5"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/00000000-0000-0000-0000-00005cff706a"
-					(reference "J22")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(wire
-		(pts
-			(xy 226.06 177.8) (xy 223.52 177.8)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "7f9d62fb-7ffe-4e6a-a706-c379942bad7b")
-	)
-	(label "GPIO9"
-		(at 223.52 177.8 180)
+	(hierarchical_label "IO_TXD"
+		(shape bidirectional)
+		(at 215.9 165.1 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify right)
 		)
-		(uuid "b25a2ff1-6336-4117-b12d-ee16def3e51a")
-	)
-	(no_connect
-		(at 226.06 180.34)
-		(uuid "97747b77-f946-4a60-b447-3e68810b22dd")
+		(uuid "1859e5c8-bb5a-46c8-a437-e7b23fcdca97")
 	)
 	(wire
 		(pts
-			(xy 226.06 182.88) (xy 218.44 182.88)
+			(xy 215.9 165.1) (xy 226.06 165.1)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "2beac9e4-fd2d-4440-83de-0c939579c051")
+		(uuid "076b0a19-4bdf-4344-bbb0-5be483e35c8f")
 	)
-	(symbol
-		(lib_id "power:GND")
-		(at 218.44 182.88 270)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "1226cddc-5992-4578-b5d2-0cf4c8980b24")
-		(property "Reference" "#PWR430"
-			(at 218.44 189.23 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
+	(label "IO_TXD"
+		(at 226.06 165.1 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
 			)
+			(justify left bottom)
 		)
-		(property "Value" "GND"
-			(at 218.44 186.69 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
+		(uuid "36c8572e-aa4d-430a-9737-d6c6a2ed5bfb")
+	)
+	(hierarchical_label "IO_RXD"
+		(shape bidirectional)
+		(at 215.9 168.91 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
 			)
+			(justify right)
 		)
-		(pin "1"
-			(uuid "acfc9db9-6b1d-44c6-a2ef-99e5d541fd74")
-		)
-		(instances
-			(project "carrier-cm5"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/00000000-0000-0000-0000-00005cff706a"
-					(reference "#PWR430")
-					(unit 1)
-				)
-			)
-		)
+		(uuid "0a7a2eac-3732-4643-bd4e-d796ec9087c0")
 	)
 	(wire
 		(pts
-			(xy 226.06 185.42) (xy 223.52 185.42)
+			(xy 215.9 168.91) (xy 226.06 168.91)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "4b97d249-e113-4222-81cb-d171f0b21987")
+		(uuid "74c8e8f8-46a1-43e3-845b-3223f1b8c49a")
 	)
-	(symbol
-		(lib_id "power:+5V")
-		(at 223.52 185.42 90)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "254b6557-2088-4ff3-8c32-333a48b3cb7e")
-		(property "Reference" "#PWR431"
-			(at 223.52 191.77 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
+	(label "IO_RXD"
+		(at 226.06 168.91 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
 			)
+			(justify left bottom)
 		)
-		(property "Value" "+5V"
-			(at 217.17 185.42 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
+		(uuid "3dc6a1b2-b349-4ec8-8bda-74dda003c2e0")
+	)
+	(hierarchical_label "SWDREC_SWDIO"
+		(shape bidirectional)
+		(at 215.9 172.72 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
 			)
+			(justify right)
 		)
-		(pin "1"
-			(uuid "e69f6ad2-5836-4704-aea7-2e5d842f17cb")
+		(uuid "229c7118-e675-42c9-a9d1-29a902aa220b")
+	)
+	(wire
+		(pts
+			(xy 215.9 172.72) (xy 226.06 172.72)
 		)
-		(instances
-			(project "carrier-cm5"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/00000000-0000-0000-0000-00005cff706a"
-					(reference "#PWR431")
-					(unit 1)
-				)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c0ec2646-29dc-4684-b728-e57566caec55")
+	)
+	(label "SWDREC_SWDIO"
+		(at 226.06 172.72 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
 			)
+			(justify left bottom)
 		)
+		(uuid "630ed315-1b19-4c2f-9a09-ab9d61ab1efc")
+	)
+	(hierarchical_label "SWDREC_SWCLK"
+		(shape bidirectional)
+		(at 215.9 176.53 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "a896b145-3515-45d5-a84a-f19099305d3d")
+	)
+	(wire
+		(pts
+			(xy 215.9 176.53) (xy 226.06 176.53)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0e88b9dc-1c1d-4bc6-b30e-46bf4647791d")
+	)
+	(label "SWDREC_SWCLK"
+		(at 226.06 176.53 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "9f410e6e-c803-45ee-ad97-8544cb2cb868")
+	)
+	(hierarchical_label "SWDREC_NRST"
+		(shape bidirectional)
+		(at 215.9 180.34 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "2354541d-1479-455a-a8f3-f579f2f1f948")
+	)
+	(wire
+		(pts
+			(xy 215.9 180.34) (xy 226.06 180.34)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3d4f2978-87b0-47e6-b0f8-a88fb42c98fe")
+	)
+	(label "SWDREC_NRST"
+		(at 226.06 180.34 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "361a4301-6c5a-4e2c-9cf3-e45d8b868801")
+	)
+	(hierarchical_label "GNSS_PPS"
+		(shape bidirectional)
+		(at 215.9 184.15 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "3838b148-a1e3-46e7-9ea9-0b8a0ad9380e")
+	)
+	(wire
+		(pts
+			(xy 215.9 184.15) (xy 226.06 184.15)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d0c8bfa0-6fb7-4abf-9da9-6272bc854e98")
+	)
+	(label "GNSS_PPS"
+		(at 226.06 184.15 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "edb36e75-d810-46d8-9ea1-4258e85cbe3f")
 	)
 )
