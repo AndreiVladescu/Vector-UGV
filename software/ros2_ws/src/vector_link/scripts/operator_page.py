@@ -38,8 +38,8 @@ from nav_msgs.msg import Odometry
 from rcl_interfaces.msg import Parameter, ParameterType, ParameterValue
 from rcl_interfaces.srv import GetParameters, SetParameters
 from rclpy.node import Node
-from rclpy.qos import DurabilityPolicy, QoSProfile
-from sensor_msgs.msg import BatteryState, CompressedImage, JointState, NavSatFix
+from rclpy.qos import DurabilityPolicy, QoSProfile, qos_profile_sensor_data
+from sensor_msgs.msg import BatteryState, CompressedImage, Imu, JointState, NavSatFix
 from std_msgs.msg import Bool, Empty, Float32MultiArray, String, UInt8MultiArray
 from std_srvs.srv import SetBool, Trigger
 
@@ -66,7 +66,7 @@ class Operator(Node):
         self.video = p('video', ':8889/yolo')  # MediaMTX WebRTC, relative to the page's host
         self.lock = threading.Lock()
         self.s = {'battery': None, 'mode': None, 'active': None, 'mission': None, 'estop': None,
-                  'fix': None, 'heading': None, 'diag': {}, 'io': None, 'lora_rx': None}
+                  'fix': None, 'heading': None, 'diag': {}, 'io': None, 'lora_rx': None, 'attitude': None}
         self.cmd_pub = self.create_publisher(Twist, 'cmd_vel/teleop', 10)
         self.hb_pub = self.create_publisher(Empty, 'operator/heartbeat', 10)
         self.mission_pub = self.create_publisher(GeoPath, 'mission', 10)
@@ -77,6 +77,7 @@ class Operator(Node):
         self.beep = self.create_client(Trigger, 'io/beep')
         self.lte = self.create_client(SetBool, 'io/lte_power')
         self.sub(UInt8MultiArray, 'lora/rx', self.on_lora)
+        self.sub(Imu, 'imu', self.on_imu, qos_profile_sensor_data)
         self.sub(BatteryState, 'battery', self.on_battery)
         self.sub(String, 'gait_node/mode', lambda m: self.put('mode', m.data), LATCHED)
         self.sub(String, 'links/active', lambda m: self.put('active', m.data), LATCHED)
@@ -121,7 +122,19 @@ class Operator(Node):
                              'percent': round(m.percentage * 100), 'status': m.power_supply_status})
 
     def on_fix(self, m):
-        self.put('fix', {'lat': m.latitude, 'lon': m.longitude, 'status': m.status.status, 't': time.time()})
+        known = bool(m.position_covariance_type > 0 and m.position_covariance[0] >= 0)
+        self.put('fix', {'lat': m.latitude, 'lon': m.longitude, 'status': m.status.status, 't': time.time(),
+                         'alt': round(m.altitude, 1) if math.isfinite(m.altitude) else None,
+                         'acc': round(math.sqrt(float(m.position_covariance[0])), 1) if known else None})
+
+    def on_imu(self, m):
+        q = m.orientation
+        roll = math.atan2(2 * (q.w * q.x + q.y * q.z), 1 - 2 * (q.x * q.x + q.y * q.y))
+        pitch = math.asin(max(-1.0, min(1.0, 2 * (q.w * q.y - q.z * q.x))))
+        yaw = math.atan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y * q.y + q.z * q.z))
+        self.put('attitude', {'roll': round(math.degrees(roll), 1), 'pitch': round(math.degrees(pitch), 1),
+                              'heading': round((90 - math.degrees(yaw)) % 360),  # ENU yaw -> compass
+                              'absolute': bool(m.orientation_covariance[8] < 1.0), 't': time.time()})
 
     def on_odom(self, m):
         q = m.pose.pose.orientation
@@ -219,7 +232,8 @@ class Operator(Node):
             for st in m.status:
                 if st.name.startswith(('links: ', 'power: ', 'io: ', 'imu: ')):
                     self.s['diag'][st.name] = {'level': int.from_bytes(st.level, 'little') if isinstance(st.level, bytes)
-                                               else int(st.level), 'message': st.message, 't': time.time()}
+                                               else int(st.level), 'message': st.message, 't': time.time(),
+                                               'values': {kv.key: kv.value for kv in st.values[:24]}}
                 if st.name == 'io: mcu':
                     self.s['io'] = self.io_values(st.values)
 
@@ -249,6 +263,8 @@ class Operator(Node):
             del s['diag'][k]
         if 'io: mcu' not in s['diag']:
             s['io'] = None  # the bridge went quiet: show nothing rather than old numbers
+        if s['attitude'] and now - s['attitude']['t'] > 2.0:
+            s['attitude'] = None
         s['video'] = self.video
         s['max_v'], s['max_w'] = self.max_v, self.max_w
         return s

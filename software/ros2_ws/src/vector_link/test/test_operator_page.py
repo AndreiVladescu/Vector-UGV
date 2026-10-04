@@ -13,7 +13,7 @@ import rclpy
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 from geographic_msgs.msg import GeoPath
 from geometry_msgs.msg import Twist
-from sensor_msgs.msg import BatteryState, CompressedImage
+from sensor_msgs.msg import BatteryState, CompressedImage, Imu, NavSatFix
 from std_msgs.msg import Empty, UInt8MultiArray
 from std_srvs.srv import SetBool, Trigger
 
@@ -77,6 +77,8 @@ class TestOperatorPage(unittest.TestCase):
         cls.node.create_service(SetBool, '/io/lte_power', lte)
         cls.diag = cls.node.create_publisher(DiagnosticArray, '/diagnostics', 10)
         cls.lora = cls.node.create_publisher(UInt8MultiArray, '/lora/rx', 10)
+        cls.imu = cls.node.create_publisher(Imu, '/imu', rclpy.qos.qos_profile_sensor_data)
+        cls.fix = cls.node.create_publisher(NavSatFix, '/gnss/fix', 10)
         cls.battery = cls.node.create_publisher(BatteryState, '/battery', 10)
         cls.camera = cls.node.create_publisher(CompressedImage, '/yolo/debug/compressed', 10)
         # stands in for gait_node's parameters
@@ -211,3 +213,22 @@ class TestOperatorPage(unittest.TestCase):
         self.assertEqual(request('/api/lte', {'on': True})[0], 200)
         self.spin(0.5)
         self.assertEqual(self.io_calls, ['beep', 'lte True'])
+
+    def test_tiles_data(self):
+        m = Imu()
+        # level, yaw 0 in ENU = facing east = compass 90
+        m.orientation.w = 1.0
+        m.orientation_covariance[8] = 0.01
+        f = NavSatFix(latitude=44.4268, longitude=26.1025, altitude=81.5)
+        f.position_covariance = [3.24, 0.0, 0.0, 0.0, 3.24, 0.0, 0.0, 0.0, 9.0]
+        f.position_covariance_type = NavSatFix.COVARIANCE_TYPE_DIAGONAL_KNOWN
+        for _ in range(10):
+            self.imu.publish(m)
+            self.fix.publish(f)
+            self.spin(0.1)
+        s = json.loads(request('/api/state')[1])
+        self.assertEqual(s['attitude']['heading'], 90)
+        self.assertEqual(s['attitude']['roll'], 0.0)
+        self.assertTrue(s['attitude']['absolute'])
+        self.assertEqual(s['fix']['acc'], 1.8)
+        self.assertEqual(s['fix']['alt'], 81.5)
