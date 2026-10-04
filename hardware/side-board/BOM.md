@@ -38,7 +38,7 @@ Per board = 3 leg cells + shared parts. Two boards per robot. Prices are single-
 | 2 | LED + resistor | any 0603 LED, 1k | 0603 | 0.05 | PA15 (green), 6V0 present (red) |
 | 1 | ToF connector | JST SH 6-pin SM06B-SRSS-TB | SMD | 0.50 | 3V3, GND, SDA, SCL, XSHUT, INT |
 | 2 | I2C pull-ups | 4.7k, DNP by default | 0603 | – | most VL53L1X breakouts have their own |
-| 1 | Cell fuse | 5 A fast, Littelfuse NANO2 0451005.MRL | 2410 | 0.60 | in the buck's VIN: a shorted leg can't take the side down |
+| 1 | Cell fuse | 5 A fast, Littelfuse 0466005.NR | 1206 | 0.30 | in the buck's VIN: a shorted leg can't take the side down; 32 V, 11 mΩ |
 | – | Leg ID | 3 solder jumpers | PCB | – | |
 | – | SWD | Tag-Connect TC2050 footprint | PCB | – | SWDIO, SWCLK, NRST, 3V3, GND |
 
