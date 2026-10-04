@@ -4143,7 +4143,7 @@
 	)
 	(wire
 		(pts
-			(xy 160.02 48.26) (xy 167.64 48.26)
+			(xy 160.02 48.26) (xy 161.925 48.26)
 		)
 		(stroke
 			(width 0)
@@ -4433,7 +4433,7 @@
 	)
 	(wire
 		(pts
-			(xy 147.32 50.8) (xy 139.7 50.8)
+			(xy 147.32 50.8) (xy 137.16 50.8)
 		)
 		(stroke
 			(width 0)
@@ -10082,7 +10082,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 139.7 50.8 270)
+		(at 137.16 50.8 270)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -10092,7 +10092,7 @@
 		(dnp no)
 		(uuid "b8636ff2-b163-4444-8de4-2cee529ceff6")
 		(property "Reference" "#PWR0610"
-			(at 139.7 57.15 0)
+			(at 137.16 57.15 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10103,7 +10103,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 139.7 54.61 0)
+			(at 137.16 54.61 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10114,7 +10114,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 139.7 50.8 0)
+			(at 137.16 50.8 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10124,7 +10124,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 139.7 50.8 0)
+			(at 137.16 50.8 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10134,7 +10134,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 139.7 50.8 0)
+			(at 137.16 50.8 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10780,7 +10780,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 167.64 48.26 90)
+		(at 161.925 48.26 90)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -10790,7 +10790,7 @@
 		(dnp no)
 		(uuid "dfa4258f-e950-4d4e-b438-579fd5890cc2")
 		(property "Reference" "#PWR0612"
-			(at 167.64 54.61 0)
+			(at 161.925 54.61 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10801,7 +10801,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 167.64 52.07 0)
+			(at 161.925 52.07 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10812,7 +10812,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 167.64 48.26 0)
+			(at 161.925 48.26 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10822,7 +10822,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 167.64 48.26 0)
+			(at 161.925 48.26 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10832,7 +10832,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 167.64 48.26 0)
+			(at 161.925 48.26 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
