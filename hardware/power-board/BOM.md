@@ -26,7 +26,7 @@ Parts shared with the side boards use the same MPN and the same 0603 / 1206 foot
 | 1 | USB-C receptacle | USB4125-GF-A (GCT) | SMD | 0.50 | power only |
 | 1 | VBUS TVS | SMBJ20A | SMB | 0.30 | |
 | 1 | Charger wake | BSS138-7-F | SOT-23 | 0.10 | VBUS present pulls TS2 low |
-| – | Caps | per the EVM | 0603 / 1206 | 1.00 | |
+| – | Caps | per the EVM; VBUS and PMID 10 µF 50 V (20 V PD input) | 0805 / 1206 | 1.00 | |
 
 20 V × 3 A ≈ 60 W, about 2.5 h for the pack. A plain 5 V USB-C source still charges, at about 15 W.
 
@@ -45,12 +45,12 @@ Parts shared with the side boards use the same MPN and the same 0603 / 1206 foot
 |---|---|---|---|---|---|
 | 1 | 3.3 V buck | TPS62933DRLR + the side boards' inductor and caps | SOT-583 | 1.50 | EN from BMS REG1 |
 | 1 | MCU | STM32C092KCT6 | LQFP32 | 2.10 | node 7 |
-| 1 | Crystal + load caps | ABM8-40.000MHZ-10-1-U-T + 2× C0G | 3225 | 0.45 | FDCAN needs it |
+| 1 | Crystal + load caps | K2B400001210 (KYX, 40 MHz, CL 12 pF) + 2× 18 pF C0G | 2016 | 0.20 | FDCAN needs it; as the side boards |
 | 1 | CAN transceiver | TCAN332DR | SOIC-8 | 2.15 | stub off the bus, no termination |
 | 1 | CAN ESD | NUP2105LT1G | SOT-23 | 0.15 | |
 | 2 | I2C pull-ups | 2.2k | 0603 | 0.02 | BMS and charger share the bus |
 | 1 | HALTED pull-down | 100k | 0603 | 0.01 | |
-| 1 | LED + resistor | as the side boards | 0603 | 0.05 | |
+| 1 | LED + resistor | as the side boards | 0805 / 0603 | 0.05 | |
 | – | SWD | TC2050 footprint | PCB | – | |
 
 ## Protection and connectors
@@ -65,7 +65,7 @@ Parts shared with the side boards use the same MPN and the same 0603 / 1206 foot
 | 1 | Cell NTC | B2B-PH-K-S (JST) | TH | 0.10 | DIY pack only; drone packs have none |
 | 1 | Power button | B2B-PH-K-S (JST) | TH | 0.10 | |
 | 3 | Sides, carrier | XT30PW-M (Amass) | TH | 1.50 | VBAT to both side boards and the carrier; TME |
-| 1 | CAN | SM04B-GHS-TB (JST) | SMD | 0.50 | |
-| 1 | J-SYSCTL | SM06B-GHS-TB (JST) | SMD | 0.50 | could merge with CAN into one 10-pin GH, undecided |
+| 1 | CAN | S4B-XH-A-1 (JST) | TH, horizontal | 0.20 | |
+| 1 | J-SYSCTL | S6B-XH-A-1 (JST) | TH, horizontal | 0.25 | could merge with CAN into one 10-pin XH, undecided |
 
 About **€35** in parts, plus the PCB (4 layers, 2 oz).
