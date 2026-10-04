@@ -142,6 +142,22 @@
   .stepper span { flex: 1; text-align: center; font-variant-numeric: tabular-nums; font-weight: 700; }
   .drive hr { width: 100%; border: 0; border-top: 1px solid var(--edge); margin: 2px 0; }
 
+  /* systems panel: the carrier's IO MCU and the sensors */
+  #sys { position: fixed; top: calc(84px + var(--safe-t)); right: var(--gap); z-index: 6; width: 320px; padding: 14px;
+         display: none; flex-direction: column; gap: 10px; max-height: calc(100vh - 110px); overflow: auto;
+         background: rgba(14, 18, 25, 0.95); }
+  #sys.open { display: flex; }
+  #sys .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #sys .stat { background: rgba(255,255,255,.05); border-radius: 12px; padding: 8px 10px; }
+  #sys .stat small { display: block; color: var(--faint); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  #sys .stat b { font-size: 16px; font-variant-numeric: tabular-nums; }
+  #sys .item { display: flex; align-items: center; gap: 10px; padding: 4px 2px; }
+  #sys .item .dot { flex: none; }
+  #sys .item span { flex: 1; font-weight: 600; }
+  #sys .item em { font-style: normal; color: var(--dim); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+  #sys .none { color: var(--faint); padding: 4px 2px; }
+  #loraMsg { color: var(--dim); font-size: 12px; word-break: break-all; }
+
   /* narrow / portrait: video on top, the cards below it */
   @media (max-width: 820px), (orientation: portrait) {
     html, body { overflow: auto; }
@@ -158,6 +174,8 @@
     #drawer { height: 70vh; }
     #objects { position: absolute; top: auto; bottom: calc(58vh + 8px); }
     .tool { width: 34px; height: 34px; }
+    /* below the header, so STOP stays reachable */
+    #sys { position: absolute; left: var(--gap); right: var(--gap); width: auto; top: calc(170px + var(--safe-t)); max-height: none; }
   }
 </style>
 </head>
@@ -174,8 +192,10 @@
     <div class="sig" id="sigElrs" title="ExpressLRS"></div>
     <div class="sig" id="sigWifi" title="Wi-Fi"></div>
     <div class="sig" id="sigLte" title="LTE"></div>
+    <div class="pill" id="gnss" title="GNSS"><span class="dot" id="gnssDot"></span><b id="gnssText">GNSS</b></div>
     <div class="pill" id="ping" title="round trip to the robot">- ms</div>
     <div class="batt" id="batt"></div>
+    <button class="tool" id="sysBtn" title="carrier and sensors"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></button>
     <button class="tool" id="snap" title="save a camera snapshot"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
     <button class="tool" id="full" title="full screen, keep the screen on"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     <button id="estop" title="emergency stop">STOP</button>
@@ -235,6 +255,25 @@
   </div>
 </div>
 <div class="glass" id="toast"></div>
+
+<div class="glass" id="sys">
+  <div class="label">Carrier</div>
+  <div id="ioNone" class="none">IO MCU not reporting</div>
+  <div class="stats" id="ioStats" style="display:none">
+    <div class="stat"><small>Battery</small><b id="ioVbat">-</b></div>
+    <div class="stat"><small>5 V rail</small><b id="ioV5">-</b></div>
+    <div class="stat"><small>Board</small><b id="ioTemp">-</b></div>
+    <div class="stat"><small>Up</small><b id="ioUp">-</b></div>
+  </div>
+  <div class="label">Sensors</div>
+  <div id="sensors"></div>
+  <div class="label">LoRa</div>
+  <div class="item"><span class="dot" id="loraDot"></span><span>Beacon</span><em id="loraText">-</em></div>
+  <div id="loraMsg"></div>
+  <hr style="width:100%;border:0;border-top:1px solid var(--edge);margin:2px 0">
+  <label class="switch">LTE module power<input type="checkbox" id="lteSw"><i></i></label>
+  <div class="row"><button class="btn" id="beep">Beep</button><button class="btn" id="sysClose">Close</button></div>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -609,6 +648,59 @@ async function pollPose() {
 pollPose();
 requestAnimationFrame(frame);
 
+// ---- systems panel ----
+$('sysBtn').onclick = () => { $('sys').classList.toggle('open'); $('sysBtn').classList.toggle('on', $('sys').classList.contains('open')); };
+$('sysClose').onclick = () => { $('sys').classList.remove('open'); $('sysBtn').classList.remove('on'); };
+$('beep').onclick = () => post('beep', {}, 'Beep');
+$('lteSw').onchange = e => post('lte', {on: e.target.checked}, 'LTE ' + (e.target.checked ? 'on' : 'off'));
+const FIX = {0: 'no fix', 1: 'GPS', 2: 'DGPS', 4: 'RTK', 5: 'RTK float', 6: 'dead reckoning'};
+function upTime(s) {
+  if (s == null) return '-';
+  const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60;
+  return h ? `${h}h ${m}m` : m ? `${m}m` : `${Math.floor(s)}s`;
+}
+function item(name, color, text) {
+  return `<div class="item"><span class="dot" style="background:${color};color:${color}"></span><span>${name}</span><em>${text}</em></div>`;
+}
+function renderSys(s) {
+  const io = s.io, d = s.diag || {};
+  $('ioNone').style.display = io ? 'none' : '';
+  $('ioStats').style.display = io ? '' : 'none';
+  // GNSS in the header: the IO MCU's fix and satellites, or the fix topic alone without the carrier
+  const gq = io ? (io.gnss ? io.fix_quality : null) : (s.fix ? (s.fix.status >= 0 ? 1 : 0) : null);
+  $('gnssText').textContent = gq == null ? 'GNSS -' : gq > 0 ? `GNSS ${io && io.sats != null ? io.sats : 'fix'}` : 'NO FIX';
+  $('gnssDot').style.background = $('gnssDot').style.color = gq == null ? COL.dim : gq > 0 ? COL.ok : COL.warn;
+  $('gnss').title = gq == null ? 'GNSS: no data' : `GNSS: ${FIX[gq] || 'fix ' + gq}` + (io && io.sats != null ? `, ${io.sats} satellites` : '');
+  if (io) {
+    $('ioVbat').textContent = io.vbat != null ? io.vbat.toFixed(2) + ' V' : '-';
+    $('ioV5').textContent = io.v5 != null ? io.v5.toFixed(2) + ' V' : '-';
+    $('ioV5').style.color = io.v5 != null && (io.v5 < 4.75 || io.v5 > 5.25) ? COL.warn : '';
+    $('ioTemp').textContent = io.temp != null ? Math.round(io.temp) + ' °C' : 'open';
+    $('ioTemp').style.color = io.temp != null && io.temp > 70 ? COL.err : io.temp != null && io.temp > 55 ? COL.warn : '';
+    $('ioUp').textContent = upTime(io.uptime_s);
+    $('ioUp').title = 'IO firmware ' + (io.version || '?');
+  }
+  const diagItem = (name, key) => {
+    const x = d[key];
+    return item(name, x ? COL[lvl(x.level)] : COL.dim, x ? x.message : 'no data');
+  };
+  const flag = (name, on, okText, offText) => item(name, !io ? COL.dim : on ? COL.ok : COL.warn, !io ? '-' : on ? okText : offText);
+  $('sensors').innerHTML =
+    flag('GNSS', io && io.gnss && io.fix, io ? `${FIX[io.fix_quality] || '-'} · ${io.sats ?? 0} sats` : '', io && io.gnss ? 'no fix' : 'no data') +
+    flag('Lidar', io && io.lidar, 'scanning', 'no data') +
+    flag('ELRS receiver', io && io.crsf, 'link up', 'no link') +
+    diagItem('IMU', 'imu: lsm6dsv16x') +
+    diagItem('Compass', 'imu: compass') +
+    (io && !io.lte_en ? item('LTE module', COL.dim, 'off') : flag('LTE module', io && io.lte_status, 'on', 'starting'));
+  const lr = s.lora_rx, recent = lr && Date.now() / 1000 - lr.t < 600;
+  $('loraDot').style.background = $('loraDot').style.color = !io ? COL.dim : io.lora ? COL.ok : COL.err;
+  $('loraText').textContent = !io ? '-' : !io.lora ? 'no radio' :
+    `${io.beacons ?? 0} sent` + (io.lora_rssi != null ? ` · ${Math.round(io.lora_rssi)} dBm` : '');
+  $('loraMsg').textContent = recent ? `received: ${lr.text}` : '';
+  if (document.activeElement !== $('lteSw')) $('lteSw').checked = !!(io && io.lte_en);
+  $('lteSw').disabled = !io;
+}
+
 // ---- state ----
 const ICON = {person: '🚶', car: '🚗', truck: '🚚', bicycle: '🚲', motorcycle: '🏍', dog: '🐕', cat: '🐈', bus: '🚌', bird: '🐦'};
 function render(s) {
@@ -628,6 +720,7 @@ function render(s) {
   signal($('sigWifi'), 'WiFi', d['links: wifi']);
   signal($('sigLte'), 'LTE', d['links: lte']);
   battery(s.battery);
+  renderSys(s);
   estopOn = !!s.estop;
   $('estopBanner').classList.toggle('show', estopOn);
   $('missionText').textContent = s.mission && s.mission !== 'idle' ? s.mission : 'No mission';

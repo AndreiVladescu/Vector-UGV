@@ -16,6 +16,8 @@ JSON API (all POST bodies JSON; with the token parameter set, every request need
   POST /api/sentinel  /api/wake  /api/estop {on}
   POST /api/gait {name}             tripod, ripple or wave (only while standing)
   POST /api/height {step}           body height up (+1) or down (-1) by 5 mm, gait_node body_z
+  POST /api/beep                    two beeps from the carrier's buzzer, to find the robot
+  POST /api/lte {on}                the LTE module's supply, through the IO MCU
   GET  /api/snapshot                the latest annotated camera frame, JPEG
 """
 import json
@@ -38,7 +40,7 @@ from rcl_interfaces.srv import GetParameters, SetParameters
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile
 from sensor_msgs.msg import BatteryState, CompressedImage, JointState, NavSatFix
-from std_msgs.msg import Bool, Empty, Float32MultiArray, String
+from std_msgs.msg import Bool, Empty, Float32MultiArray, String, UInt8MultiArray
 from std_srvs.srv import SetBool, Trigger
 
 try:
@@ -48,6 +50,10 @@ except ImportError:  # the page works without the vision messages, just without 
 
 LATCHED = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
 HEIGHT_STEP, HEIGHT_MIN, HEIGHT_MAX = 0.005, -0.04, 0.03
+# what the page shows from the IO MCU's diagnostics (io_bridge.py), parsed
+IO_NUM = ('vbat', 'v5', 'temp', 'uptime_s', 'lora_rssi', 'lora_snr')
+IO_INT = ('sats', 'fix_quality', 'beacons')
+IO_BOOL = ('lte_en', 'lte_status', 'crsf', 'lidar', 'gnss', 'fix', 'lora', 'host')
 
 
 class Operator(Node):
@@ -60,7 +66,7 @@ class Operator(Node):
         self.video = p('video', ':8889/yolo')  # MediaMTX WebRTC, relative to the page's host
         self.lock = threading.Lock()
         self.s = {'battery': None, 'mode': None, 'active': None, 'mission': None, 'estop': None,
-                  'fix': None, 'heading': None, 'diag': {}}
+                  'fix': None, 'heading': None, 'diag': {}, 'io': None, 'lora_rx': None}
         self.cmd_pub = self.create_publisher(Twist, 'cmd_vel/teleop', 10)
         self.hb_pub = self.create_publisher(Empty, 'operator/heartbeat', 10)
         self.mission_pub = self.create_publisher(GeoPath, 'mission', 10)
@@ -68,6 +74,9 @@ class Operator(Node):
         self.wake = self.create_client(Trigger, 'gait_node/wake')
         self.estop = self.create_client(SetBool, 'gait_node/estop')
         self.cancel = self.create_client(Trigger, 'mission/cancel')
+        self.beep = self.create_client(Trigger, 'io/beep')
+        self.lte = self.create_client(SetBool, 'io/lte_power')
+        self.sub(UInt8MultiArray, 'lora/rx', self.on_lora)
         self.sub(BatteryState, 'battery', self.on_battery)
         self.sub(String, 'gait_node/mode', lambda m: self.put('mode', m.data), LATCHED)
         self.sub(String, 'links/active', lambda m: self.put('active', m.data), LATCHED)
@@ -200,16 +209,46 @@ class Operator(Node):
             p['sectors'] = None  # stale: no HUD rather than an old one
         return p
 
+    def on_lora(self, m):
+        data = bytes(m.data)
+        text = data.decode('utf-8', 'replace') if all(32 <= b < 127 for b in data) else data.hex(' ')
+        self.put('lora_rx', {'text': text[:80], 't': time.time()})
+
     def on_diag(self, m):
         with self.lock:
             for st in m.status:
-                if st.name.startswith(('links: ', 'power: ')):
+                if st.name.startswith(('links: ', 'power: ', 'io: ', 'imu: ')):
                     self.s['diag'][st.name] = {'level': int.from_bytes(st.level, 'little') if isinstance(st.level, bytes)
-                                               else int(st.level), 'message': st.message}
+                                               else int(st.level), 'message': st.message, 't': time.time()}
+                if st.name == 'io: mcu':
+                    self.s['io'] = self.io_values(st.values)
+
+    @staticmethod
+    def io_values(values):
+        v = {kv.key: kv.value for kv in values}
+        out = {}
+        for k in IO_NUM:
+            try:
+                out[k] = float(v[k])
+            except (KeyError, ValueError):
+                out[k] = None
+        for k in IO_INT:
+            out[k] = int(v[k]) if v.get(k, '').isdigit() else None
+        for k in IO_BOOL:
+            out[k] = v.get(k) == 'True'
+        out['version'] = v.get('version')
+        return out
 
     def state(self):
         with self.lock:
             s = json.loads(json.dumps(self.s))
+        now = time.time()
+        # the IO bridge and the IMU report every second; anything older means they're gone
+        stale = [k for k, d in s['diag'].items() if now - d.pop('t') > 5.0 and k.startswith(('io: ', 'imu: '))]
+        for k in stale:
+            del s['diag'][k]
+        if 'io: mcu' not in s['diag']:
+            s['io'] = None  # the bridge went quiet: show nothing rather than old numbers
         s['video'] = self.video
         s['max_v'], s['max_w'] = self.max_v, self.max_w
         return s
@@ -306,6 +345,10 @@ def handler(node, page):
                 ok = node.call(node.sentinel, Trigger.Request())
             elif path == '/api/wake':
                 ok = node.call(node.wake, Trigger.Request())
+            elif path == '/api/beep':
+                ok = node.call(node.beep, Trigger.Request())
+            elif path == '/api/lte':
+                ok = node.call(node.lte, SetBool.Request(data=bool(body.get('on', False))))
             elif path == '/api/estop':
                 ok = node.call(node.estop, SetBool.Request(data=bool(body.get('on', True))))
             elif path in ('/api/gait', '/api/height'):

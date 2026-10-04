@@ -10,10 +10,11 @@ import launch_ros.actions
 import launch_testing.actions
 import pytest
 import rclpy
+from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 from geographic_msgs.msg import GeoPath
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import BatteryState, CompressedImage
-from std_msgs.msg import Empty
+from std_msgs.msg import Empty, UInt8MultiArray
 from std_srvs.srv import SetBool, Trigger
 
 PORT = 18080
@@ -61,6 +62,21 @@ class TestOperatorPage(unittest.TestCase):
             return res
         cls.node.create_service(Trigger, '/gait_node/sentinel', trig)
         cls.node.create_service(SetBool, '/gait_node/estop', estop)
+        cls.io_calls = []
+
+        def beep(req, res):
+            cls.io_calls.append('beep')
+            res.success = True
+            return res
+
+        def lte(req, res):
+            cls.io_calls.append(f'lte {req.data}')
+            res.success = True
+            return res
+        cls.node.create_service(Trigger, '/io/beep', beep)
+        cls.node.create_service(SetBool, '/io/lte_power', lte)
+        cls.diag = cls.node.create_publisher(DiagnosticArray, '/diagnostics', 10)
+        cls.lora = cls.node.create_publisher(UInt8MultiArray, '/lora/rx', 10)
         cls.battery = cls.node.create_publisher(BatteryState, '/battery', 10)
         cls.camera = cls.node.create_publisher(CompressedImage, '/yolo/debug/compressed', 10)
         # stands in for gait_node's parameters
@@ -79,7 +95,8 @@ class TestOperatorPage(unittest.TestCase):
         end = time.time() + 15
         while time.time() < end and not (cls.node.count_publishers('/cmd_vel/teleop')
                                          and cls.node.count_clients('/gait_node/sentinel')
-                                         and cls.node.count_clients('/gait_node/estop')):
+                                         and cls.node.count_clients('/gait_node/estop')
+                                         and cls.node.count_clients('/io/beep')):
             rclpy.spin_once(cls.node, timeout_sec=0.1)
         end = time.time() + 1.0  # and the other way round
         while time.time() < end:
@@ -166,3 +183,31 @@ class TestOperatorPage(unittest.TestCase):
         status, body = request('/api/snapshot')
         self.assertEqual(status, 200)
         self.assertEqual(body, b'\xff\xd8fake')
+
+    def test_io_panel(self):
+        self.assertIsNone(json.loads(request('/api/state')[1])['io'])
+        vals = {'version': '1234567', 'uptime_s': '3725.5', 'vbat': '14.82', 'v5': '5.03', 'temp': '31.4',
+                'sats': '9', 'fix_quality': '1', 'beacons': '12', 'lidar': 'True', 'gnss': 'True', 'fix': 'True',
+                'lora': 'True', 'crsf': 'False', 'lte_en': 'False', 'lte_status': 'False', 'lora_rssi': '-97'}
+        st = DiagnosticStatus(name='io: mcu', level=DiagnosticStatus.OK, message='14.82 V',
+                              values=[KeyValue(key=k, value=v) for k, v in vals.items()])
+        imu = DiagnosticStatus(name='imu: compass', level=DiagnosticStatus.WARN, message='no compass')
+        for _ in range(10):
+            self.diag.publish(DiagnosticArray(status=[st, imu]))
+            self.lora.publish(UInt8MultiArray(data=list(b'base: hello')))
+            self.spin(0.1)
+        s = json.loads(request('/api/state')[1])
+        io = s['io']
+        self.assertEqual(io['vbat'], 14.82)
+        self.assertEqual(io['sats'], 9)
+        self.assertEqual(io['beacons'], 12)
+        self.assertTrue(io['lidar'] and io['fix'] and not io['crsf'])
+        self.assertEqual(io['lora_rssi'], -97.0)
+        self.assertIsNone(io['lora_snr'])
+        self.assertEqual(s['diag']['imu: compass']['level'], 1)
+        self.assertEqual(s['lora_rx']['text'], 'base: hello')
+
+        self.assertEqual(request('/api/beep', {})[0], 200)
+        self.assertEqual(request('/api/lte', {'on': True})[0], 200)
+        self.spin(0.5)
+        self.assertEqual(self.io_calls, ['beep', 'lte True'])
