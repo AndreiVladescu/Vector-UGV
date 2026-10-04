@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""ExpressLRS receiver on a UART (CRSF, 420000 baud) -> the robot.
+"""ExpressLRS receiver on a UART (CRSF, 420000 baud) -> the robot. With port:=io the
+receiver hangs off the carrier's IO MCU instead: CRSF frames come from io_bridge on io/crsf
+and telemetry goes back on io/crsf_out.
 
 Mode 2 sticks: right stick forward / sideways, left stick turns (sideways) and sets the
 top speed (throttle, 30-100 %). Switches:
@@ -20,7 +22,7 @@ from geometry_msgs.msg import Twist
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile
 from sensor_msgs.msg import BatteryState
-from std_msgs.msg import String, UInt8
+from std_msgs.msg import String, UInt8, UInt8MultiArray
 from std_srvs.srv import SetBool, Trigger
 
 from vector_link import crsf
@@ -52,13 +54,18 @@ class Elrs(Node):
         self.create_subscription(String, 'gait_node/mode', lambda m: setattr(self, 'mode', m.data),
                                  QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.ser = None
-        threading.Thread(target=self.reader, daemon=True).start()
+        self.parser = crsf.Parser()
+        self.via_io = self.port == 'io'
+        if self.via_io:
+            self.io_out = self.create_publisher(UInt8MultiArray, 'io/crsf_out', 10)
+            self.create_subscription(UInt8MultiArray, 'io/crsf', lambda m: self.on_bytes(bytes(m.data)), 50)
+        else:
+            threading.Thread(target=self.reader, daemon=True).start()
         self.create_timer(0.02, self.tick)
         self.create_timer(0.1, self.report)
         self.create_timer(1.0, self.telemetry)
 
     def reader(self):
-        parser = crsf.Parser()
         while rclpy.ok():
             try:
                 if self.ser is None:
@@ -70,13 +77,16 @@ class Elrs(Node):
                 self.ser = None
                 time.sleep(2)
                 continue
-            now = time.monotonic()
-            for ftype, payload in parser.feed(data):
-                with self.lock:
-                    if ftype == crsf.T_RC_CHANNELS and len(payload) >= 22:
-                        self.ch, self.ch_t = crsf.unpack_channels(payload), now
-                    elif ftype == crsf.T_LINK_STATS and len(payload) >= 10:
-                        self.stats, self.stats_t = crsf.link_stats(payload), now
+            self.on_bytes(data)
+
+    def on_bytes(self, data):
+        now = time.monotonic()
+        for ftype, payload in self.parser.feed(data):
+            with self.lock:
+                if ftype == crsf.T_RC_CHANNELS and len(payload) >= 22:
+                    self.ch, self.ch_t = crsf.unpack_channels(payload), now
+                elif ftype == crsf.T_LINK_STATS and len(payload) >= 10:
+                    self.stats, self.stats_t = crsf.link_stats(payload), now
 
     def link_ok(self, now):
         # ELRS stops sending channels on failsafe; link stats alone don't count
@@ -123,7 +133,7 @@ class Elrs(Node):
             armed = ok and crsf.normalize(self.ch[4]) > 0.5
         self.link_pub.publish(UInt8(data=s.get('lq', 1) if ok else 0))
         d = DiagnosticStatus(name='links: elrs', hardware_id=self.port)
-        if self.ser is None:
+        if self.ser is None and not self.via_io:
             d.level, d.message = DiagnosticStatus.WARN, 'no receiver port'
         elif not ok:
             d.level, d.message = DiagnosticStatus.WARN, 'no link'
@@ -136,13 +146,20 @@ class Elrs(Node):
         self.diag_pub.publish(arr)
 
     def telemetry(self):
-        if self.ser is None:
+        if self.ser is None and not self.via_io:
             return
         out = crsf.flight_mode(self.mode.upper()[:14] or 'VECTOR')
         b = self.battery
         if b is not None:
             used = (1 - b.percentage) * b.capacity * 1000 if b.capacity == b.capacity and b.capacity > 0 else 0
             out += crsf.battery(b.voltage, max(0.0, -b.current), used, b.percentage * 100)
+        if self.via_io:
+            # one CRSF frame per message: the IO MCU checks each one
+            while out:
+                n = out[1] + 2
+                self.io_out.publish(UInt8MultiArray(data=list(out[:n])))
+                out = out[n:]
+            return
         try:
             self.ser.write(out)
         except (serial.SerialException, OSError):
