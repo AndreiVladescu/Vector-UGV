@@ -16,7 +16,7 @@
 
 - Decide whether J-SYSCTL and the power board's J-CAN merge into one 10-pin JST-GH to the carrier.
 - Side boards: add the e-stop diode (BAT54J, BUCK_EN → ESTOP_N) and the 1k in series with PB0 on each leg cell.
-- Carrier: J-SYSCTL to GPIO22-24, MCP251863 + 2× J-CAN, LSM6DSV16X, J-NOSE, SWD recovery, the IO MCU with ELRS, lidar and LoRa, the GNSS and A7670E sheets (GPIOs in `docs/interfaces.md`).
+- Carrier: J-SYSCTL to GPIO22-24, MCP251863 + 2× J-CAN, LSM6DSV16X, J-NOSE, SWD recovery, the IO MCU with ELRS, lidar and LoRa. (GPIOs in `docs/interfaces.md`.)
 - XT60 / XT30 aren't on Mouser: order from TME.
 
 ## Mechanical

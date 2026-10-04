@@ -1007,6 +1007,46 @@
 				(justify right)
 			)
 		)
+		(pin "LTE_TXD" bidirectional
+			(at 165.1 160.02 0)
+			(uuid "b9fc2814-114d-4154-ba0a-4884afba2403")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "LTE_RXD" bidirectional
+			(at 165.1 162.56 0)
+			(uuid "d21bab42-a562-48b7-ab80-73e26bdc871e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "LTE_PWRKEY" bidirectional
+			(at 165.1 165.1 0)
+			(uuid "b3dc433a-1e51-44e2-8a6f-174638881ac6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "LTE_SLEEP" bidirectional
+			(at 165.1 167.64 0)
+			(uuid "1600e08b-156e-45b6-9959-53d8993a3d06")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
 		(instances
 			(project "carrier-cm5"
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -2210,6 +2250,26 @@
 				(justify left)
 			)
 		)
+		(pin "LTE_EN" bidirectional
+			(at 254 152.4 0)
+			(uuid "54023d39-ff94-4681-9140-ed72e945aee2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "LTE_STATUS" bidirectional
+			(at 254 154.94 0)
+			(uuid "927d1f3a-166c-4add-8d12-cae6701a0807")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
 		(instances
 			(project "carrier-cm5"
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -2318,6 +2378,408 @@
 			)
 		)
 		(uuid "59a37df1-2d4c-4dfb-8192-220a71e59f87")
+	)
+	(wire
+		(pts
+			(xy 165.1 160.02) (xy 172.72 160.02)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f002c33f-6601-4ff9-ba7d-c398a044620b")
+	)
+	(label "LTE_TXD"
+		(at 172.72 160.02 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "91af6958-16c7-44dd-add3-6abff642c7db")
+	)
+	(wire
+		(pts
+			(xy 165.1 162.56) (xy 172.72 162.56)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "633e3c33-d2bb-4e9f-8923-7d22f6815b28")
+	)
+	(label "LTE_RXD"
+		(at 172.72 162.56 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "b09d9276-0f06-4152-ab00-3f4db6c0702b")
+	)
+	(wire
+		(pts
+			(xy 165.1 165.1) (xy 172.72 165.1)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "aa132f1e-ab2b-4f2e-b589-c35396949498")
+	)
+	(label "LTE_PWRKEY"
+		(at 172.72 165.1 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "189c76af-4dda-401b-9f70-b7d50047c7d5")
+	)
+	(wire
+		(pts
+			(xy 165.1 167.64) (xy 172.72 167.64)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e4d55345-d557-4dd3-a449-6ca5be662436")
+	)
+	(label "LTE_SLEEP"
+		(at 172.72 167.64 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "64c7e52e-fde2-470e-aa08-7090a1d8bf13")
+	)
+	(wire
+		(pts
+			(xy 254 152.4) (xy 261.62 152.4)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3f0e3388-6ee9-4503-a03f-9584a8e001b4")
+	)
+	(label "LTE_EN"
+		(at 261.62 152.4 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "252ac817-b4e6-4ca3-95a1-d49a0a78298b")
+	)
+	(wire
+		(pts
+			(xy 254 154.94) (xy 261.62 154.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1ecf382c-1271-4192-b838-df30b219abd4")
+	)
+	(label "LTE_STATUS"
+		(at 261.62 154.94 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "23cb4ba8-6b09-4721-a0aa-728fe7e5d9c2")
+	)
+	(wire
+		(pts
+			(xy 274.32 167.64) (xy 266.7 167.64)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3bba5086-13e9-4e75-84d3-829c6c2c796f")
+	)
+	(label "LTE_TXD"
+		(at 266.7 167.64 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "a91e51e9-9317-49cf-8cce-a1f7a097a9b7")
+	)
+	(wire
+		(pts
+			(xy 274.32 170.18) (xy 266.7 170.18)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6c628862-706a-4227-8737-6ad272a53db8")
+	)
+	(label "LTE_RXD"
+		(at 266.7 170.18 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "b84c3eb8-6712-4aba-b3cc-d8749a40d989")
+	)
+	(wire
+		(pts
+			(xy 274.32 172.72) (xy 266.7 172.72)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "07f9cee9-c799-452f-a3ee-ed60855f118c")
+	)
+	(label "LTE_PWRKEY"
+		(at 266.7 172.72 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "416aadb9-0d42-47e0-8a69-c471792b334d")
+	)
+	(wire
+		(pts
+			(xy 274.32 175.26) (xy 266.7 175.26)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cfc1c2be-ae56-49c2-8891-4248f0242883")
+	)
+	(label "LTE_SLEEP"
+		(at 266.7 175.26 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "66027456-e054-44f1-b22a-8da111b22639")
+	)
+	(wire
+		(pts
+			(xy 274.32 177.8) (xy 266.7 177.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e9628828-0899-4279-94dc-a99913ba6587")
+	)
+	(label "LTE_EN"
+		(at 266.7 177.8 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "b58f31ab-121c-4c8f-a1a9-3b6c79444c4d")
+	)
+	(wire
+		(pts
+			(xy 274.32 180.34) (xy 266.7 180.34)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0f77dec5-e054-4371-afff-7f669a44a1a0")
+	)
+	(label "LTE_STATUS"
+		(at 266.7 180.34 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "6c866a37-da3d-4df8-a3b8-e8ebdd6de002")
+	)
+	(wire
+		(pts
+			(xy 274.32 182.88) (xy 266.7 182.88)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c5994034-2528-408b-8bbf-e96ea588907c")
+	)
+	(label "VBAT"
+		(at 266.7 182.88 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "d36b3eac-70dc-45ad-97d0-cbd5c6641501")
+	)
+	(sheet
+		(at 274.32 165.1)
+		(size 38.1 22.86)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.152)
+			(type solid)
+			(color 132 0 132 1)
+		)
+		(fill
+			(color 255 255 255 0)
+		)
+		(uuid "0919b368-a999-465e-b816-ad074e6fa1a7")
+		(property "Sheetname" "LTE"
+			(at 274.32 164.3886 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "lte.kicad_sch"
+			(at 274.32 188.6744 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "LTE_TXD" bidirectional
+			(at 274.32 167.64 180)
+			(uuid "38033434-14fb-46d7-8c11-8ef367f64848")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "LTE_RXD" bidirectional
+			(at 274.32 170.18 180)
+			(uuid "a1bd5daf-d62a-42bb-bda9-478e78a78b50")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "LTE_PWRKEY" bidirectional
+			(at 274.32 172.72 180)
+			(uuid "f3422551-d3fb-47b9-898c-5b583b919b01")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "LTE_SLEEP" bidirectional
+			(at 274.32 175.26 180)
+			(uuid "214390ca-17fd-47aa-ae85-d38917102996")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "LTE_EN" bidirectional
+			(at 274.32 177.8 180)
+			(uuid "f0cc9b5d-4e0f-4cc1-809f-b7fdf88fd02b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "LTE_STATUS" bidirectional
+			(at 274.32 180.34 180)
+			(uuid "d770260c-7bcd-4ef6-bbe2-95e087aa078d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "VBAT" bidirectional
+			(at 274.32 182.88 180)
+			(uuid "89c20f11-77a0-4547-9970-4eba356db483")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(instances
+			(project "carrier-cm5"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+					(page "8")
+				)
+			)
+		)
+	)
+	(text "LTE"
+		(exclude_from_sim no)
+		(at 299.72 176.53 0)
+		(effects
+			(font
+				(size 1.905 1.905)
+				(thickness 0.381)
+				(bold yes)
+			)
+		)
+		(uuid "fc7cbed2-444c-40d4-9d56-1a566971cb2c")
 	)
 	(sheet_instances
 		(path "/"

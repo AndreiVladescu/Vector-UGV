@@ -11058,16 +11058,6 @@
 	)
 	(wire
 		(pts
-			(xy 368.3 226.06) (xy 368.3 231.14)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "527c15f0-0f65-4075-b694-5af3e7cfd073")
-	)
-	(wire
-		(pts
 			(xy 59.055 147.955) (xy 60.325 147.955)
 		)
 		(stroke
@@ -12846,7 +12836,7 @@
 		)
 		(uuid "1d901cb2-360a-4708-b3ed-e4b172d3996f")
 	)
-	(label "GPIO13"
+	(label "LTE_RXD"
 		(at 56.515 71.755 180)
 		(effects
 			(font
@@ -13036,7 +13026,7 @@
 		)
 		(uuid "4362d6f1-39b0-4140-a0c9-e1c7e29f1387")
 	)
-	(label "GPIO27"
+	(label "LTE_SLEEP"
 		(at 56.515 97.155 180)
 		(effects
 			(font
@@ -13276,7 +13266,7 @@
 		)
 		(uuid "7e98c7bb-1d59-4b79-8dd7-3fc856d94f6e")
 	)
-	(label "GPIO12"
+	(label "LTE_TXD"
 		(at 125.095 76.835 0)
 		(effects
 			(font
@@ -13306,7 +13296,7 @@
 		)
 		(uuid "8570228b-a73c-4b22-b4d9-83e319b13c58")
 	)
-	(label "GPIO17"
+	(label "LTE_PWRKEY"
 		(at 56.515 99.695 180)
 		(effects
 			(font
@@ -21043,80 +21033,6 @@
 		)
 	)
 	(symbol
-		(lib_id "power:PWR_FLAG")
-		(at 368.3 226.06 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "af94f8bb-7996-4a9f-820e-6006dc451c97")
-		(property "Reference" "#FLG201"
-			(at 368.3 232.41 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "PWR_FLAG"
-			(at 368.3 222.25 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 368.3 226.06 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 368.3 226.06 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 368.3 226.06 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "6b127453-bc74-44c3-8a1b-2763fdcd47a3")
-		)
-		(instances
-			(project "carrier-cm5"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/00000000-0000-0000-0000-00005cff706a"
-					(reference "#FLG201")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:+3V3")
 		(at 56.515 142.875 90)
 		(unit 1)
@@ -21927,80 +21843,6 @@
 			(project "carrier-cm5"
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/00000000-0000-0000-0000-00005cff706a"
 					(reference "R7")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+3V3")
-		(at 368.3 231.14 180)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "d8f4782d-3e96-4fb8-937a-a7f9f8165a12")
-		(property "Reference" "#PWR311"
-			(at 368.3 237.49 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "+3V3"
-			(at 368.3 234.95 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 368.3 231.14 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 368.3 231.14 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 368.3 231.14 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "026aae2c-7889-4bd2-8944-a1cd81e5200e")
-		)
-		(instances
-			(project "carrier-cm5"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/00000000-0000-0000-0000-00005cff706a"
-					(reference "#PWR311")
 					(unit 1)
 				)
 			)
@@ -25778,5 +25620,137 @@
 			(justify left bottom)
 		)
 		(uuid "edb36e75-d810-46d8-9ea1-4258e85cbe3f")
+	)
+	(hierarchical_label "LTE_TXD"
+		(shape bidirectional)
+		(at 215.9 187.96 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "1cfea756-681a-4969-a749-6e36a83283f0")
+	)
+	(wire
+		(pts
+			(xy 215.9 187.96) (xy 226.06 187.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "51e9da61-67d3-4665-91a7-c246966855c2")
+	)
+	(label "LTE_TXD"
+		(at 226.06 187.96 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "7d5c38e5-0edf-4539-8097-78101a0cec2d")
+	)
+	(hierarchical_label "LTE_RXD"
+		(shape bidirectional)
+		(at 215.9 191.77 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "96ef9bee-c7b0-4235-ac8b-c5fbae0a1188")
+	)
+	(wire
+		(pts
+			(xy 215.9 191.77) (xy 226.06 191.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f1184091-a89c-4fa4-a4bd-486cb6605e90")
+	)
+	(label "LTE_RXD"
+		(at 226.06 191.77 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "b7256a6e-9081-4c76-8460-14155487c5cd")
+	)
+	(hierarchical_label "LTE_PWRKEY"
+		(shape bidirectional)
+		(at 215.9 195.58 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "50227bd9-28ec-4145-b9c0-75a7f4750a9f")
+	)
+	(wire
+		(pts
+			(xy 215.9 195.58) (xy 226.06 195.58)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3377cfc7-4c35-448a-baf8-f3c61020b5d7")
+	)
+	(label "LTE_PWRKEY"
+		(at 226.06 195.58 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "b3d9de23-81e7-473d-b5ab-7a6a32198840")
+	)
+	(hierarchical_label "LTE_SLEEP"
+		(shape bidirectional)
+		(at 215.9 199.39 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "c97e71f5-85e6-4fc4-9528-d4d3275c4c40")
+	)
+	(wire
+		(pts
+			(xy 215.9 199.39) (xy 226.06 199.39)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7bdf21e2-aa7f-4960-a91e-e3d9c4a40886")
+	)
+	(label "LTE_SLEEP"
+		(at 226.06 199.39 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "b3ba4cb1-48d0-4acf-9be3-11b4be7c29c4")
 	)
 )
