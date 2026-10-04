@@ -72,13 +72,13 @@ Battery protection, USB-C charging and soft power, with a power MCU on CAN. BOM 
 - **IMU:** ICM-42688-P.
 - **Other connectors:**
   - 2× USB-A behind current-limit switches
-  - CSI camera (the main camera)
+  - 2× CSI, 22-pin FFC: CAM0 is the main camera, CAM1 is for a second one (I2C on ID_SC/ID_SD, 2.2k pull-ups)
   - microSD socket (the CM5 Lite boots from it)
   - ELRS and lidar UARTs
   - gimbal PWM for 2× SG90 with a small 5 V buck
   - a USB-C port for rpiboot, data only: D+/D− to the CM5's USB 2.0, 5.1k on CC, VBUS not connected to the 5 V rail (the CM5 is powered from VBAT, or a bench supply on the XT30). With a CM5 Lite on microSD it's rarely needed
   - an nRPIBOOT jumper and a 3-pin console UART header
-  - a fan
+  - a fan header: 4-pin 2.54 mm footprint (5 V, PWM, GND, tach), not fitted until the fan is chosen
   - an RTC battery
 - **SWD recovery header:** on CM5 GPIOs.
 - **Antennas:** all go to a printed plate on top via U.FL pigtails, with GNSS as far from LTE as possible.

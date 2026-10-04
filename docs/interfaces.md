@@ -25,7 +25,7 @@ Both ends of a cable use the same footprint and pin order.
 | J-LIDAR | Carrier → LD19 | JST-GH 4-pin | 5 V, GND, TX, RX |
 | J-GIMBAL (×2) | Carrier → SG90 | 2.54 mm 3-pin | 5 V, GND, PWM |
 | J-NOSE | Carrier → nose board | JST-GH 8-pin | see below |
-| J-CAM | Carrier → nose board camera | Pi camera FFC (22-pin on the carrier) | CSI, camera screwed to the nose board |
+| J-CAM0, J-CAM1 | Carrier → cameras | Pi camera FFC (22-pin on the carrier) | CSI; CAM0 is the camera screwed to the nose board, CAM1 is spare |
 
 ## CAN bus
 
