@@ -43,8 +43,8 @@
   .sig svg { display: block; }
   .sig b { font-size: 11px; color: var(--dim); font-weight: 600; letter-spacing: .04em; }
   .batt { display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; }
-  .batt .pct { font-weight: 700; font-variant-numeric: tabular-nums; }
-  .batt .v { color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .batt .pct { font-weight: 700; font-variant-numeric: tabular-nums; width: 4.4ch; text-align: right; }
+  .batt .v { color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; width: 16ch; white-space: nowrap; }
   #estop { width: 58px; height: 58px; border-radius: 50%; border: 3px solid #ffd0d4; font-weight: 900; font-size: 12px;
            letter-spacing: .06em; color: #fff; background: radial-gradient(circle at 35% 30%, #ff7480, #d8111f 70%);
            box-shadow: 0 0 0 4px rgba(255, 77, 90, .25), 0 8px 24px rgba(216, 17, 31, .5); flex: none; }
@@ -85,13 +85,13 @@
   .drive { display: flex; flex-direction: column; gap: 12px; align-items: center; width: 190px; }
   .dpad { position: relative; width: 150px; height: 150px; border-radius: 50%; background: rgba(255, 255, 255, .04);
           border: 1px solid var(--edge); flex: none; }
-  .dpad button { position: absolute; width: 50px; height: 50px; border-radius: 14px; border: 1px solid var(--edge);
+  .dpad button { position: absolute; width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--edge);
                  background: var(--glass-2); display: grid; place-items: center; }
-  .dpad button svg { width: 18px; height: 18px; fill: var(--text); }
+  .dpad button svg { width: 16px; height: 16px; fill: var(--text); }
   .dpad button.on { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 18px rgba(62, 166, 255, .6); }
-  .dpad [data-c=fwd] { left: 50px; top: 4px; } .dpad [data-c=back] { left: 50px; bottom: 4px; }
-  .dpad [data-c=left] { left: 4px; top: 50px; } .dpad [data-c=right] { right: 4px; top: 50px; }
-  .dpad [data-c=stop] { left: 50px; top: 50px; border-radius: 50%; }
+  .dpad [data-c=fwd] { left: 54px; top: 7px; } .dpad [data-c=back] { left: 54px; bottom: 7px; }
+  .dpad [data-c=left] { left: 7px; top: 54px; } .dpad [data-c=right] { right: 7px; top: 54px; }
+  .dpad [data-c=stop] { left: 54px; top: 54px; border-radius: 50%; }
   .row { display: flex; gap: 8px; width: 100%; }
   .btn { flex: 1; padding: 11px 10px; border-radius: 12px; border: 1px solid var(--edge); background: var(--glass-2); font-weight: 700; }
   .btn:active { background: rgba(255, 255, 255, .12); }
@@ -126,7 +126,10 @@
           display: grid; place-items: center; flex: none; }
   .tool svg { width: 18px; height: 18px; stroke: var(--text); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .tool.on { background: var(--accent); border-color: var(--accent); }
-  #ping { font-variant-numeric: tabular-nums; }
+  /* fixed widths, room for four digits: a changing number never shifts the header */
+  #ping { font-variant-numeric: tabular-nums; width: calc(7ch + 26px); justify-content: flex-end; }
+  #gnss { font-variant-numeric: tabular-nums; width: calc(9ch + 42px); }
+  #gnssText { white-space: nowrap; }
   #hud { position: fixed; top: calc(96px + var(--safe-t)); left: var(--gap); z-index: 4; display: flex; flex-direction: column; gap: 6px;
          max-height: calc(100vh - 330px); overflow: hidden; }
   #objects { display: flex; flex-direction: column; gap: 6px; }
@@ -212,11 +215,11 @@
     <div class="pill"><span class="dot" id="modeDot"></span><small>mode</small><b id="mode">-</b></div>
     <div class="pill"><small>control</small><b id="control">-</b></div>
     <div class="spacer"></div>
+    <div class="pill" id="gnss" title="GNSS"><span class="dot" id="gnssDot"></span><b id="gnssText">GNSS</b></div>
+    <div class="pill" id="ping" title="round trip to the robot">- ms</div>
     <div class="sig" id="sigElrs" title="ExpressLRS"></div>
     <div class="sig" id="sigWifi" title="Wi-Fi"></div>
     <div class="sig" id="sigLte" title="LTE"></div>
-    <div class="pill" id="gnss" title="GNSS"><span class="dot" id="gnssDot"></span><b id="gnssText">GNSS</b></div>
-    <div class="pill" id="ping" title="round trip to the robot">- ms</div>
     <div class="batt" id="batt"></div>
     <button class="tool" id="mapBtn" title="map over the video"><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg></button>
     <button class="tool" id="tilesBtn" title="choose the data tiles"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/></svg></button>
