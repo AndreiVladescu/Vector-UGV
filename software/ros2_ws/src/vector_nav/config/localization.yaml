@@ -2,7 +2,7 @@
 #   ekf_odom: leg odometry + IMU gyro -> odom -> base_link, smooth, drifts
 #   ekf_map:  the same + GNSS (through navsat_transform) + IMU heading -> map -> odom
 # navsat_transform needs an absolute heading from the IMU (ENU: 0 = east). The Gazebo IMU
-# gives it; on the robot it has to come from the compass (MMC5983MA on the nose board).
+# gives it; on the robot imu_node.py gets it from the compass (MMC5983MA on the nose board).
 ekf_odom:
   ros__parameters:
     frequency: 30.0

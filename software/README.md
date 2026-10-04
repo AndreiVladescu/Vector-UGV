@@ -7,7 +7,12 @@ Packages in `ros2_ws/src/`:
 - `vector_gait`: kinematics and gait in plain C++ (`vector_core`, no ROS), plus `gait_node`
 - `vector_hw`: ros2_control hardware for the leg nodes over SocketCAN, plus `sim_legs` (the leg firmware logic with simulated servos) and `leg_config.py` (calibration and settings over CAN)
 - `vector_bringup`: launch files, controller config, rviz config, Gazebo worlds
-- later: `vector_perception`, `vector_links`
+- `vector_link`: ExpressLRS (`elrs.py`), the cmd_vel mux and link watchdog, the operator page
+- `vector_nav`: waypoint follower and obstacle grid
+- `vector_tof`: the nose board's VL53L8CX
+- `vector_io`: the carrier's IO MCU over UART2 (lidar, GNSS, ELRS frames, LoRa, housekeeping) and its flasher
+- `vector_imu`: LSM6DSV16X on the carrier and MMC5983MA on the nose board -> `imu`, `mag`
+- later: `vector_perception`
 
 ## Desktop setup (Mint 22.3 / Ubuntu 24.04)
 
@@ -147,7 +152,7 @@ ros2 topic echo /links/active          # elrs, teleop, nav or idle
 
 The operator page, `http://<robot>:8080` on a phone or laptop (started with `links:=true`): the YOLO video, battery, links and gait mode, a joystick (forward and turn, or sideways), Sit / Wake / E-STOP, and a map with the GNSS position where tapping adds waypoints to send as a mission. While it's open it sends the operator heartbeat; commands stop 0.4 s after the last one, so a phone that drops out doesn't leave the robot walking. The map tiles come from OpenStreetMap, so they need internet on the phone; the rest doesn't. Anyone who can reach port 8080 can drive the robot: keep it on Tailscale, or set `page_key:=...` and open `http://<robot>:8080/?key=...`.
 
-`elrs.py` reads an ExpressLRS receiver in CRSF mode (420000 baud) on UART2 (GPIO4 TX, GPIO5 RX, `/dev/ttyAMA2`). Mode 2: right stick forward / sideways, left stick sideways turns and up / down sets the top speed (30-100 % of 0.1 m/s). AUX1 arms, AUX2 high sits down (low wakes), AUX3 high is the e-stop. The handset shows the battery (voltage, current, used mAh, %) and the gait mode as telemetry. Set the receiver to failsafe "no pulses", so a lost link stops the sticks.
+`elrs.py` reads an ExpressLRS receiver in CRSF mode (420000 baud) on UART2 (GPIO4 TX, GPIO5 RX, `/dev/ttyAMA2`) on the Pi; on the carrier the receiver hangs off the IO MCU and `elrs_port:=io` takes its frames from `io_bridge`. Mode 2: right stick forward / sideways, left stick sideways turns and up / down sets the top speed (30-100 % of 0.1 m/s). AUX1 arms, AUX2 high sits down (low wakes), AUX3 high is the e-stop. The handset shows the battery (voltage, current, used mAh, %) and the gait mode as telemetry. Set the receiver to failsafe "no pulses", so a lost link stops the sticks.
 
 The LTE modem (A7670E) in RNDIS / ECM mode is a wired interface to Linux; `setup.sh` adds a NetworkManager profile that matches it by driver and puts it behind Wi-Fi (route metric 700). `/diagnostics` shows the control source, the Wi-Fi signal and the modem's state, plus its signal with `LTE_AT=/dev/ttyUSB2` (the AT port number can differ; `AT+CSQ` is plain 3GPP). The APN and the modem's USB mode are set once with its own AT commands, see SIMCom's A76XX documents.
 
@@ -167,7 +172,20 @@ The receiver is any NMEA module on UART0 (GPIO14 TX, GPIO15 RX, 3.3 V), 115200 b
 
 `obstacles.py` (also started by `nav.launch.py`) keeps what sticks out of the ground for 3 s in `odom`: where YOLO's objects meet the ground (the lowest mask pixel per column, projected from the camera pose on flat ground), the nose ToF zones and the six leg ToF rays more than 5 cm above the ground. It publishes `obstacles/grid` (OccupancyGrid, for Foxglove) and `obstacles/clearance` (free metres straight ahead, and the side with more room). The follower stops with less than 0.6 m free, and after 2 s steps sideways around it; without obstacle data it walks on GNSS alone.
 
-`navsat_transform` needs an absolute heading from the IMU (0 = east). Gazebo's IMU has one; on the robot it has to come from the compass on the nose board (MMC5983MA), so `nav:=true` only makes sense on the robot once that exists. Until then a UART module on the Pi shows `/gnss/fix` and `/gnss/vel` on their own.
+`navsat_transform` needs an absolute heading from the IMU (0 = east). Gazebo's IMU has one; on the robot it comes from `imu_node.py` with the nose board's compass (below). Without the nose board the IMU's yaw is gyro only and `nav:=true` has no heading.
+
+## Carrier IO MCU and IMU
+
+The STM32C092 next to the CM5 (`firmware/io-node`) carries the ELRS receiver, the LD19 lidar, the MAX-M10S, the RFM95W and the battery / 5 V / NTC sensing, and talks to the CM5 on UART2 at 1 Mbaud. `io_bridge.py` turns that into `scan` (LaserScan, frame `lidar`), `gnss/nmea_sentence` (and through `nmea_topic_driver` the usual `gnss/fix`, `gnss/vel`), `io/crsf` for `elrs.py`, `lora/rx` / `lora/tx` and an `io: mcu` entry in `/diagnostics`. The MCU sends a LoRa position beacon every 30 s on its own (`beacon_s`, 0 = off), so a lost robot can be found with any SX127x receiver.
+
+```sh
+ros2 launch vector_bringup robot.launch.py hardware:=can io_port:=/dev/ttyAMA2 elrs_port:=io imu:=true nav:=true
+ros2 service call /io/lte_power std_srvs/srv/SetBool "{data: true}"
+ros2 param set /io_bridge lidar_pwm 0                      # 0 = the LD19's own 10 Hz
+ros2 run vector_io io_flash.py io-node.bin                 # new IO firmware through the ROM bootloader
+```
+
+`imu_node.py` reads the LSM6DSV16X (0x6A) and the MMC5983MA (0x30) on I2C1 and publishes `imu` with the orientation in ENU, fused from gyro, accelerometer and compass, and `mag`. Keep the robot still for the first 2 s (gyro bias). `imu_axes` / `mag_axes` map each chip onto `base_link` and `declination_deg` (6 for Bucharest) turns magnetic north into true north. Calibrate the compass once it sits in the robot: `ros2 service call /imu/calibrate_mag std_srvs/srv/Trigger`, then turn the robot through every orientation for 30 s and copy the logged `mag_offset` / `mag_scale` into the launch parameters. In the container: `IO_PORT=/dev/ttyAMA2`, `ELRS_PORT=io` and `IMU=true` in `/etc/vector.env`.
 
 ## On the robot (Docker)
 

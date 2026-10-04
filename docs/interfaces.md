@@ -115,7 +115,7 @@ One ADC pin per leg cell reads a divider (3V3 → R_top → ADC → R_bot → GN
 |---|---|
 | 0, 1 | ID_SD, ID_SC: CAM1 I2C |
 | 2, 3 | I2C1 SDA, SCL: IMU, J-NOSE |
-| 4, 5 | UART2 TX, RX: IO MCU, 1 Mbaud |
+| 4, 5 | UART2 TX, RX: IO MCU, 1 Mbaud (framing in `firmware/io-node/README.md`) |
 | 6 | IMU_INT |
 | 7 | GNSS_PPS (time pulse) |
 | 8 | SWD recovery NRST |

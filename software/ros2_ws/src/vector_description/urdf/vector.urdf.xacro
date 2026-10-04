@@ -200,7 +200,7 @@
   </ros2_control>
 
   <xacro:if value="${gazebo}">
-    <!-- IMU in the body centre, like the ICM-42688 on the carrier -->
+    <!-- IMU in the body centre, like the LSM6DSV16X on the carrier -->
     <gazebo reference="base_link">
       <sensor name="imu" type="imu">
         <always_on>true</always_on>

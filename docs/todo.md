@@ -6,11 +6,8 @@
 - Check the VL53L8CX zone orientation (`flip_x`, `flip_y` in `tof_front`) with a hand in one corner.
 - Calibrate the OV5647 (checkerboard): the ground projection and the ToF fusion use datasheet angles.
 - LTE (A7670E on UART4): APN on the modem, PPP over the UART, then a drive over LTE with the operator page.
-- GitHub Actions: firmware tests, ARM builds, colcon tests, protocol checks.
-
-## On hold
-
-- IMU and compass drivers: the parts aren't chosen yet. `nav:=true` on the robot needs the compass for heading.
+- On the carrier: set `imu_axes`, `mag_axes` from the board layouts and calibrate the compass in the robot; set `lidar_yaw` once the LD19 is mounted.
+- IO MCU bring-up: check the ROM bootloader jump and `io_flash.py` on the real chip, the LD19 PWM range and the buzzer frequency.
 
 ## Hardware
 
