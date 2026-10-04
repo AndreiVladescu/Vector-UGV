@@ -22,7 +22,7 @@ Both ends of a cable use the same footprint and pin order.
 | J-SWD (per MCU) | Debug | Tag-Connect TC2030 or 1.27 mm 2×5 *TBD* | SWDIO, SWCLK, NRST, 3V3, GND |
 | J-SWDREC | Carrier → any MCU | 1.27 mm 2×5 | CM5 GPIO SWD recovery |
 | J-ELRS | Carrier → receiver | JST-GH 4-pin | 5 V, GND, TX, RX |
-| J-LIDAR | Carrier → LD19 (2D lidar) | JST-GH 4-pin, not fitted | TX, PWM, GND, 5 V (the LD19's own order); PWM open = 10 Hz default |
+| J-LIDAR | Carrier (IO MCU) → LD19 (2D lidar) | JST-GH 4-pin, not fitted | TX, PWM, GND, 5 V (the LD19's own order); PWM open = 10 Hz default |
 | J-LTE | Carrier → A7670E board | 1x07 2.54 mm | GND, RXD, TXD, PWRKEY, VCC, GND, SLEEP; the alternative to the soldered-down A7670E |
 | J-CONSOLE | Carrier → USB-UART | 1x03 2.54 mm | GND, TX, RX (CM5 UART0) |
 | J-NOSE | Carrier → nose board | JST-GH 8-pin | see below |
@@ -114,12 +114,12 @@ One ADC pin per leg cell reads a divider (3V3 → R_top → ADC → R_bot → GN
 | GPIO | Use |
 |---|---|
 | 0, 1 | ID_SD, ID_SC: CAM1 I2C |
-| 2, 3 | I2C1 SDA, SCL: IMU, GNSS (0x42), J-NOSE |
-| 4, 5 | UART2 TX, RX: ELRS |
+| 2, 3 | I2C1 SDA, SCL: IMU, J-NOSE |
+| 4, 5 | UART2 TX, RX: IO MCU, 1 Mbaud |
 | 6 | IMU_INT |
-| 7 | GNSS_PPS (MAX-M10S time pulse) |
+| 7 | GNSS_PPS (time pulse) |
 | 8 | SWD recovery NRST |
-| 9 | UART3 RX: lidar TX |
+| 9 | MAG_INT (J-NOSE); UART3 RX if UART3 is ever needed |
 | 10, 11 | SWD recovery SWDIO, SWCLK |
 | 12, 13 | UART4 TX, RX: LTE |
 | 14, 15 | UART0 TX, RX: console |
@@ -133,5 +133,5 @@ One ADC pin per leg cell reads a divider (3V3 → R_top → ADC → R_bot → GN
 | 26 | TOF_LPN (J-NOSE) |
 | 27 | LTE_SLEEP |
 
-None left: MAG_INT and the nose LED on J-NOSE stay unconnected (the compass is polled), and the lidar PWM is left open.
+ELRS, the lidar, the GNSS and the LoRa radio sit on the IO MCU. The nose LED on J-NOSE stays unconnected.
 

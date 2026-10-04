@@ -16,7 +16,7 @@ Four designs, five boards:
 |---|---|---|---|
 | Side board | 2 | 4 | 3 leg cells, each with STM32C092, TCAN332DR, TPS56A37 6 V buck |
 | Power & BMS | 1 | 4, 2 oz | BQ7694202, BQ25798 (USB-C), STM32C092 |
-| CM5 carrier | 1 | 4, impedance-controlled | CM5, 5 V buck (TPS56A37), M.2, A7670E LTE (own sheet), MAX-M10S GNSS, MCP251863, IMU |
+| CM5 carrier | 1 | 4, impedance-controlled | CM5, 5 V buck (TPS56A37), M.2, MCP251863, STM32C092 IO MCU, LoRa, A7670E LTE and GNSS (own sheets), IMU |
 | Nose board | 1 | 2 | VL53L8CX front ToF, MMC5983MA compass, Pi camera mount |
 
 ```
@@ -66,15 +66,17 @@ Battery protection, USB-C charging and soft power, with a power MCU on CAN. BOM 
 - **5 V for the CM5:** a TPS56A37 (the side boards' servo buck, set to 5.0 V) fed with VBAT over an XT30 from the power board. EN is pulled up on the carrier and pulled low by the power board (5V_EN in J-SYSCTL); PG goes back as 5V_PG. Without a power board, 12–16.8 V on the XT30 just runs it, which is how it's powered on the bench.
 - **CAN:** MCP251863 (MCP2518FD plus transceiver in one package), which shows up as `can0` through the mainline `mcp251xfd` driver. The bus passes through the carrier, with no termination on it.
 - **LTE:** SIMCom A7670E on UART4, on its own sheet. Either the module is soldered down (3.8 V from a TPS62933 on VBAT, nano-SIM, U.FL for LTE and GNSS, 1.8 V UART level shifting, PWRKEY through a transistor) or a ready A7670E board plugs into a 1x07 2.54 mm header (GND, RXD, TXD, PWRKEY, VCC, GND, SLEEP). The whole sheet is DNP on the prototype; the pads stay. The GNSS variant of the module (A7670E-LASE, check before ordering) is the second GNSS.
-- **GNSS:** u-blox MAX-M10S on I2C (0x42) with its time pulse on a GPIO. It has the LNA and SAW filter inside, which matters because LTE band 3 uplink sits close to GPS L1; the active antenna is fed from its VCC_RF. The second GNSS is the one in the LTE module.
+- **GNSS:** on its own sheet, on a UART of the IO MCU, time pulse also to a CM5 GPIO. Either a u-blox MAX-M10S soldered down (LNA and SAW filter inside, which matters because LTE band 3 uplink sits close to GPS L1; the active antenna is fed from its VCC_RF) or a ready GNSS module on a 1x04 2.54 mm header. The sheet is DNP on the prototype; the pads stay. The second GNSS is the one in the LTE module.
 - **Nose board connector (J-NOSE):** 3V3 and I2C for the front sensors, plus the CSI connector for the camera ribbon. An I2C header for an external compass stays as a fallback.
 - **SDR:** RJ45 to the AD9363 over GbE. That gives far more bandwidth than its USB 2.0 port.
-- **IMU:** ICM-42688-P.
+- **IMU:** ST LSM6DSV16X on the CM5's I2C1, interrupt on a GPIO.
+- **IO MCU:** an STM32C092, the same part as the leg cells and the power board, takes the slow serial devices off the CM5, which has only five UARTs on fixed pins. It talks to the CM5 over UART2 at 1 Mbaud and handles ELRS (CRSF, 420 kbaud), the lidar (230.4 kbaud in, PWM out), the GNSS and the LoRa radio, plus the ADC housekeeping (VBAT, 5 V rail, board temperature) and a buzzer. That's about 35 kB/s in total, a third of the link. It also keeps the LoRa position beacon going if Linux hangs.
+- **LoRa:** a telemetry link next to ELRS: robot state and GNSS position at a low rate, so the robot can be found even with Wi-Fi and LTE down. On 868 MHz the 1 % duty cycle allows a short packet every few seconds. The radio is one of the modules already on hand, on the IO MCU.
 - **Other connectors:**
   - 2× USB-A behind current-limit switches
   - 2× CSI, 22-pin FFC: CAM0 is the main camera, CAM1 is for a second one (I2C on ID_SC/ID_SD, 2.2k pull-ups)
   - microSD socket (the CM5 Lite boots from it)
-  - ELRS UART, and a lidar connector (LD19, not fitted for now)
+  - ELRS and lidar connectors, both on the IO MCU (the LD19 connector not fitted for now)
   - a USB-C port for rpiboot, data only: D+/D− to the CM5's USB 2.0, 5.1k on CC, VBUS not connected to the 5 V rail (the CM5 is powered from VBAT, or a bench supply on the XT30). With a CM5 Lite on microSD it's rarely needed
   - an nRPIBOOT jumper and a 1x3 2.54 mm console UART header (GND, TX, RX)
   - a fan header: 4-pin 2.54 mm footprint (5 V, PWM, GND, tach), not fitted until the fan is chosen
@@ -82,7 +84,7 @@ Battery protection, USB-C charging and soft power, with a power MCU on CAN. BOM 
 - **SWD recovery header:** on CM5 GPIOs.
 - **Antennas:** all go to a printed plate on top via U.FL pigtails, with GNSS as far from LTE as possible.
 
-CM5 UARTs are all taken: console, ELRS, lidar, LTE. GPIO allocation in `docs/interfaces.md`.
+CM5 UARTs: console, IO MCU, LTE; UART3 is spare. GPIO allocation in `docs/interfaces.md`.
 
 ### Nose board
 
