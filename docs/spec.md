@@ -43,7 +43,7 @@ Both sides use the same PCB, rotated 180°. Each side board carries three indepe
 - **Leg ID:** a resistor divider on one ADC pin.
 - **SWD:** pads for debugging and recovery.
 
-Shared on the board: an XT30 input, a low-Iq 3.3 V buck (stays on in Sentinel), CAN in/out on JST-GH, and a termination jumper at the outer end.
+Shared on the board: an XT30 input, a low-Iq 3.3 V buck (stays on in Sentinel), CAN in/out on JST-XH, and a termination jumper at the outer end.
 
 About 24 MCU pins in total: 3 PWM, 8 ADC, 3 CAN, 1–2 oscillator, 4 ToF, 3 SWD/NRST, 3 buck control/LED. Check the fit in CubeMX before layout.
 
@@ -70,13 +70,13 @@ Battery protection, USB-C charging and soft power, with a power MCU on CAN. BOM 
 - **Nose board connector (J-NOSE):** 3V3 and I2C for the front sensors, plus the CSI connector for the camera ribbon. On the nose board it is J1 on the back; J2 on the front shares its pads as an alternative, fitted instead of J1 with a reversed cable. An I2C header for an external compass stays as a fallback.
 - **SDR:** RJ45 to the AD9363 over GbE. That gives far more bandwidth than its USB 2.0 port.
 - **IMU:** ST LSM6DSV16X on the CM5's I2C1, interrupt on a GPIO.
-- **IO MCU:** an STM32C092, the same part as the leg cells and the power board, takes the slow serial devices off the CM5, which has only five UARTs on fixed pins. It talks to the CM5 over UART2 at 1 Mbaud and handles ELRS (CRSF, 420 kbaud), the lidar (230.4 kbaud in, PWM out), the GNSS and the LoRa radio, plus the ADC housekeeping (VBAT, 5 V rail, board temperature), a buzzer, and the LTE module's power switch and STATUS. That's about 35 kB/s in total, a third of the link. It also keeps the LoRa position beacon going if Linux hangs.
+- **IO MCU:** an STM32C092, the same part as the leg cells and the power board, takes the slow serial devices off the CM5, which has only five UARTs on fixed pins. It talks to the CM5 over UART2 at 1 Mbaud and handles ELRS (CRSF, 420 kbaud), the lidar (115.2 kbaud in, motor PWM out), the GNSS and the LoRa radio, plus the ADC housekeeping (VBAT, 5 V rail, board temperature), a buzzer, and the LTE module's power switch and STATUS. That's about 35 kB/s in total, a third of the link. It also keeps the LoRa position beacon going if Linux hangs.
 - **LoRa:** a telemetry link next to ELRS: robot state and GNSS position at a low rate, so the robot can be found even with Wi-Fi and LTE down. It runs on 869.525 MHz (g3 sub-band, 10 % duty cycle, SF9 / 125 kHz): the 16-byte position beacon takes 165 ms on air and goes every 30 s. The radio is a HopeRF RFM95W (SX1276, 3.3 V) soldered to the carrier on the IO MCU's SPI (DIO0 and DIO1 as interrupts), with a U.FL for the 868 MHz antenna. The Elecrow LR1262 modules on hand (STM32WLE5 with AT firmware over UART) suit the ground side: SX126x and SX127x talk to each other with the same spreading factor, bandwidth, coding rate and sync word.
 - **Other connectors:**
   - 2× USB-A behind current-limit switches
   - 2× CSI, 22-pin FFC: CAM0 is the main camera, CAM1 is for a second one (I2C on ID_SC/ID_SD, 2.2k pull-ups)
   - microSD socket (the CM5 Lite boots from it)
-  - ELRS and lidar connectors, both on the IO MCU (the LD19 connector not fitted for now). ELRS gets the same supply bridges as the GNSS header, 5 V closed by default: most receivers want 5 V, some run from 3.3 V. The lidar is 5 V only and the LoRa module 3.3 V only, so they get no bridges.
+  - ELRS and lidar connectors, both on the IO MCU. The lidar is an LDS01RR from a Roborock vacuum (Neato XV-11 protocol, 360 points per turn, 0.15–6 m): its motor is driven by the IO MCU through a low-side FET and held at 300 rpm from the speed in its packets. ELRS gets the same supply bridges as the GNSS header, 5 V closed by default: most receivers want 5 V, some run from 3.3 V. The lidar is 5 V only and the LoRa module 3.3 V only, so they get no bridges.
   - a USB-C port for rpiboot, data only: D+/D− to the CM5's USB 2.0, 5.1k on CC, VBUS not connected to the 5 V rail (the CM5 is powered from VBAT, or a bench supply on the XT30). With a CM5 Lite on microSD it's rarely needed
   - an nRPIBOOT jumper and a 1x3 2.54 mm console UART header (GND, TX, RX)
   - a fan header: 4-pin 2.54 mm footprint (5 V, PWM, GND, tach), not fitted until the fan is chosen

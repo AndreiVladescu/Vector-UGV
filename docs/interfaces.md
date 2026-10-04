@@ -15,18 +15,21 @@ Both ends of a cable use the same footprint and pin order.
 | J-LEGPWR-L / -R | Power board → Side board | XT30 (PCB: XT30PW-M) | VBAT (~13 A peak each) |
 | J-SYSPWR | Power board → Carrier | XT30 (PCB: XT30PW-M) | VBAT; the carrier makes 5 V itself |
 | J-USBDEV | Carrier → laptop | USB-C receptacle | CM5 USB 2.0 for rpiboot, data only |
-| J-SYSCTL | Power board ↔ Carrier | JST-GH 6-pin | see below |
-| J-CAN (×n) | Bus hops | JST-GH 4-pin | CANH, CANL, GND, ESTOP_N / spare |
-| J-SERVO (×9 per side) | Side board → servo | 4-pin latched (JST-XH or 2.54 mm latching *TBD*) | V+ (6 V), GND, PWM, POT |
+| J-SYSCTL | Power board ↔ Carrier | JST-XH 6-pin | see below |
+| J-CAN (×n) | Bus hops | JST-XH 4-pin | CANH, CANL, GND, ESTOP_N / spare |
+| J-SERVO (×9 per side) | Side board → servo | JST-XH 4-pin | V+ (6 V), GND, PWM, POT |
 | J-TOF (×3 per side) | Side board → ToF | JST-XH 6-pin | 3V3, GND, SDA, SCL, INT, XSHUT |
 | J-SWD (per MCU) | Debug | Tag-Connect TC2030 or 1.27 mm 2×5 *TBD* | SWDIO, SWCLK, NRST, 3V3, GND |
 | J-SWDREC | Carrier → any MCU | 1.27 mm 2×5 | CM5 GPIO SWD recovery |
 | J-ELRS | Carrier → receiver | JST-GH 4-pin | 5 V, GND, TX, RX |
-| J-LIDAR | Carrier (IO MCU) → LD19 (2D lidar) | JST-GH 4-pin, not fitted | TX, PWM, GND, 5 V (the LD19's own order); PWM open = 10 Hz default |
+| J-LIDAR | Carrier (IO MCU) → LDS01RR lidar | JST-XH 4-pin | 5 V, GND, TX (lidar → MCU, 3.3 V), RX (not used); the lidar end is JST-PH 2.0 |
+| J-LIDARMOT | Carrier → LDS01RR motor | JST-XH 2-pin | M+ (5 V), M− (low-side FET, PWM from the IO MCU) |
 | J-LTE | Carrier → A7670E board | 1x07 2.54 mm | GND, RXD, TXD, PWRKEY, VCC, GND, SLEEP; the alternative to the soldered-down A7670E |
 | J-CONSOLE | Carrier → USB-UART | 1x03 2.54 mm | GND, TX, RX (CM5 UART0) |
 | J-NOSE | Carrier → nose board | JST-GH 8-pin | see below |
 | J-CAM0, J-CAM1 | Carrier → cameras | Pi camera FFC (22-pin on the carrier) | CSI; CAM0 is the camera screwed to the nose board, CAM1 is spare |
+
+Board-to-board cables are JST-XH (2.5 mm, horizontal headers). JST-GH stays only where the other end dictates it (ELRS receiver) and on J-NOSE.
 
 ## CAN bus
 
@@ -36,7 +39,7 @@ Both ends of a cable use the same footprint and pin order.
                                 POWER BOARD
 ```
 
-J-CAN pinout (JST-GH 4-pin):
+J-CAN pinout (JST-XH 4-pin):
 
 | Pin | Signal |
 |---|---|
@@ -56,7 +59,7 @@ J-CAN pinout (JST-GH 4-pin):
 | 5 | 5V_EN | power → carrier | the carrier's 5 V buck EN: pulled up on the carrier, pulled low by the power board to keep the CM5 off |
 | 6 | 5V_PG | carrier → power | the 5 V buck's PG |
 
-J-SYSCTL and the power board's J-CAN may merge into one 10-pin JST-GH (one cable to the carrier); not decided.
+J-SYSCTL and the power board's J-CAN may merge into one 10-pin JST-XH (one cable to the carrier); not decided.
 
 ## J-NOSE pinout
 
