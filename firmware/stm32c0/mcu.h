@@ -24,11 +24,13 @@ void mcu_fail(void);
 /* RESET_* bits from the RCC flags, which it then clears */
 uint32_t mcu_reset_cause(void);
 void mcu_clocks(void);
+#ifndef MCU_NO_HSE
 /* only SYNC and frames to this node get into the receive FIFO */
 void mcu_can(FDCAN_HandleTypeDef *h, uint8_t node);
 bool mcu_can_send(FDCAN_HandleTypeDef *h, const struct can_frame_t *f);
 bool mcu_can_recv(FDCAN_HandleTypeDef *h, struct can_frame_t *f);
 /* restart the controller after bus-off; true when it had to */
 bool mcu_can_recover(FDCAN_HandleTypeDef *h);
+#endif
 
 #endif

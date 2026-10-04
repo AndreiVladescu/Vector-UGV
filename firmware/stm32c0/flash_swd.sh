@@ -2,12 +2,17 @@
 # First flash over SWD: bootloader + application, then write-protect the bootloader.
 #   flash_swd.sh build/leg-stm32        side board: asks for each of the three cells in turn
 #   flash_swd.sh build/nucleo 1         one chip (Nucleo, power board)
+#   flash_swd.sh build/io-stm32         the carrier's IO MCU: no bootloader, the image at 0x08000000
 # Later updates go over CAN (leg_config.py flash). Needs STM32CubeProgrammer's CLI.
 set -euo pipefail
 
 dir=${1:?usage: flash_swd.sh BUILD_DIR [CELLS]}
 cells=${2:-3}
 cli=${STM32_PROGRAMMER_CLI:-STM32_Programmer_CLI}
+if [[ -f $dir/io-node.bin ]]; then
+    "$cli" -c port=SWD mode=UR -q -e all -w "$dir/io-node.bin" 0x08000000 -v -rst
+    exit 0
+fi
 [[ -f $dir/bootloader.bin ]] || { echo "$dir/bootloader.bin not found, build first"; exit 1; }
 app=
 for f in "$dir"/*.bin; do

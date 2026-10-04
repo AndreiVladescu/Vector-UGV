@@ -1,5 +1,6 @@
 /* STM32C092 setup shared by every node's application and the bootloader: clocks, reset
-   cause, FDCAN with its filters. */
+   cause, FDCAN with its filters. MCU_NO_HSE (the carrier's IO MCU) runs on the HSI alone
+   and has no CAN. */
 
 #include "mcu.h"
 
@@ -33,6 +34,15 @@ uint32_t mcu_reset_cause(void)
 
 void mcu_clocks(void)
 {
+#ifdef MCU_NO_HSE
+    /* no crystal, no CAN: 48 MHz HSI for everything */
+    RCC_OscInitTypeDef osc = {
+        .OscillatorType = RCC_OSCILLATORTYPE_HSI,
+        .HSIState = RCC_HSI_ON,
+        .HSIDiv = RCC_HSI_DIV1,
+        .HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT,
+    };
+#else
     RCC_OscInitTypeDef osc = {
         .OscillatorType = RCC_OSCILLATORTYPE_HSI | RCC_OSCILLATORTYPE_HSE,
         .HSIState = RCC_HSI_ON,
@@ -40,6 +50,11 @@ void mcu_clocks(void)
         .HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT,
         .HSEState = RCC_HSE_ON,
     };
+    RCC_PeriphCLKInitTypeDef per = {
+        .PeriphClockSelection = RCC_PERIPHCLK_FDCAN1,
+        .Fdcan1ClockSelection = RCC_FDCAN1CLKSOURCE_HSE,
+    };
+#endif
     RCC_ClkInitTypeDef clk = {
         .ClockType = RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1,
         .SYSCLKSource = RCC_SYSCLKSOURCE_HSI,
@@ -47,14 +62,15 @@ void mcu_clocks(void)
         .AHBCLKDivider = RCC_HCLK_DIV1,
         .APB1CLKDivider = RCC_APB1_DIV1,
     };
-    RCC_PeriphCLKInitTypeDef per = {
-        .PeriphClockSelection = RCC_PERIPHCLK_FDCAN1,
-        .Fdcan1ClockSelection = RCC_FDCAN1CLKSOURCE_HSE,
-    };
-    if (HAL_RCC_OscConfig(&osc) != HAL_OK || HAL_RCC_ClockConfig(&clk, FLASH_LATENCY_1) != HAL_OK ||
-        HAL_RCCEx_PeriphCLKConfig(&per) != HAL_OK)
+    if (HAL_RCC_OscConfig(&osc) != HAL_OK || HAL_RCC_ClockConfig(&clk, FLASH_LATENCY_1) != HAL_OK)
         mcu_fail();
+#ifndef MCU_NO_HSE
+    if (HAL_RCCEx_PeriphCLKConfig(&per) != HAL_OK)
+        mcu_fail();
+#endif
 }
+
+#ifndef MCU_NO_HSE
 
 void mcu_can(FDCAN_HandleTypeDef *h, uint8_t node)
 {
@@ -138,3 +154,5 @@ bool mcu_can_recover(FDCAN_HandleTypeDef *h)
     CLEAR_BIT(h->Instance->CCCR, FDCAN_CCCR_INIT);
     return true;
 }
+
+#endif
