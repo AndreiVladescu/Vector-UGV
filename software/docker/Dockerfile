@@ -8,13 +8,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ros-jazzy-controller-manager ros-jazzy-forward-command-controller ros-jazzy-gpio-controllers \
       ros-jazzy-joint-state-broadcaster ros-jazzy-robot-state-publisher ros-jazzy-xacro \
       ros-jazzy-foxglove-bridge ros-jazzy-robot-localization ros-jazzy-nmea-navsat-driver ros-jazzy-vision-msgs \
-      python3-can python3-yaml can-utils \
+      python3-can python3-yaml python3-serial can-utils stm32flash \
     && rm -rf /var/lib/apt/lists/*
 
 FROM base AS build
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ros-jazzy-launch-testing-ament-cmake ros-jazzy-launch-testing-ros ros-jazzy-ament-cmake-pytest \
-      ros-jazzy-ament-cmake-gtest \
+      ros-jazzy-ament-cmake-gtest iproute2 \
     && rm -rf /var/lib/apt/lists/*
 # the repo layout matters: vector_hw builds sim_legs from ../../../../firmware
 COPY firmware/common /ws/firmware/common

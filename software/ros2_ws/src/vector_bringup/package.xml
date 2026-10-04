@@ -24,6 +24,8 @@
   <exec_depend>vector_nav</exec_depend>
   <exec_depend>vector_tof</exec_depend>
   <exec_depend>vector_link</exec_depend>
+  <exec_depend>vector_io</exec_depend>
+  <exec_depend>vector_imu</exec_depend>
   <exec_depend>robot_localization</exec_depend>
   <exec_depend>nmea_navsat_driver</exec_depend>
 

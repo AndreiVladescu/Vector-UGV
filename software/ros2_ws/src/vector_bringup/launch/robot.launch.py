@@ -4,6 +4,9 @@
   ros2 launch vector_bringup robot.launch.py hardware:=can          # leg nodes on can0
   ros2 launch vector_bringup robot.launch.py hardware:=can can_interface:=vcan0   # sim_legs
   gnss_port:=/dev/ttyAMA0 [gnss_baud:=115200]   NMEA GNSS on a UART: gnss/fix, gnss/vel
+  io_port:=/dev/ttyAMA2                         the carrier's IO MCU: scan, gnss/fix, lora/rx, io/crsf
+                                                (with elrs_port:=io for the radio behind it)
+  imu:=true [imu_bus:=/dev/i2c-1]               LSM6DSV16X and the nose compass: imu, mag
   nav:=true                                     EKFs, navsat_transform, waypoint follower
   links:=true [elrs_port:=/dev/ttyAMA2] [lte_at_port:=/dev/ttyUSB2]
       the link manager owns cmd_vel (radio > cmd_vel/teleop > cmd_vel/nav) and sits the robot
@@ -45,6 +48,9 @@ def generate_launch_description():
         DeclareLaunchArgument('nav', default_value='false'),
         DeclareLaunchArgument('gnss_port', default_value='', description='serial port of an NMEA receiver'),
         DeclareLaunchArgument('gnss_baud', default_value='115200'),
+        DeclareLaunchArgument('io_port', default_value='', description="UART of the carrier's IO MCU"),
+        DeclareLaunchArgument('imu', default_value='false'),
+        DeclareLaunchArgument('imu_bus', default_value='/dev/i2c-1'),
         DeclareLaunchArgument('links', default_value='false'),
         DeclareLaunchArgument('elrs_port', default_value='', description='UART of the ExpressLRS receiver'),
         DeclareLaunchArgument('lte_at_port', default_value='', description='AT port of the LTE modem'),
@@ -85,6 +91,28 @@ def generate_launch_description():
             remappings=[('fix', 'gnss/fix'), ('vel', 'gnss/vel'), ('heading', 'gnss/heading'),
                         ('time_reference', 'gnss/time')],
             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('gnss_port'), "' != ''"]))),
+
+        # the IO MCU: lidar, GNSS (through nmea_topic_driver), LoRa, ELRS frames, housekeeping
+        Node(
+            package='vector_io',
+            executable='io_bridge.py',
+            parameters=[{'port': LaunchConfiguration('io_port')}],
+            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('io_port'), "' != ''"]))),
+        Node(
+            package='nmea_navsat_driver',
+            executable='nmea_topic_driver',
+            name='gnss',
+            parameters=[{'frame_id': 'gnss'}],
+            remappings=[('nmea_sentence', 'gnss/nmea_sentence'), ('fix', 'gnss/fix'), ('vel', 'gnss/vel'),
+                        ('heading', 'gnss/heading'), ('time_reference', 'gnss/time')],
+            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('io_port'), "' != ''"]))),
+
+        Node(
+            package='vector_imu',
+            executable='imu_node.py',
+            name='imu',
+            parameters=[{'bus': LaunchConfiguration('imu_bus')}],
+            condition=IfCondition(LaunchConfiguration('imu'))),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(bringup, 'launch', 'nav.launch.py')),

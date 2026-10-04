@@ -22,6 +22,8 @@ services:
     environment:
       - CAN_INTERFACE=${CAN_INTERFACE:-can0}
       - GNSS_PORT=${GNSS_PORT:-}
+      - IO_PORT=${IO_PORT:-}
+      - IMU=${IMU:-false}
       - NAV=${NAV:-false}
       - LINKS=${LINKS:-false}
       - ELRS_PORT=${ELRS_PORT:-}
@@ -32,7 +34,7 @@ services:
     device_cgroup_rules: ['c 204:* rmw', 'c 89:* rmw', 'c 188:* rmw']
     command: >
       bash -c "ros2 launch vector_bringup robot.launch.py hardware:=can can_interface:=$${CAN_INTERFACE}
-      $${GNSS_PORT:+gnss_port:=$${GNSS_PORT}} nav:=$${NAV} links:=$${LINKS}
+      $${GNSS_PORT:+gnss_port:=$${GNSS_PORT}} $${IO_PORT:+io_port:=$${IO_PORT}} imu:=$${IMU} nav:=$${NAV} links:=$${LINKS}
       $${ELRS_PORT:+elrs_port:=$${ELRS_PORT}} $${LTE_AT_PORT:+lte_at_port:=$${LTE_AT_PORT}} rviz:=false"
     restart: unless-stopped
 

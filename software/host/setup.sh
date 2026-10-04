@@ -5,6 +5,7 @@
 #   GNSS=/dev/ttyAMA0 (default; "" = none), NAV=true for the EKFs and the waypoint follower
 #   LINKS=true (default with can0) for the link manager; ELRS=/dev/ttyAMA2 (UART2, default;
 #   "" = none); LTE_AT=/dev/ttyUSB2 for the modem's signal ("" = default, don't ask it)
+#   On the carrier: IO=/dev/ttyAMA2 (the IO MCU on UART2) with ELRS=io and GNSS="", IMU=true
 # Installs: Docker (with a sane open-files limit), CAN bring-up, the camera service, the
 # stack as a systemd service, and the hardware watchdog. Images are built separately.
 set -euo pipefail
@@ -22,6 +23,8 @@ NAV=${NAV:-false}
 LINKS=${LINKS:-$([[ $CAN == can0 ]] && echo true || echo false)}
 ELRS=${ELRS-/dev/ttyAMA2}
 LTE_AT=${LTE_AT:-}
+IO=${IO:-}
+IMU=${IMU:-false}
 
 command -v docker >/dev/null || apt-get install -y docker.io docker-compose
 usermod -aG docker "$USER_NAME"
@@ -49,6 +52,8 @@ NAV=$NAV
 LINKS=$LINKS
 ELRS_PORT=$ELRS
 LTE_AT_PORT=$LTE_AT
+IO_PORT=$IO
+IMU=$IMU
 E
 
 # UART0 on GPIO14 (TX) / 15 (RX) for the GNSS receiver, /dev/ttyAMA0 after a reboot. The
@@ -59,9 +64,9 @@ if [[ -n $GNSS && -f $BOOT_CFG ]] && ! grep -q '^dtparam=uart0=on' "$BOOT_CFG"; 
     echo "UART0 enabled in $BOOT_CFG: reboot for /dev/ttyAMA0"
 fi
 # UART2 on GPIO4 (TX) / 5 (RX) for the ExpressLRS receiver, /dev/ttyAMA2 (Pi 5 / CM5 overlay)
-if [[ -n $ELRS && -f $BOOT_CFG ]] && ! grep -q '^dtoverlay=uart2-pi5' "$BOOT_CFG"; then
+if [[ ( -n $IO || ( -n $ELRS && $ELRS != io ) ) && -f $BOOT_CFG ]] && ! grep -q '^dtoverlay=uart2-pi5' "$BOOT_CFG"; then
     echo 'dtoverlay=uart2-pi5' >> "$BOOT_CFG"
-    echo "UART2 enabled in $BOOT_CFG: reboot for $ELRS"
+    echo "UART2 enabled in $BOOT_CFG: reboot for /dev/ttyAMA2"
 fi
 
 # The A7670E (RNDIS / ECM) shows up as a wired interface, which NetworkManager would put
@@ -190,4 +195,4 @@ if docker image inspect vector >/dev/null 2>&1; then
 else
     echo "no vector image yet: build it, then systemctl start vector-stack"
 fi
-echo "done: CAN=$CAN, profiles=$PROFILES, GNSS=${GNSS:-none}, nav=$NAV, links=$LINKS, ELRS=${ELRS:-none}; status: systemctl status vector-stack"
+echo "done: CAN=$CAN, profiles=$PROFILES, GNSS=${GNSS:-none}, nav=$NAV, links=$LINKS, ELRS=${ELRS:-none}, IO=${IO:-none}, IMU=$IMU; status: systemctl status vector-stack"
