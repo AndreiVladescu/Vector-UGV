@@ -184,7 +184,9 @@ ros2 param set /sim_io radio false                              # also lidar, gn
 ros2 param set /sim_io vbat 13.3                                # low battery
 ```
 
-There's no video in the demo; the page shows NO VIDEO until a stream answers.
+On the desktop there's no video; the page shows NO VIDEO until a stream answers.
+
+On the Pi (or the robot) in Docker: `DEMO=true` in `/etc/vector.env` (or `sudo DEMO=true software/host/setup.sh`) makes the robot container start the demo instead, `DEMO_GNSS_SCALE` sets the scale (default 20). `sudo systemctl restart vector-stack`, then `http://<pi>:8080`; with the vision profile the page also shows the camera with YOLO. `DEMO=false` and another restart go back to the robot.
 
 ## Carrier IO MCU and IMU
 

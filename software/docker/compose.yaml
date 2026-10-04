@@ -28,12 +28,16 @@ services:
       - LINKS=${LINKS:-false}
       - ELRS_PORT=${ELRS_PORT:-}
       - LTE_AT_PORT=${LTE_AT_PORT:-}
+      - DEMO=${DEMO:-false}
+      - DEMO_GNSS_SCALE=${DEMO_GNSS_SCALE:-20}
     # UARTs (GNSS, ELRS: ttyAMA*, major 204), the nose board's I2C (i2c-*, 89) and the LTE
     # modem's AT port (ttyUSB*, 188), without failing when they aren't there
     volumes: [/dev:/dev]
     device_cgroup_rules: ['c 204:* rmw', 'c 89:* rmw', 'c 188:* rmw']
+    # DEMO=true: the operator page demo instead (mock legs, simulated IO MCU and IMU), see software/README.md
     command: >
-      bash -c "ros2 launch vector_bringup robot.launch.py hardware:=can can_interface:=$${CAN_INTERFACE}
+      bash -c "if [ \"$${DEMO}\" = true ]; then exec ros2 launch vector_bringup demo.launch.py gnss_scale:=$${DEMO_GNSS_SCALE}; fi;
+      exec ros2 launch vector_bringup robot.launch.py hardware:=can can_interface:=$${CAN_INTERFACE}
       $${GNSS_PORT:+gnss_port:=$${GNSS_PORT}} $${IO_PORT:+io_port:=$${IO_PORT}} imu:=$${IMU} nav:=$${NAV} links:=$${LINKS}
       $${ELRS_PORT:+elrs_port:=$${ELRS_PORT}} $${LTE_AT_PORT:+lte_at_port:=$${LTE_AT_PORT}} rviz:=false"
     restart: unless-stopped

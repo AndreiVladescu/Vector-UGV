@@ -6,6 +6,7 @@
 #   LINKS=true (default with can0) for the link manager; ELRS=/dev/ttyAMA2 (UART2, default;
 #   "" = none); LTE_AT=/dev/ttyUSB2 for the modem's signal ("" = default, don't ask it)
 #   On the carrier: IO=/dev/ttyAMA2 (the IO MCU on UART2) with ELRS=io and GNSS="", IMU=true
+#   DEMO=true: the operator page demo instead of the robot (no hardware needed)
 # Installs: Docker (with a sane open-files limit), CAN bring-up, the camera service, the
 # stack as a systemd service, and the hardware watchdog. Images are built separately.
 set -euo pipefail
@@ -25,6 +26,7 @@ ELRS=${ELRS-/dev/ttyAMA2}
 LTE_AT=${LTE_AT:-}
 IO=${IO:-}
 IMU=${IMU:-false}
+DEMO=${DEMO:-false}
 
 command -v docker >/dev/null || apt-get install -y docker.io docker-compose
 usermod -aG docker "$USER_NAME"
@@ -54,6 +56,7 @@ ELRS_PORT=$ELRS
 LTE_AT_PORT=$LTE_AT
 IO_PORT=$IO
 IMU=$IMU
+DEMO=$DEMO
 E
 
 # UART0 on GPIO14 (TX) / 15 (RX) for the GNSS receiver, /dev/ttyAMA0 after a reboot. The
@@ -195,4 +198,4 @@ if docker image inspect vector >/dev/null 2>&1; then
 else
     echo "no vector image yet: build it, then systemctl start vector-stack"
 fi
-echo "done: CAN=$CAN, profiles=$PROFILES, GNSS=${GNSS:-none}, nav=$NAV, links=$LINKS, ELRS=${ELRS:-none}, IO=${IO:-none}, IMU=$IMU; status: systemctl status vector-stack"
+echo "done: CAN=$CAN, profiles=$PROFILES, GNSS=${GNSS:-none}, nav=$NAV, links=$LINKS, ELRS=${ELRS:-none}, IO=${IO:-none}, IMU=$IMU, demo=$DEMO; status: systemctl status vector-stack"
