@@ -7,14 +7,14 @@ Per board = 3 leg cells + shared parts. Two boards per robot. Prices are single-
 | Qty | Part | Value / MPN | Package | ~€ | Notes |
 |---|---|---|---|---|---|
 | 1 | MCU | STM32C092KCT6 | LQFP32 | 2.10 | |
-| 1 | Crystal | 40 MHz, CL 8–10 pF, ±20 ppm | 3225 | 0.40 | same part as the carrier's MCP251863; check drive level against the C0 HSE |
-| 2 | Crystal load caps | 10 pF C0G, or 2×(CL − 3 pF) for the crystal picked | 0402 | 0.02 | |
+| 1 | Crystal | KYX K2B400001210: 40 MHz, CL 12 pF, ±10 ppm, ESR ≤ 40 Ω | 2016 | 0.15 | at worst-case ESR its gm_crit (~1.7–2 mA/V) is over the C0's 1.5 mA/V start-up limit: check start-up on the first boards |
+| 2 | Crystal load caps | 18 pF C0G, 2 × (12 − 3) pF | 0805 | 0.02 | |
 | 2 | MCU decoupling | 100 nF + 4.7 µF on VDD/VDDA | 0603 | 0.05 | |
 | 1 | NRST cap | 100 nF | 0603 | 0.01 | |
 | 1 | CAN transceiver | TCAN332DR | SOIC-8 | 2.15 | 3.3 V-only, which is what the board has (TJA1051T/3 needs 5 V) |
 | 1 | Servo buck | TPS56A37RPAR | VQFN-HR 3×3 | 2.70 | 4.5–28 V in, 10 A, 32 V abs max |
-| 1 | Buck inductor | 4.7 µH, Isat ≥ 12 A, low DCR | 7×7 mm class | 1.00 | from the WEBENCH design in `docs/` |
-| 2 | Buck input caps | 15 µF + 1 µF, 35 V X7R | 1206 | 0.25 | after the cell fuse |
+| 1 | Buck inductor | AMRM001010404R7MA1 (Pulse/Yageo): 4.7 µH, Isat 11 A, Irms 9 A, 16 mΩ max | 10×10 mm | 1.00 | WEBENCH in `docs/`: 8.8 A peak at 8 A, 520 kHz |
+| 2 | Buck input caps | 15 µF + 1 µF, 35 V X7R | 1206 / 0805 | 0.25 | after the cell fuse |
 | 2 | Buck output caps | 15 µF 16 V X7R | 1206 | 0.25 | plus 100 pF feed-forward across the top feedback resistor |
 | 1 | Bootstrap cap | 100 nF | 0603 | 0.01 | |
 | 1 | Soft-start cap | 22 nF | 0603 | 0.01 | slows the inrush when a leg wakes |
@@ -35,8 +35,8 @@ Per board = 3 leg cells + shared parts. Two boards per robot. Prices are single-
 | 1 | NTC pull-up | 10k 1 % | 0603 | 0.01 | |
 | 2 | VBAT divider | 100k / 15k 1 % + 100 nF | 0603 | 0.03 | PA5 |
 | 2 | 6V0 divider | 15k / 10k 1 % + 100 nF | 0603 | 0.03 | PA6 |
-| 2 | LED + resistor | any 0603 LED, 1k | 0603 | 0.05 | PA15 (green), 6V0 present (red) |
-| 1 | ToF connector | JST SH 6-pin SM06B-SRSS-TB | SMD | 0.50 | 3V3, GND, SDA, SCL, XSHUT, INT |
+| 2 | LED + resistor | any 0805 LED, 1k | 0805 / 0603 | 0.05 | PA15 (green), 6V0 present (red) |
+| 1 | ToF connector | JST XH 6-pin B6B-XH-A | TH, vertical | 0.20 | 3V3, GND, SDA, SCL, XSHUT, INT |
 | 2 | I2C pull-ups | 4.7k, DNP by default | 0603 | – | most VL53L1X breakouts have their own |
 | 1 | Cell fuse | 5 A fast, Littelfuse 0466005.NR | 1206 | 0.30 | in the buck's VIN: a shorted leg can't take the side down; 32 V, 11 mΩ |
 | – | Leg ID | 3 solder jumpers | PCB | – | |
@@ -52,10 +52,10 @@ About **€10 per leg cell**, ICs included.
 | 1 | TVS | SMBJ18A | SMB | 0.30 | clamps ~29 V, under the buck's 32 V abs max |
 | 1 | Bulk cap | 100 µF 35 V low-ESR (polymer or electrolytic) | SMD | 0.60 | at the XT30, before the three cells |
 | 1 | 3.3 V buck | TPS62933DRLR | SOT-583 | 1.00 | 3.8–30 V in, 3 A; stays on in Sentinel |
-| 1 | 3.3 V inductor | 4.7 µH, Isat ≥ 1.5 A | 4×4 mm class | 0.40 | |
+| 1 | 3.3 V inductor | AMRM001010404R7MA1, the servo bucks' part | 10×10 mm | 1.00 | far above the ~0.3 A load; one part for every 4.7 µH |
 | 5 | 3.3 V caps | 10 µF 35 V + 100 nF in, 47 µF out, 100 nF boot, 33 nF SS | 0805/1206 | 0.30 | |
 | 2 | 3.3 V feedback | 30.9k / 10k 1 % | 0603 | 0.02 | |
-| 2 | CAN connectors | JST GH 4-pin SM04B-GHS-TB (in, out) | SMD | 1.00 | CANH, CANL, GND, ESTOP_N |
+| 2 | CAN connectors | JST XH 4-pin S4B-XH-A-1 (in, out) | TH, horizontal | 0.40 | CANH, CANL, GND, ESTOP_N |
 | 1 | CAN ESD | NUP2105LT1G | SOT-23 | 0.30 | both connectors are on the same bus |
 | 1 | CAN termination | 120 Ω + solder jumper | 0603 | 0.01 | close the jumper only at the outer end of the bus |
 | 4 | Mounting holes | M3 | PCB | – | |
