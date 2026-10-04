@@ -74,6 +74,17 @@ class TestOperatorPage(unittest.TestCase):
                 break
             except OSError:
                 time.sleep(0.2)
+        # HTTP answering isn't ROS ready: on a slow box discovery takes a few seconds more, and
+        # until the page sees our services and subscriptions it answers 503 or drops commands
+        end = time.time() + 15
+        while time.time() < end and not (cls.node.count_publishers('/cmd_vel/teleop')
+                                         and cls.node.count_clients('/gait_node/sentinel')
+                                         and cls.node.count_clients('/gait_node/estop')):
+            rclpy.spin_once(cls.node, timeout_sec=0.1)
+        end = time.time() + 1.0  # and the other way round
+        while time.time() < end:
+            rclpy.spin_once(cls.node, timeout_sec=0.05)
+            rclpy.spin_once(cls.gait, timeout_sec=0.05)
 
     @classmethod
     def tearDownClass(cls):
