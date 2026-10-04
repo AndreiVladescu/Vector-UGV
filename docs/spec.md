@@ -30,7 +30,7 @@ carrier ──J-NOSE (I2C, 3V3) + CSI ribbon──► nose board
 
 ### Side board (×2)
 
-Both sides use the same PCB, rotated 180°. Each side board carries three independent leg cells, and the CAN bus between those cells is just traces. A leg cell has:
+Both sides use the same PCB, rotated 180°, at most 100 mm long. Each side board carries three independent leg cells, and the CAN bus between those cells is just traces. A leg cell has:
 
 - **MCU:** STM32C092KCT6 (LQFP32) with a 40 MHz crystal for FDCAN (the same part as the carrier's MCP251863); the core runs from the internal 48 MHz. It has FDCAN in hardware and a factory CAN bootloader. Pin map in `firmware/leg-node/README.md`.
 - **CAN transceiver:** TCAN332DR (SOIC-8), a 3.3 V-only part.
@@ -76,7 +76,7 @@ Battery protection, USB-C charging and soft power, with a power MCU on CAN. BOM 
   - 2× USB-A behind current-limit switches
   - 2× CSI, 22-pin FFC: CAM0 is the main camera, CAM1 is for a second one (I2C on ID_SC/ID_SD, 2.2k pull-ups)
   - microSD socket (the CM5 Lite boots from it)
-  - ELRS and lidar connectors, both on the IO MCU. The lidar is an LDS01RR from a Roborock vacuum (Neato XV-11 protocol, 360 points per turn, 0.15–6 m): its motor is driven by the IO MCU through a low-side FET and held at 300 rpm from the speed in its packets. ELRS gets the same supply bridges as the GNSS header, 5 V closed by default: most receivers want 5 V, some run from 3.3 V. The lidar is 5 V only and the LoRa module 3.3 V only, so they get no bridges.
+  - ELRS and lidar connectors, both on the IO MCU. The lidar is an LDS01RR from a Roborock vacuum (Neato XV-11 protocol, 360 points per turn, 0.15–6 m): its motor is driven by the IO MCU through a low-side FET and held at 300 rpm from the speed in its packets. On the carrier: J-LIDAR (JST-XH 4-pin: 5 V, GND, lidar TX into the MCU through 1k, lidar RX unused) and J-LIDARMOT (JST-XH 2-pin: +5 V and the drain of a logic-level N-FET such as AO3400A, gate from PB1 through 100 Ω with 100k to GND, Schottky such as B5819W across the motor). The lidar's own plugs are JST-PH 2.0, so it needs an adapter cable. ELRS gets the same supply bridges as the GNSS header, 5 V closed by default: most receivers want 5 V, some run from 3.3 V. The lidar is 5 V only and the LoRa module 3.3 V only, so they get no bridges.
   - a USB-C port for rpiboot, data only: D+/D− to the CM5's USB 2.0, 5.1k on CC, VBUS not connected to the 5 V rail (the CM5 is powered from VBAT, or a bench supply on the XT30). With a CM5 Lite on microSD it's rarely needed
   - an nRPIBOOT jumper and a 1x3 2.54 mm console UART header (GND, TX, RX)
   - a fan header: 4-pin 2.54 mm footprint (5 V, PWM, GND, tach), not fitted until the fan is chosen
