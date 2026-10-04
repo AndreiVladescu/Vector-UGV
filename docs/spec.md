@@ -16,7 +16,7 @@ Four designs, five boards:
 |---|---|---|---|
 | Side board | 2 | 4 | 3 leg cells, each with STM32C092, TCAN332DR, TPS56A37 6 V buck |
 | Power & BMS | 1 | 4, 2 oz | BQ7694202, BQ25798 (USB-C), STM32C092 |
-| CM5 carrier | 1 | 4, impedance-controlled | CM5, 5 V buck (TPS56A37), M.2, EC25-EUX LTE, 2× GNSS, MCP251863, IMU |
+| CM5 carrier | 1 | 4, impedance-controlled | CM5, 5 V buck (TPS56A37), M.2, A7670E LTE (own sheet), MAX-M10S GNSS, MCP251863, IMU |
 | Nose board | 1 | 2 | VL53L8CX front ToF, MMC5983MA compass, Pi camera mount |
 
 ```
@@ -65,8 +65,8 @@ Battery protection, USB-C charging and soft power, with a power MCU on CAN. BOM 
 - **M.2 M-key 2242 on the single PCIe lane:** kept only as an upgrade path for a Hailo accelerator. Not fitted on the prototype or the CM5 board; vision runs on the CPU.
 - **5 V for the CM5:** a TPS56A37 (the side boards' servo buck, set to 5.0 V) fed with VBAT over an XT30 from the power board. EN is pulled up on the carrier and pulled low by the power board (5V_EN in J-SYSCTL); PG goes back as 5V_PG. Without a power board, 12–16.8 V on the XT30 just runs it, which is how it's powered on the bench.
 - **CAN:** MCP251863 (MCP2518FD plus transceiver in one package), which shows up as `can0` through the mainline `mcp251xfd` driver. The bus passes through the carrier, with no termination on it.
-- **LTE:** Quectel EC25-EUX in an mPCIe socket (USB 2.0 lines only), with a nano-SIM and a 3.8 V / 3 A buck.
-- **GNSS:** u-blox MAX-M10S plus Quectel LC76G, two vendors for real redundancy. Both use active antennas with a bias-tee each, plus a SAW filter, because LTE band 3 uplink sits close to GPS L1.
+- **LTE:** SIMCom A7670E on UART4, on its own sheet. Either the module is soldered down (3.8 V from a TPS62933 on VBAT, nano-SIM, U.FL for LTE and GNSS, 1.8 V UART level shifting, PWRKEY through a transistor) or a ready A7670E board plugs into a 1x07 2.54 mm header (GND, RXD, TXD, PWRKEY, VCC, GND, SLEEP). The whole sheet is DNP on the prototype; the pads stay. The GNSS variant of the module (A7670E-LASE, check before ordering) is the second GNSS.
+- **GNSS:** u-blox MAX-M10S on I2C (0x42) with its time pulse on a GPIO. It has the LNA and SAW filter inside, which matters because LTE band 3 uplink sits close to GPS L1; the active antenna is fed from its VCC_RF. The second GNSS is the one in the LTE module.
 - **Nose board connector (J-NOSE):** 3V3 and I2C for the front sensors, plus the CSI connector for the camera ribbon. An I2C header for an external compass stays as a fallback.
 - **SDR:** RJ45 to the AD9363 over GbE. That gives far more bandwidth than its USB 2.0 port.
 - **IMU:** ICM-42688-P.
@@ -74,16 +74,15 @@ Battery protection, USB-C charging and soft power, with a power MCU on CAN. BOM 
   - 2× USB-A behind current-limit switches
   - 2× CSI, 22-pin FFC: CAM0 is the main camera, CAM1 is for a second one (I2C on ID_SC/ID_SD, 2.2k pull-ups)
   - microSD socket (the CM5 Lite boots from it)
-  - ELRS and lidar UARTs
-  - gimbal PWM for 2× SG90 with a small 5 V buck
+  - ELRS UART, and a lidar connector (LD19, not fitted for now)
   - a USB-C port for rpiboot, data only: D+/D− to the CM5's USB 2.0, 5.1k on CC, VBUS not connected to the 5 V rail (the CM5 is powered from VBAT, or a bench supply on the XT30). With a CM5 Lite on microSD it's rarely needed
-  - an nRPIBOOT jumper and a 3-pin console UART header
+  - an nRPIBOOT jumper and a 1x3 2.54 mm console UART header (GND, TX, RX)
   - a fan header: 4-pin 2.54 mm footprint (5 V, PWM, GND, tach), not fitted until the fan is chosen
   - an RTC battery
 - **SWD recovery header:** on CM5 GPIOs.
 - **Antennas:** all go to a printed plate on top via U.FL pigtails, with GNSS as far from LTE as possible.
 
-CM5 UARTs are all taken: console, ELRS, GNSS1, GNSS2, lidar.
+CM5 UARTs are all taken: console, ELRS, lidar, LTE. GPIO allocation in `docs/interfaces.md`.
 
 ### Nose board
 
@@ -143,7 +142,7 @@ The leg loop runs at 1 kHz: PWM out, ADC in, soft-start, VL53L1X read, watchdog.
 1. **`libvector`:** plain C++ with no ROS in it (kinematics, gait, leg state machine, CAN encoding generated from the DBC). Unit-tested on the desktop.
 2. **One real-time process:** the ros2_control hardware interface over SocketCAN plus the gait controller, at 200 Hz on an isolated core with SCHED_FIFO. Safety doesn't depend on its timing.
 3. **Normal ROS nodes for everything else:**
-   - `robot_localization` (2× GNSS, compass, IMU)
+   - `robot_localization` (MAX-M10S and the LTE module's GNSS, compass, IMU)
    - ToF ray mapping
    - perception
    - a link manager (ELRS > Wi-Fi > LTE; on total loss, stop and go into Sentinel)

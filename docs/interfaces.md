@@ -22,8 +22,9 @@ Both ends of a cable use the same footprint and pin order.
 | J-SWD (per MCU) | Debug | Tag-Connect TC2030 or 1.27 mm 2×5 *TBD* | SWDIO, SWCLK, NRST, 3V3, GND |
 | J-SWDREC | Carrier → any MCU | 1.27 mm 2×5 | CM5 GPIO SWD recovery |
 | J-ELRS | Carrier → receiver | JST-GH 4-pin | 5 V, GND, TX, RX |
-| J-LIDAR | Carrier → LD19 | JST-GH 4-pin | 5 V, GND, TX, RX |
-| J-GIMBAL (×2) | Carrier → SG90 | 2.54 mm 3-pin | 5 V, GND, PWM |
+| J-LIDAR | Carrier → LD19 (2D lidar) | JST-GH 4-pin, not fitted | TX, PWM, GND, 5 V (the LD19's own order); PWM open = 10 Hz default |
+| J-LTE | Carrier → A7670E board | 1x07 2.54 mm | GND, RXD, TXD, PWRKEY, VCC, GND, SLEEP; the alternative to the soldered-down A7670E |
+| J-CONSOLE | Carrier → USB-UART | 1x03 2.54 mm | GND, TX, RX (CM5 UART0) |
 | J-NOSE | Carrier → nose board | JST-GH 8-pin | see below |
 | J-CAM0, J-CAM1 | Carrier → cameras | Pi camera FFC (22-pin on the carrier) | CSI; CAM0 is the camera screwed to the nose board, CAM1 is spare |
 
@@ -107,3 +108,30 @@ One ADC pin per leg cell reads a divider (3V3 → R_top → ADC → R_bot → GN
 | R2 | 5 | 0x5 |
 | R3 | 6 | 0x6 |
 | Power board | 7 | 0x7 (fixed in firmware) |
+
+## CM5 GPIO allocation
+
+| GPIO | Use |
+|---|---|
+| 0, 1 | ID_SD, ID_SC: CAM1 I2C |
+| 2, 3 | I2C1 SDA, SCL: IMU, GNSS (0x42), J-NOSE |
+| 4, 5 | UART2 TX, RX: ELRS |
+| 6 | IMU_INT |
+| 7 | GNSS_PPS (MAX-M10S time pulse) |
+| 8 | SWD recovery NRST |
+| 9 | UART3 RX: lidar TX |
+| 10, 11 | SWD recovery SWDIO, SWCLK |
+| 12, 13 | UART4 TX, RX: LTE |
+| 14, 15 | UART0 TX, RX: console |
+| 16 | CAN_INT (MCP251863) |
+| 17 | LTE_PWRKEY |
+| 18, 19, 20, 21 | SPI1 CE0, MISO, MOSI, SCLK: MCP251863 (SPI0 shares pins with UART3) |
+| 22 | SHUTDOWN_REQ_N (J-SYSCTL, in) |
+| 23 | HALTED (J-SYSCTL, out) |
+| 24 | ESTOP_N (J-SYSCTL, in) |
+| 25 | TOF_INT (J-NOSE) |
+| 26 | TOF_LPN (J-NOSE) |
+| 27 | LTE_SLEEP |
+
+None left: MAG_INT and the nose LED on J-NOSE stay unconnected (the compass is polled), and the lidar PWM is left open.
+
