@@ -709,7 +709,7 @@
   "schematic": {
     "annotate_start_num": 0,
     "annotation": {
-      "method": 0,
+      "method": 1,
       "sort_order": 0
     },
     "bom_export_filename": "${PROJECTNAME}.csv",
@@ -899,7 +899,7 @@
         "uuid": "e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
       }
     ],
-    "used_designators": "C7,H5-6,TP1,TP6-14,Module2,J4-5,J7-8,#PWR2,#PWR41,#PWR108,#PWR189-200",
+    "used_designators": "SW301,R201-205,R301-310,R401-404,R501-506,R601-610,R701-703,R801-821,R901-903,RT501,Q601,Q801-802,Y901,#PWR2,#PWR41,#PWR108,#PWR189-275,#PWR301-355,#PWR401-421,#PWR501-522,#PWR601-633,#PWR701-714,#PWR801-853,#PWR901-940,USB201,J4-5,J7-8,J201-203,J301-305,J401,J501-502,J601-604,J701-702,J801-804,J901-904,BZ601,TP1,TP6-14,TP201-208,TP301-328,TP401-404,TP501-508,TP701-705,TP801-809,TP901-908,Module2,Module201,JP601-605,JP701-702,JP801-802,H5-6,H101-108,H401,C7,C201-210,C301-302,C401-412,C501-509,C601-608,C701-704,C801-823,C901-908,Card301,U201-204,U301-305,U401-402,U601-602,U701,U801-804,U901-902,D201-203,D301-302,D401,D501,D601-602,D801-802,D901,#FLG301,#FLG401,#FLG501-503,#FLG801,IC501,L401,L501,L701,L801",
     "variants": []
   },
   "sheets": [
@@ -922,6 +922,22 @@
     [
       "ed702e07-e156-4d9c-88a8-20fd12dbb3c2",
       "Power"
+    ],
+    [
+      "dc0c6157-ca13-48c5-94d6-c9851ba60b87",
+      "IO_MCU"
+    ],
+    [
+      "0f8f54fe-5f77-4ab7-a4c2-ce4b85bdda31",
+      "GNSS"
+    ],
+    [
+      "0919b368-a999-465e-b816-ad074e6fa1a7",
+      "LTE"
+    ],
+    [
+      "afcd644d-70b1-4ef8-b12e-251a4ca14a49",
+      "Peripherals"
     ]
   ],
   "text_variables": {

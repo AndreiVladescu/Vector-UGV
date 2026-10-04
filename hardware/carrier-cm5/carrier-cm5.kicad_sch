@@ -7,7 +7,6 @@
 	(title_block
 		(title "V.E.C.T.O.R. - CM5 Carrier")
 		(rev "1")
-		(company "AAC")
 	)
 	(lib_symbols
 		(symbol "Mechanical:MountingHole"
@@ -112,7 +111,7 @@
 	)
 	(text "Power - 5V"
 		(exclude_from_sim no)
-		(at 48.26 60.96 0)
+		(at 67.31 65.405 0)
 		(effects
 			(font
 				(size 1.905 1.905)
@@ -124,7 +123,7 @@
 	)
 	(text "M.2 M-key"
 		(exclude_from_sim no)
-		(at 218.44 75.565 0)
+		(at 258.445 81.28 0)
 		(effects
 			(font
 				(size 1.905 1.905)
@@ -134,9 +133,21 @@
 		)
 		(uuid "519cd094-d49a-462f-b73a-2dcf09394f36")
 	)
+	(text "GNSS"
+		(exclude_from_sim no)
+		(at 333.375 145.415 0)
+		(effects
+			(font
+				(size 1.905 1.905)
+				(thickness 0.381)
+				(bold yes)
+			)
+		)
+		(uuid "59a37df1-2d4c-4dfb-8192-220a71e59f87")
+	)
 	(text "CM5 - Ethernet - microSD"
 		(exclude_from_sim no)
-		(at 129.54 152.4 0)
+		(at 169.545 158.115 0)
 		(effects
 			(font
 				(size 1.905 1.905)
@@ -146,9 +157,21 @@
 		)
 		(uuid "5a31003d-a6de-4760-8dcd-b2cd0bb97a8e")
 	)
+	(text "CAN - IMU - J-NOSE - SWD"
+		(exclude_from_sim no)
+		(at 167.005 222.25 0)
+		(effects
+			(font
+				(size 1.905 1.905)
+				(thickness 0.381)
+				(bold yes)
+			)
+		)
+		(uuid "73c06365-305c-4a89-8307-3e7ea88be1eb")
+	)
 	(text "USB 3.0 - USB-C - CSI"
 		(exclude_from_sim no)
-		(at 123.19 73.66 0)
+		(at 163.195 79.375 0)
 		(effects
 			(font
 				(size 1.905 1.905)
@@ -158,9 +181,73 @@
 		)
 		(uuid "9f9a4176-50e9-4b72-af7a-e9f96759cfdf")
 	)
+	(text "IO MCU - ELRS - LoRa"
+		(exclude_from_sim no)
+		(at 274.32 153.67 0)
+		(effects
+			(font
+				(size 1.905 1.905)
+				(thickness 0.381)
+				(bold yes)
+			)
+		)
+		(uuid "d9874f8b-661d-48ce-9977-d29ea651e359")
+	)
+	(text "LTE"
+		(exclude_from_sim no)
+		(at 339.725 182.245 0)
+		(effects
+			(font
+				(size 1.905 1.905)
+				(thickness 0.381)
+				(bold yes)
+			)
+		)
+		(uuid "fc7cbed2-444c-40d4-9d56-1a566971cb2c")
+	)
 	(wire
 		(pts
-			(xy 164.465 71.12) (xy 187.96 71.12)
+			(xy 176.53 175.895) (xy 176.53 202.565)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0548257b-c57a-4a4d-92de-78c8b363bbae")
+	)
+	(wire
+		(pts
+			(xy 314.325 178.435) (xy 312.42 178.435)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "07f9cee9-c799-452f-a3ee-ed60855f118c")
+	)
+	(wire
+		(pts
+			(xy 205.105 153.035) (xy 243.205 153.035)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0a8e96ea-38fa-4705-af8a-9b74023a5ba3")
+	)
+	(wire
+		(pts
+			(xy 314.325 186.055) (xy 312.42 186.055)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0f77dec5-e054-4371-afff-7f669a44a1a0")
+	)
+	(wire
+		(pts
+			(xy 204.47 76.835) (xy 227.965 76.835)
 		)
 		(stroke
 			(width 0)
@@ -170,7 +257,37 @@
 	)
 	(wire
 		(pts
-			(xy 164.465 81.28) (xy 187.96 81.28)
+			(xy 166.37 175.895) (xy 166.37 202.565)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1999ef86-28dc-4263-ac37-1f98c7d5692c")
+	)
+	(wire
+		(pts
+			(xy 298.45 160.655) (xy 300.355 160.655)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1ecf382c-1271-4192-b838-df30b219abd4")
+	)
+	(wire
+		(pts
+			(xy 205.105 140.335) (xy 243.205 140.335)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1fffe133-93f0-4235-8eb2-34e95a953f7b")
+	)
+	(wire
+		(pts
+			(xy 204.47 86.995) (xy 227.965 86.995)
 		)
 		(stroke
 			(width 0)
@@ -180,7 +297,17 @@
 	)
 	(wire
 		(pts
-			(xy 111.76 107.95) (xy 111.76 132.08)
+			(xy 151.13 175.895) (xy 151.13 202.565)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "28394b76-13c2-4f22-9389-af7153f1a57b")
+	)
+	(wire
+		(pts
+			(xy 151.765 113.665) (xy 151.765 137.795)
 		)
 		(stroke
 			(width 0)
@@ -190,7 +317,37 @@
 	)
 	(wire
 		(pts
-			(xy 164.465 63.5) (xy 187.96 63.5)
+			(xy 90.17 55.245) (xy 92.075 55.245)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2b1a1515-b17b-427c-b4a7-2cf1783e8b5a")
+	)
+	(wire
+		(pts
+			(xy 90.17 60.325) (xy 92.075 60.325)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2b4bb691-2b0a-4de0-bd5c-2347d767ad54")
+	)
+	(wire
+		(pts
+			(xy 90.17 57.785) (xy 92.075 57.785)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2c4ff00e-5d85-4a28-81ab-f6ca1c81c56b")
+	)
+	(wire
+		(pts
+			(xy 204.47 69.215) (xy 227.965 69.215)
 		)
 		(stroke
 			(width 0)
@@ -200,7 +357,97 @@
 	)
 	(wire
 		(pts
-			(xy 114.3 107.95) (xy 114.3 132.08)
+			(xy 205.105 145.415) (xy 243.205 145.415)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "30573726-05d7-43ed-b6a2-77a0c48d0127")
+	)
+	(wire
+		(pts
+			(xy 158.75 175.895) (xy 158.75 202.565)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "37c542a6-2ce9-4087-a5a5-56f136fc41e0")
+	)
+	(wire
+		(pts
+			(xy 205.105 147.955) (xy 243.205 147.955)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3ad8eefb-2313-474c-9775-8df0d8f5592a")
+	)
+	(wire
+		(pts
+			(xy 314.325 173.355) (xy 312.42 173.355)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3bba5086-13e9-4e75-84d3-829c6c2c796f")
+	)
+	(wire
+		(pts
+			(xy 243.205 163.195) (xy 241.3 163.195)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3c7a4814-a82f-4852-bfcf-897a46ede100")
+	)
+	(wire
+		(pts
+			(xy 125.095 158.115) (xy 123.19 158.115)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3d74c9fa-95b0-4860-bce0-b36c18f3ddfd")
+	)
+	(wire
+		(pts
+			(xy 298.45 158.115) (xy 300.355 158.115)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3f0e3388-6ee9-4503-a03f-9584a8e001b4")
+	)
+	(wire
+		(pts
+			(xy 171.45 175.895) (xy 171.45 202.565)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4051abdc-ffa8-4174-bc2c-4cc5bde8f3b3")
+	)
+	(wire
+		(pts
+			(xy 243.205 155.575) (xy 241.3 155.575)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4450c4bd-9d17-4b5b-891c-968042892f8b")
+	)
+	(wire
+		(pts
+			(xy 154.305 113.665) (xy 154.305 137.795)
 		)
 		(stroke
 			(width 0)
@@ -210,7 +457,27 @@
 	)
 	(wire
 		(pts
-			(xy 164.465 73.66) (xy 187.96 73.66)
+			(xy 173.99 175.895) (xy 173.99 202.565)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4aac1c72-a682-4c6a-9ec0-58d084268d88")
+	)
+	(wire
+		(pts
+			(xy 314.325 140.335) (xy 312.42 140.335)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4e805f4e-b9cd-496f-b016-0b844cad9417")
+	)
+	(wire
+		(pts
+			(xy 204.47 79.375) (xy 227.965 79.375)
 		)
 		(stroke
 			(width 0)
@@ -220,7 +487,37 @@
 	)
 	(wire
 		(pts
-			(xy 164.465 68.58) (xy 187.96 68.58)
+			(xy 161.925 113.665) (xy 161.925 137.795)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "62fbc134-565d-43f7-9703-6f5b324f9597")
+	)
+	(wire
+		(pts
+			(xy 205.105 168.275) (xy 207.01 168.275)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "633e3c33-d2bb-4e9f-8923-7d22f6815b28")
+	)
+	(wire
+		(pts
+			(xy 314.325 175.895) (xy 312.42 175.895)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6c628862-706a-4227-8737-6ad272a53db8")
+	)
+	(wire
+		(pts
+			(xy 204.47 74.295) (xy 227.965 74.295)
 		)
 		(stroke
 			(width 0)
@@ -230,7 +527,17 @@
 	)
 	(wire
 		(pts
-			(xy 142.875 107.95) (xy 142.875 132.08)
+			(xy 201.93 230.505) (xy 203.835 230.505)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "775b8531-ea97-44f3-a099-f6c403c63323")
+	)
+	(wire
+		(pts
+			(xy 182.88 113.665) (xy 182.88 137.795)
 		)
 		(stroke
 			(width 0)
@@ -240,7 +547,7 @@
 	)
 	(wire
 		(pts
-			(xy 164.465 78.74) (xy 187.96 78.74)
+			(xy 204.47 84.455) (xy 227.965 84.455)
 		)
 		(stroke
 			(width 0)
@@ -250,7 +557,107 @@
 	)
 	(wire
 		(pts
-			(xy 164.465 83.82) (xy 187.96 83.82)
+			(xy 243.205 160.655) (xy 241.3 160.655)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "80eb6d6a-be91-4ee7-87b0-4e77c27746cb")
+	)
+	(wire
+		(pts
+			(xy 169.545 113.665) (xy 169.545 137.795)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "820e8d92-219e-497c-a689-ec3211df315a")
+	)
+	(wire
+		(pts
+			(xy 161.29 175.895) (xy 161.29 202.565)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "82755058-acbb-4401-9055-245db8fbbef8")
+	)
+	(wire
+		(pts
+			(xy 314.325 142.875) (xy 312.42 142.875)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8e73d844-8823-4edf-82b5-78a0a90ecdad")
+	)
+	(wire
+		(pts
+			(xy 163.83 175.895) (xy 163.83 202.565)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9262b145-47d8-4e9b-815a-d4e33216843d")
+	)
+	(wire
+		(pts
+			(xy 153.67 175.895) (xy 153.67 202.565)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "92dc1a67-b33e-4768-924e-9b06eb4e9fd8")
+	)
+	(wire
+		(pts
+			(xy 205.105 150.495) (xy 243.205 150.495)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9875500c-e211-4bf5-b860-f060d27452ab")
+	)
+	(wire
+		(pts
+			(xy 156.21 175.895) (xy 156.21 202.565)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9ab716cc-d2c3-4a5d-9770-9e182008a281")
+	)
+	(wire
+		(pts
+			(xy 90.17 52.705) (xy 92.075 52.705)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9d42dbc0-6db6-4be9-899a-ab8d771a1dae")
+	)
+	(wire
+		(pts
+			(xy 125.095 160.655) (xy 123.19 160.655)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a784c6c3-2449-4c9a-bab5-c5666a56448b")
+	)
+	(wire
+		(pts
+			(xy 204.47 89.535) (xy 227.965 89.535)
 		)
 		(stroke
 			(width 0)
@@ -260,7 +667,37 @@
 	)
 	(wire
 		(pts
-			(xy 164.465 76.2) (xy 187.96 76.2)
+			(xy 205.105 142.875) (xy 243.205 142.875)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a94046d3-d1c9-4b02-b911-58e8967d9dbf")
+	)
+	(wire
+		(pts
+			(xy 205.105 170.815) (xy 207.01 170.815)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "aa132f1e-ab2b-4f2e-b589-c35396949498")
+	)
+	(wire
+		(pts
+			(xy 164.465 113.665) (xy 164.465 137.795)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "acd1f20e-1f1c-47b9-adbc-ba6c4beb6152")
+	)
+	(wire
+		(pts
+			(xy 204.47 81.915) (xy 227.965 81.915)
 		)
 		(stroke
 			(width 0)
@@ -270,7 +707,147 @@
 	)
 	(wire
 		(pts
-			(xy 164.465 66.04) (xy 187.96 66.04)
+			(xy 201.93 227.965) (xy 203.835 227.965)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b78c0c2d-2a79-4dca-88f2-0be1ee85572c")
+	)
+	(wire
+		(pts
+			(xy 125.095 163.195) (xy 123.19 163.195)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b9d658f9-d177-4db8-9220-55fbdd5f5eb6")
+	)
+	(wire
+		(pts
+			(xy 201.93 235.585) (xy 203.835 235.585)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "be7f1a9f-a721-41a6-99e0-e08d18042afa")
+	)
+	(wire
+		(pts
+			(xy 314.325 188.595) (xy 312.42 188.595)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c5994034-2528-408b-8bbf-e96ea588907c")
+	)
+	(wire
+		(pts
+			(xy 201.93 233.045) (xy 203.835 233.045)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c7d1b008-2753-4659-a5a6-0a7ef2ef5100")
+	)
+	(wire
+		(pts
+			(xy 314.325 180.975) (xy 312.42 180.975)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cfc1c2be-ae56-49c2-8891-4248f0242883")
+	)
+	(wire
+		(pts
+			(xy 243.205 158.115) (xy 241.3 158.115)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d296e1d1-a0e4-4ad8-ab56-d5d6b71fd313")
+	)
+	(wire
+		(pts
+			(xy 172.085 113.665) (xy 172.085 137.795)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d2983723-65ec-4b45-b352-77aa720a71a3")
+	)
+	(wire
+		(pts
+			(xy 168.91 175.895) (xy 168.91 202.565)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d496d1dc-e0b5-45c3-86bd-3f19b0eb1dbd")
+	)
+	(wire
+		(pts
+			(xy 90.17 62.865) (xy 92.075 62.865)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d5948b05-1314-4c1a-8157-356a6b4e54eb")
+	)
+	(wire
+		(pts
+			(xy 156.845 113.665) (xy 156.845 137.795)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e4356097-793f-4832-9ac7-f3fa21f0a7f8")
+	)
+	(wire
+		(pts
+			(xy 205.105 173.355) (xy 207.01 173.355)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e4d55345-d557-4dd3-a449-6ca5be662436")
+	)
+	(wire
+		(pts
+			(xy 314.325 183.515) (xy 312.42 183.515)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e9628828-0899-4279-94dc-a99913ba6587")
+	)
+	(wire
+		(pts
+			(xy 205.105 165.735) (xy 207.01 165.735)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f002c33f-6601-4ff9-ba7d-c398a044620b")
+	)
+	(wire
+		(pts
+			(xy 204.47 71.755) (xy 227.965 71.755)
 		)
 		(stroke
 			(width 0)
@@ -280,7 +857,27 @@
 	)
 	(wire
 		(pts
-			(xy 164.465 86.36) (xy 187.96 86.36)
+			(xy 159.385 113.665) (xy 159.385 137.795)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f22c6c7d-c5dc-4381-bbdb-9ae24318a3ec")
+	)
+	(wire
+		(pts
+			(xy 314.325 145.415) (xy 312.42 145.415)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f41b023d-1ea9-4041-aa55-2aeb79efb707")
+	)
+	(wire
+		(pts
+			(xy 204.47 92.075) (xy 227.965 92.075)
 		)
 		(stroke
 			(width 0)
@@ -288,9 +885,379 @@
 		)
 		(uuid "fa92842d-37e8-4687-b4f4-0cfd415b8d84")
 	)
+	(wire
+		(pts
+			(xy 167.005 113.665) (xy 167.005 137.795)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ff77c33e-03eb-4b5c-87ba-b2f3ee8deaf5")
+	)
+	(label "LTE_PWRKEY"
+		(at 207.01 170.815 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "189c76af-4dda-401b-9f70-b7d50047c7d5")
+	)
+	(label "GNSS_TXD"
+		(at 241.3 155.575 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "1b4a6f2d-1f0f-4d19-a149-44b6162adf68")
+	)
+	(label "VBAT"
+		(at 92.075 52.705 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "1b9a4985-8c75-49f6-bb14-59359f825cb2")
+	)
+	(label "SWDREC_NRST"
+		(at 203.835 233.045 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "1c795cb2-fa7d-4619-9ef4-68b31adcbab0")
+	)
+	(label "LTE_STATUS"
+		(at 300.355 160.655 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "23cb4ba8-6b09-4721-a0aa-728fe7e5d9c2")
+	)
+	(label "SWDREC_NRST"
+		(at 241.3 150.495 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "2412572f-27a8-42d3-a006-9b37605c3471")
+	)
+	(label "LTE_EN"
+		(at 300.355 158.115 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "252ac817-b4e6-4ca3-95a1-d49a0a78298b")
+	)
+	(label "LTE_PWRKEY"
+		(at 312.42 178.435 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "416aadb9-0d42-47e0-8a69-c471792b334d")
+	)
+	(label "ESTOP_N"
+		(at 123.19 163.195 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "4556b00a-f0e3-4cbf-9512-c85704159785")
+	)
+	(label "HALTED"
+		(at 92.075 60.325 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "4a16490b-5839-4f29-9d15-0b3d31c95c08")
+	)
+	(label "ESTOP_N"
+		(at 203.835 235.585 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "53d4684a-b166-4689-a307-9b0094fec5a4")
+	)
+	(label "SWDREC_SWCLK"
+		(at 203.835 230.505 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "54efffff-64c2-4d48-893f-95a54ca1a578")
+	)
+	(label "GNSS_PPS"
+		(at 241.3 153.035 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "58757f73-49b5-4d0b-9c6d-4f3121c16775")
+	)
+	(label "LTE_SLEEP"
+		(at 207.01 173.355 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "64c7e52e-fde2-470e-aa08-7090a1d8bf13")
+	)
+	(label "LTE_SLEEP"
+		(at 312.42 180.975 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "66027456-e054-44f1-b22a-8da111b22639")
+	)
+	(label "LTE_STATUS"
+		(at 312.42 186.055 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "6c866a37-da3d-4df8-a3b8-e8ebdd6de002")
+	)
+	(label "SWDREC_SWCLK"
+		(at 241.3 147.955 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "6f48b40e-7e6e-483a-9c75-2ad0bb46bb2d")
+	)
+	(label "SWDREC_SWDIO"
+		(at 203.835 227.965 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "73544ebe-02ef-4e0e-9c98-995c220c35ee")
+	)
+	(label "GNSS_PPS"
+		(at 312.42 145.415 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "7b5e92dc-41a5-412b-a819-c225a1ddf443")
+	)
+	(label "NTC_SENSE"
+		(at 241.3 163.195 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "82bfb265-b582-45df-9dbf-e9d9a5ff3dc8")
+	)
+	(label "HALTED"
+		(at 123.19 160.655 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "859d3d66-d7ad-455f-8cbe-39e6f9bbe3b0")
+	)
+	(label "NTC_SENSE"
+		(at 92.075 55.245 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "8b18e274-c759-4274-bd04-b1d442a28466")
+	)
+	(label "LTE_TXD"
+		(at 207.01 165.735 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "91af6958-16c7-44dd-add3-6abff642c7db")
+	)
+	(label "ESTOP_N"
+		(at 92.075 62.865 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "a44677a1-ef96-4ec1-b007-536f55e9ae44")
+	)
+	(label "LTE_TXD"
+		(at 312.42 173.355 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "a91e51e9-9317-49cf-8cce-a1f7a097a9b7")
+	)
+	(label "VBAT"
+		(at 241.3 160.655 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "ad278cb0-e5c8-4b41-9440-a96429793a86")
+	)
+	(label "LTE_RXD"
+		(at 207.01 168.275 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "b09d9276-0f06-4152-ab00-3f4db6c0702b")
+	)
+	(label "GNSS_RXD"
+		(at 312.42 142.875 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "b1810b84-6655-4837-a40c-28a23031b070")
+	)
+	(label "SHUTDOWN_REQ_N"
+		(at 123.19 158.115 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "b3109b9d-eeb1-468d-bfec-d60c3a4f5a84")
+	)
+	(label "LTE_EN"
+		(at 312.42 183.515 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "b58f31ab-121c-4c8f-a1a9-3b6c79444c4d")
+	)
+	(label "LTE_RXD"
+		(at 312.42 175.895 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "b84c3eb8-6712-4aba-b3cc-d8749a40d989")
+	)
+	(label "SHUTDOWN_REQ_N"
+		(at 92.075 57.785 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "c26176ef-90de-408c-9d90-f8ed675d35f4")
+	)
+	(label "VBAT"
+		(at 312.42 188.595 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "d36b3eac-70dc-45ad-97d0-cbd5c6641501")
+	)
+	(label "GNSS_RXD"
+		(at 241.3 158.115 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "d8da0290-daef-4f54-a36c-babf43149042")
+	)
+	(label "SWDREC_SWDIO"
+		(at 241.3 145.415 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "e692b520-3aa8-40e6-9df8-c973812c76d2")
+	)
+	(label "GNSS_TXD"
+		(at 312.42 140.335 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "e8f0485a-adcf-4ecb-bb03-3a99a70c6107")
+	)
 	(symbol
 		(lib_id "Mechanical:MountingHole")
-		(at 30.48 186.69 0)
+		(at 24.13 273.05 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -299,8 +1266,8 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "00000000-0000-0000-0000-00005e3b1a1d")
-		(property "Reference" "H4"
-			(at 33.02 185.547 0)
+		(property "Reference" "H104"
+			(at 26.67 271.907 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -311,7 +1278,7 @@
 			)
 		)
 		(property "Value" "MountingHole"
-			(at 33.02 187.833 0)
+			(at 26.67 274.193 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -322,7 +1289,7 @@
 			)
 		)
 		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_DIN965_Pad"
-			(at 30.48 186.69 0)
+			(at 24.13 273.05 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -333,7 +1300,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 30.48 186.69 0)
+			(at 24.13 273.05 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -344,7 +1311,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 30.48 186.69 0)
+			(at 24.13 273.05 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -355,7 +1322,7 @@
 			)
 		)
 		(property "Field4" "nf"
-			(at 30.48 186.69 0)
+			(at 24.13 273.05 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -366,7 +1333,7 @@
 			)
 		)
 		(property "Field5" "nf"
-			(at 30.48 186.69 0)
+			(at 24.13 273.05 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -377,7 +1344,7 @@
 			)
 		)
 		(property "Field6" "nf"
-			(at 30.48 186.69 0)
+			(at 24.13 273.05 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -388,7 +1355,7 @@
 			)
 		)
 		(property "Field7" "nf"
-			(at 30.48 186.69 0)
+			(at 24.13 273.05 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -399,7 +1366,7 @@
 			)
 		)
 		(property "Part Description" "M2.5 mounting hole"
-			(at 30.48 186.69 0)
+			(at 24.13 273.05 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -412,7 +1379,7 @@
 		(instances
 			(project "carrier-cm5"
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(reference "H4")
+					(reference "H104")
 					(unit 1)
 				)
 			)
@@ -420,7 +1387,7 @@
 	)
 	(symbol
 		(lib_id "Mechanical:MountingHole")
-		(at 30.48 181.61 0)
+		(at 24.13 267.97 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -429,8 +1396,8 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "00000000-0000-0000-0000-00005e3b25a9")
-		(property "Reference" "H3"
-			(at 33.02 180.467 0)
+		(property "Reference" "H103"
+			(at 26.67 266.827 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -441,7 +1408,7 @@
 			)
 		)
 		(property "Value" "MountingHole"
-			(at 33.02 182.753 0)
+			(at 26.67 269.113 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -452,7 +1419,7 @@
 			)
 		)
 		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_DIN965_Pad"
-			(at 30.48 181.61 0)
+			(at 24.13 267.97 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -463,7 +1430,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 30.48 181.61 0)
+			(at 24.13 267.97 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -474,7 +1441,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 30.48 181.61 0)
+			(at 24.13 267.97 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -485,7 +1452,7 @@
 			)
 		)
 		(property "Field4" "nf"
-			(at 30.48 181.61 0)
+			(at 24.13 267.97 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -496,7 +1463,7 @@
 			)
 		)
 		(property "Field5" "nf"
-			(at 30.48 181.61 0)
+			(at 24.13 267.97 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -507,7 +1474,7 @@
 			)
 		)
 		(property "Field6" "nf"
-			(at 30.48 181.61 0)
+			(at 24.13 267.97 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -518,7 +1485,7 @@
 			)
 		)
 		(property "Field7" "nf"
-			(at 30.48 181.61 0)
+			(at 24.13 267.97 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -529,7 +1496,7 @@
 			)
 		)
 		(property "Part Description" "M2.5 mounting hole"
-			(at 30.48 181.61 0)
+			(at 24.13 267.97 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -542,7 +1509,7 @@
 		(instances
 			(project "carrier-cm5"
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(reference "H3")
+					(reference "H103")
 					(unit 1)
 				)
 			)
@@ -550,7 +1517,7 @@
 	)
 	(symbol
 		(lib_id "Mechanical:MountingHole")
-		(at 30.48 176.53 0)
+		(at 24.13 262.89 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -559,8 +1526,8 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "00000000-0000-0000-0000-00005e3b2cb2")
-		(property "Reference" "H2"
-			(at 33.02 175.387 0)
+		(property "Reference" "H102"
+			(at 26.67 261.747 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -571,7 +1538,7 @@
 			)
 		)
 		(property "Value" "MountingHole"
-			(at 33.02 177.673 0)
+			(at 26.67 264.033 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -582,7 +1549,7 @@
 			)
 		)
 		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_DIN965_Pad"
-			(at 30.48 176.53 0)
+			(at 24.13 262.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -593,7 +1560,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 30.48 176.53 0)
+			(at 24.13 262.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -604,7 +1571,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 30.48 176.53 0)
+			(at 24.13 262.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -615,7 +1582,7 @@
 			)
 		)
 		(property "Field4" "nf"
-			(at 30.48 176.53 0)
+			(at 24.13 262.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -626,7 +1593,7 @@
 			)
 		)
 		(property "Field5" "nf"
-			(at 30.48 176.53 0)
+			(at 24.13 262.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -637,7 +1604,7 @@
 			)
 		)
 		(property "Field6" "nf"
-			(at 30.48 176.53 0)
+			(at 24.13 262.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -648,7 +1615,7 @@
 			)
 		)
 		(property "Field7" "nf"
-			(at 30.48 176.53 0)
+			(at 24.13 262.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -659,7 +1626,7 @@
 			)
 		)
 		(property "Part Description" "M2.5 mounting hole"
-			(at 30.48 176.53 0)
+			(at 24.13 262.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -672,7 +1639,7 @@
 		(instances
 			(project "carrier-cm5"
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(reference "H2")
+					(reference "H102")
 					(unit 1)
 				)
 			)
@@ -680,7 +1647,7 @@
 	)
 	(symbol
 		(lib_id "Mechanical:MountingHole")
-		(at 30.48 171.45 0)
+		(at 24.13 257.81 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -689,8 +1656,8 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "00000000-0000-0000-0000-00005e3b2f75")
-		(property "Reference" "H1"
-			(at 33.02 170.307 0)
+		(property "Reference" "H101"
+			(at 26.67 256.667 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -701,7 +1668,7 @@
 			)
 		)
 		(property "Value" "MountingHole"
-			(at 33.02 172.593 0)
+			(at 26.67 258.953 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -712,7 +1679,7 @@
 			)
 		)
 		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_DIN965_Pad"
-			(at 30.48 171.45 0)
+			(at 24.13 257.81 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -723,7 +1690,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 30.48 171.45 0)
+			(at 24.13 257.81 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -734,7 +1701,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 30.48 171.45 0)
+			(at 24.13 257.81 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -745,7 +1712,7 @@
 			)
 		)
 		(property "Field4" "nf"
-			(at 30.48 171.45 0)
+			(at 24.13 257.81 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -756,7 +1723,7 @@
 			)
 		)
 		(property "Field5" "nf"
-			(at 30.48 171.45 0)
+			(at 24.13 257.81 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -767,7 +1734,7 @@
 			)
 		)
 		(property "Field6" "nf"
-			(at 30.48 171.45 0)
+			(at 24.13 257.81 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -778,7 +1745,7 @@
 			)
 		)
 		(property "Field7" "nf"
-			(at 30.48 171.45 0)
+			(at 24.13 257.81 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -789,7 +1756,7 @@
 			)
 		)
 		(property "Part Description" "M2.5 mounting hole"
-			(at 30.48 171.45 0)
+			(at 24.13 257.81 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -802,20 +1769,315 @@
 		(instances
 			(project "carrier-cm5"
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(reference "H1")
+					(reference "H101")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Mechanical:MountingHole")
+		(at 49.53 257.175 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "26719b96-2618-46e3-9f0d-168db3c2448e")
+		(property "Reference" "H105"
+			(at 52.705 256.54 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "CM5 standoff M2.5"
+			(at 52.705 259.08 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "vector:MountingHole_2.7mm_M2.5_DIN965"
+			(at 49.53 257.175 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 49.53 257.175 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 49.53 257.175 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(instances
+			(project "carrier-cm5"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+					(reference "H105")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Mechanical:MountingHole")
+		(at 49.53 262.255 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "60241859-ef14-4dac-9aeb-de08cb774267")
+		(property "Reference" "H106"
+			(at 52.705 261.62 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "CM5 standoff M2.5"
+			(at 52.705 264.16 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "vector:MountingHole_2.7mm_M2.5_DIN965"
+			(at 49.53 262.255 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 49.53 262.255 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 49.53 262.255 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(instances
+			(project "carrier-cm5"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+					(reference "H106")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Mechanical:MountingHole")
+		(at 49.53 267.335 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "65421d08-08d6-4355-94f6-57f787c9ec8e")
+		(property "Reference" "H107"
+			(at 52.705 266.7 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "CM5 standoff M2.5"
+			(at 52.705 269.24 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "vector:MountingHole_2.7mm_M2.5_DIN965"
+			(at 49.53 267.335 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 49.53 267.335 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 49.53 267.335 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(instances
+			(project "carrier-cm5"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+					(reference "H107")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Mechanical:MountingHole")
+		(at 49.53 272.415 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "b46dbf53-9b8f-49f4-b2d0-96ea4a777a57")
+		(property "Reference" "H108"
+			(at 52.705 271.78 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "CM5 standoff M2.5"
+			(at 52.705 274.32 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "vector:MountingHole_2.7mm_M2.5_DIN965"
+			(at 49.53 272.415 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 49.53 272.415 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 49.53 272.415 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(instances
+			(project "carrier-cm5"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+					(reference "H108")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(sheet
-		(at 89.535 132.08)
-		(size 75.565 38.1)
+		(at 125.095 137.795)
+		(size 80.01 38.1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
 			(type solid)
@@ -826,7 +2088,7 @@
 		)
 		(uuid "00000000-0000-0000-0000-00005cff706a")
 		(property "Sheetname" "CM5_IO"
-			(at 89.535 172.72 0)
+			(at 124.46 133.985 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -837,7 +2099,7 @@
 			)
 		)
 		(property "Sheetfile" "cm5_io.kicad_sch"
-			(at 89.535 173.99 0)
+			(at 124.46 135.255 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -848,7 +2110,7 @@
 			)
 		)
 		(pin "CC1" output
-			(at 114.3 132.08 90)
+			(at 154.305 137.795 90)
 			(uuid "79a90b88-0173-4019-b6c5-e1009f0c139f")
 			(effects
 				(font
@@ -858,7 +2120,7 @@
 			)
 		)
 		(pin "USBOTG" output
-			(at 142.875 132.08 90)
+			(at 182.88 137.795 90)
 			(uuid "d6d4dc9c-0e44-420e-8240-37c70ea3c763")
 			(effects
 				(font
@@ -868,7 +2130,7 @@
 			)
 		)
 		(pin "CC2" output
-			(at 111.76 132.08 90)
+			(at 151.765 137.795 90)
 			(uuid "37882526-c078-4e94-a0b9-fffe82b129e1")
 			(effects
 				(font
@@ -878,7 +2140,7 @@
 			)
 		)
 		(pin "CAM_GPIO0" bidirectional
-			(at 116.84 132.08 90)
+			(at 156.845 137.795 90)
 			(uuid "db79259e-5bb5-4bc7-adad-fe28b16f8a7b")
 			(effects
 				(font
@@ -888,7 +2150,7 @@
 			)
 		)
 		(pin "CAM_GPIO1" bidirectional
-			(at 119.38 132.08 90)
+			(at 159.385 137.795 90)
 			(uuid "57d8684f-a782-4306-b1f4-ec32a47c90a4")
 			(effects
 				(font
@@ -898,7 +2160,7 @@
 			)
 		)
 		(pin "SCL0" bidirectional
-			(at 121.92 132.08 90)
+			(at 161.925 137.795 90)
 			(uuid "88331e8e-a1b3-4c19-81ca-61db69a0db6d")
 			(effects
 				(font
@@ -908,7 +2170,7 @@
 			)
 		)
 		(pin "SDA0" bidirectional
-			(at 124.46 132.08 90)
+			(at 164.465 137.795 90)
 			(uuid "2b3e7bdf-87d3-416f-a472-042e8c4e7082")
 			(effects
 				(font
@@ -918,7 +2180,7 @@
 			)
 		)
 		(pin "ID_SC" bidirectional
-			(at 127 132.08 90)
+			(at 167.005 137.795 90)
 			(uuid "c7ea2fbd-6c04-4b42-ae64-c681dbe827fa")
 			(effects
 				(font
@@ -928,7 +2190,7 @@
 			)
 		)
 		(pin "ID_SD" bidirectional
-			(at 129.54 132.08 90)
+			(at 169.545 137.795 90)
 			(uuid "4051e2af-e5b7-4396-a730-f1c04334c11f")
 			(effects
 				(font
@@ -938,7 +2200,7 @@
 			)
 		)
 		(pin "GPIO_VREF" bidirectional
-			(at 132.08 132.08 90)
+			(at 172.085 137.795 90)
 			(uuid "4ed3147d-9f8f-4f3e-8b58-00928ea2dbe3")
 			(effects
 				(font
@@ -948,7 +2210,7 @@
 			)
 		)
 		(pin "IO_TXD" bidirectional
-			(at 165.1 134.62 0)
+			(at 205.105 140.335 0)
 			(uuid "33288225-865b-4a2b-b402-26d6f3c0073b")
 			(effects
 				(font
@@ -958,7 +2220,7 @@
 			)
 		)
 		(pin "IO_RXD" bidirectional
-			(at 165.1 137.16 0)
+			(at 205.105 142.875 0)
 			(uuid "8dd7dfab-ba31-4cf2-a7ef-4036a7f2fdfb")
 			(effects
 				(font
@@ -968,7 +2230,7 @@
 			)
 		)
 		(pin "SWDREC_SWDIO" bidirectional
-			(at 165.1 139.7 0)
+			(at 205.105 145.415 0)
 			(uuid "791b24f9-7bea-4b79-863f-b836aa77b13d")
 			(effects
 				(font
@@ -978,7 +2240,7 @@
 			)
 		)
 		(pin "SWDREC_SWCLK" bidirectional
-			(at 165.1 142.24 0)
+			(at 205.105 147.955 0)
 			(uuid "10fe1b0a-70d4-4781-97b8-bc0ecbc320ba")
 			(effects
 				(font
@@ -988,7 +2250,7 @@
 			)
 		)
 		(pin "SWDREC_NRST" bidirectional
-			(at 165.1 144.78 0)
+			(at 205.105 150.495 0)
 			(uuid "d73e4075-6aaf-46e7-8799-194e387e8c27")
 			(effects
 				(font
@@ -998,7 +2260,7 @@
 			)
 		)
 		(pin "GNSS_PPS" bidirectional
-			(at 165.1 147.32 0)
+			(at 205.105 153.035 0)
 			(uuid "de440f9d-7ee6-4663-825a-c2b229debf90")
 			(effects
 				(font
@@ -1008,7 +2270,7 @@
 			)
 		)
 		(pin "LTE_TXD" bidirectional
-			(at 165.1 160.02 0)
+			(at 205.105 165.735 0)
 			(uuid "b9fc2814-114d-4154-ba0a-4884afba2403")
 			(effects
 				(font
@@ -1018,7 +2280,7 @@
 			)
 		)
 		(pin "LTE_RXD" bidirectional
-			(at 165.1 162.56 0)
+			(at 205.105 168.275 0)
 			(uuid "d21bab42-a562-48b7-ab80-73e26bdc871e")
 			(effects
 				(font
@@ -1028,7 +2290,7 @@
 			)
 		)
 		(pin "LTE_PWRKEY" bidirectional
-			(at 165.1 165.1 0)
+			(at 205.105 170.815 0)
 			(uuid "b3dc433a-1e51-44e2-8a6f-174638881ac6")
 			(effects
 				(font
@@ -1038,7 +2300,7 @@
 			)
 		)
 		(pin "LTE_SLEEP" bidirectional
-			(at 165.1 167.64 0)
+			(at 205.105 173.355 0)
 			(uuid "1600e08b-156e-45b6-9959-53d8993a3d06")
 			(effects
 				(font
@@ -1048,7 +2310,7 @@
 			)
 		)
 		(pin "CAN_CS" bidirectional
-			(at 96.52 170.18 270)
+			(at 151.13 175.895 270)
 			(uuid "102a80d4-d712-4fab-9690-fe060b301043")
 			(effects
 				(font
@@ -1058,7 +2320,7 @@
 			)
 		)
 		(pin "CAN_MISO" bidirectional
-			(at 99.06 170.18 270)
+			(at 153.67 175.895 270)
 			(uuid "7f76d23b-b156-4df5-ae9e-533a38f85644")
 			(effects
 				(font
@@ -1068,7 +2330,7 @@
 			)
 		)
 		(pin "CAN_MOSI" bidirectional
-			(at 101.6 170.18 270)
+			(at 156.21 175.895 270)
 			(uuid "011839de-9530-4177-8ed2-a5748123aae7")
 			(effects
 				(font
@@ -1078,7 +2340,7 @@
 			)
 		)
 		(pin "CAN_SCK" bidirectional
-			(at 104.14 170.18 270)
+			(at 158.75 175.895 270)
 			(uuid "39c84f95-d075-4859-9247-cb02b96b77ba")
 			(effects
 				(font
@@ -1088,7 +2350,7 @@
 			)
 		)
 		(pin "CAN_INT" bidirectional
-			(at 106.68 170.18 270)
+			(at 161.29 175.895 270)
 			(uuid "4ecc3f80-78a2-4dc0-80b3-34c58fdc03a2")
 			(effects
 				(font
@@ -1098,7 +2360,7 @@
 			)
 		)
 		(pin "I2C1_SDA" bidirectional
-			(at 109.22 170.18 270)
+			(at 163.83 175.895 270)
 			(uuid "a4b4a85e-fea0-4680-9c8c-b262b4d83035")
 			(effects
 				(font
@@ -1108,7 +2370,7 @@
 			)
 		)
 		(pin "I2C1_SCL" bidirectional
-			(at 111.76 170.18 270)
+			(at 166.37 175.895 270)
 			(uuid "867ce0d0-cb2e-4936-b9d8-8f953c7dc737")
 			(effects
 				(font
@@ -1118,7 +2380,7 @@
 			)
 		)
 		(pin "IMU_INT" bidirectional
-			(at 114.3 170.18 270)
+			(at 168.91 175.895 270)
 			(uuid "f3dddec5-e8af-4b93-a1a4-10bde2c18c17")
 			(effects
 				(font
@@ -1128,7 +2390,7 @@
 			)
 		)
 		(pin "TOF_INT" bidirectional
-			(at 116.84 170.18 270)
+			(at 171.45 175.895 270)
 			(uuid "51364b4d-5bff-42ca-965a-11b701053e3c")
 			(effects
 				(font
@@ -1138,7 +2400,7 @@
 			)
 		)
 		(pin "TOF_LPN" bidirectional
-			(at 119.38 170.18 270)
+			(at 173.99 175.895 270)
 			(uuid "b4f5ed4c-1bb9-484d-bdc9-b6cede8743b1")
 			(effects
 				(font
@@ -1148,7 +2410,7 @@
 			)
 		)
 		(pin "MAG_INT" bidirectional
-			(at 121.92 170.18 270)
+			(at 176.53 175.895 270)
 			(uuid "1858d628-2fa1-40b4-9e55-0b526a7fe40f")
 			(effects
 				(font
@@ -1158,7 +2420,7 @@
 			)
 		)
 		(pin "SHUTDOWN_REQ_N" bidirectional
-			(at 89.535 152.4 180)
+			(at 125.095 158.115 180)
 			(uuid "158cea35-d0be-495a-a346-b0a2198a7324")
 			(effects
 				(font
@@ -1168,7 +2430,7 @@
 			)
 		)
 		(pin "HALTED" bidirectional
-			(at 89.535 154.94 180)
+			(at 125.095 160.655 180)
 			(uuid "ea691079-f50e-4cbc-918c-56ff10a7d733")
 			(effects
 				(font
@@ -1178,7 +2440,7 @@
 			)
 		)
 		(pin "ESTOP_N" bidirectional
-			(at 89.535 157.48 180)
+			(at 125.095 163.195 180)
 			(uuid "c27858a9-f9c7-40ba-b687-4aad20e5e0e4")
 			(effects
 				(font
@@ -1196,7 +2458,7 @@
 		)
 	)
 	(sheet
-		(at 89.535 45.72)
+		(at 129.54 51.435)
 		(size 74.93 62.23)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1212,7 +2474,7 @@
 		)
 		(uuid "00000000-0000-0000-0000-00005cff70b1")
 		(property "Sheetname" "CM5_HighSpeed"
-			(at 89.535 41.91 0)
+			(at 129.54 47.625 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1223,7 +2485,7 @@
 			)
 		)
 		(property "Sheetfile" "cm5_highspeed.kicad_sch"
-			(at 89.535 43.18 0)
+			(at 129.54 48.895 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1234,7 +2496,7 @@
 			)
 		)
 		(pin "PCIE_CLK_P" output
-			(at 164.465 73.66 0)
+			(at 204.47 79.375 0)
 			(uuid "fe8d9267-7834-48d6-a191-c8724b2ee78d")
 			(effects
 				(font
@@ -1244,7 +2506,7 @@
 			)
 		)
 		(pin "PCIE_CLK_N" output
-			(at 164.465 76.2 0)
+			(at 204.47 81.915 0)
 			(uuid "0b21a65d-d20b-411e-920a-75c343ac5136")
 			(effects
 				(font
@@ -1254,7 +2516,7 @@
 			)
 		)
 		(pin "PCIE_TX_P" output
-			(at 164.465 63.5 0)
+			(at 204.47 69.215 0)
 			(uuid "3cd1bda0-18db-417d-b581-a0c50623df68")
 			(effects
 				(font
@@ -1264,7 +2526,7 @@
 			)
 		)
 		(pin "PCIE_TX_N" output
-			(at 164.465 66.04 0)
+			(at 204.47 71.755 0)
 			(uuid "d57dcfee-5058-4fc2-a68b-05f9a48f685b")
 			(effects
 				(font
@@ -1274,7 +2536,7 @@
 			)
 		)
 		(pin "PCIE_nRST" output
-			(at 164.465 78.74 0)
+			(at 204.47 84.455 0)
 			(uuid "03c52831-5dc5-43c5-a442-8d23643b46fb")
 			(effects
 				(font
@@ -1284,7 +2546,7 @@
 			)
 		)
 		(pin "PCIE_RX_P" input
-			(at 164.465 68.58 0)
+			(at 204.47 74.295 0)
 			(uuid "a1823eb2-fb0d-4ed8-8b96-04184ac3a9d5")
 			(effects
 				(font
@@ -1294,7 +2556,7 @@
 			)
 		)
 		(pin "PCIE_RX_N" input
-			(at 164.465 71.12 0)
+			(at 204.47 76.835 0)
 			(uuid "29e78086-2175-405e-9ba3-c48766d2f50c")
 			(effects
 				(font
@@ -1304,7 +2566,7 @@
 			)
 		)
 		(pin "PCIE_nCLKREQ" input
-			(at 164.465 81.28 0)
+			(at 204.47 86.995 0)
 			(uuid "94a873dc-af67-4ef9-8159-1f7c93eeb3d7")
 			(effects
 				(font
@@ -1314,7 +2576,7 @@
 			)
 		)
 		(pin "USBOTG_ID" input
-			(at 142.875 107.95 270)
+			(at 182.88 113.665 270)
 			(uuid "aa14c3bd-4acc-4908-9d28-228585a22a9d")
 			(effects
 				(font
@@ -1324,7 +2586,7 @@
 			)
 		)
 		(pin "PCIE_PWR_EN" output
-			(at 164.465 83.82 0)
+			(at 204.47 89.535 0)
 			(uuid "e445000d-94a3-4ed1-b023-6aae972d0a39")
 			(effects
 				(font
@@ -1334,7 +2596,7 @@
 			)
 		)
 		(pin "PCIE_nWAKE" input
-			(at 164.465 86.36 0)
+			(at 204.47 92.075 0)
 			(uuid "31cb0f66-393a-491f-95aa-c50644299a5d")
 			(effects
 				(font
@@ -1344,7 +2606,7 @@
 			)
 		)
 		(pin "CC1" output
-			(at 114.3 107.95 270)
+			(at 154.305 113.665 270)
 			(uuid "2cf8f53b-24dd-4c24-b9ec-6a17c5d59b1e")
 			(effects
 				(font
@@ -1354,7 +2616,7 @@
 			)
 		)
 		(pin "CC2" output
-			(at 111.76 107.95 270)
+			(at 151.765 113.665 270)
 			(uuid "c1978e8e-c47f-46ab-943f-3ca251b03127")
 			(effects
 				(font
@@ -1364,7 +2626,7 @@
 			)
 		)
 		(pin "CAM_GPIO0" bidirectional
-			(at 116.84 107.95 270)
+			(at 156.845 113.665 270)
 			(uuid "a955b683-2d8b-4881-934e-bd6c79722b20")
 			(effects
 				(font
@@ -1374,7 +2636,7 @@
 			)
 		)
 		(pin "CAM_GPIO1" bidirectional
-			(at 119.38 107.95 270)
+			(at 159.385 113.665 270)
 			(uuid "4144cca0-d09c-4fc3-be47-02ea3e35e008")
 			(effects
 				(font
@@ -1384,7 +2646,7 @@
 			)
 		)
 		(pin "SCL0" bidirectional
-			(at 121.92 107.95 270)
+			(at 161.925 113.665 270)
 			(uuid "646bb3de-b971-4147-82b1-5508d76b8a5a")
 			(effects
 				(font
@@ -1394,7 +2656,7 @@
 			)
 		)
 		(pin "SDA0" bidirectional
-			(at 124.46 107.95 270)
+			(at 164.465 113.665 270)
 			(uuid "83831925-42c5-4592-b51c-6b4dcef323a7")
 			(effects
 				(font
@@ -1404,7 +2666,7 @@
 			)
 		)
 		(pin "ID_SC" bidirectional
-			(at 127 107.95 270)
+			(at 167.005 113.665 270)
 			(uuid "ecab9247-fb36-430e-ae72-abcbaa80c0e8")
 			(effects
 				(font
@@ -1414,7 +2676,7 @@
 			)
 		)
 		(pin "ID_SD" bidirectional
-			(at 129.54 107.95 270)
+			(at 169.545 113.665 270)
 			(uuid "b6569e8c-af2f-4bf7-a6cd-5b49c214f055")
 			(effects
 				(font
@@ -1424,7 +2686,7 @@
 			)
 		)
 		(pin "GPIO_VREF" bidirectional
-			(at 132.08 107.95 270)
+			(at 172.085 113.665 270)
 			(uuid "6294d409-aa73-4d2d-91b6-9cf6f0e6408b")
 			(effects
 				(font
@@ -1442,13 +2704,12 @@
 		)
 	)
 	(sheet
-		(at 187.96 45.72)
-		(size 57.15 62.23)
+		(at 227.965 57.785)
+		(size 57.15 45.72)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(stroke
 			(width 0.152)
 			(type solid)
@@ -1459,7 +2720,7 @@
 		)
 		(uuid "00000000-0000-0000-0000-00005ed4bb5b")
 		(property "Sheetname" "M2"
-			(at 187.96 45.0086 0)
+			(at 227.965 53.975 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1470,7 +2731,7 @@
 			)
 		)
 		(property "Sheetfile" "m2.kicad_sch"
-			(at 187.96 108.5344 0)
+			(at 227.965 55.245 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1481,7 +2742,7 @@
 			)
 		)
 		(pin "PCIE_CLK_P" input
-			(at 187.96 73.66 180)
+			(at 227.965 79.375 180)
 			(uuid "ee27d19c-8dca-4ac8-a760-6dfd54d28071")
 			(effects
 				(font
@@ -1491,7 +2752,7 @@
 			)
 		)
 		(pin "PCIE_CLK_N" input
-			(at 187.96 76.2 180)
+			(at 227.965 81.915 180)
 			(uuid "9b0a1687-7e1b-4a04-a30b-c27a072a2949")
 			(effects
 				(font
@@ -1501,7 +2762,7 @@
 			)
 		)
 		(pin "PCIE_TX_P" input
-			(at 187.96 63.5 180)
+			(at 227.965 69.215 180)
 			(uuid "c01d25cd-f4bb-4ef3-b5ea-533a2a4ddb2b")
 			(effects
 				(font
@@ -1511,7 +2772,7 @@
 			)
 		)
 		(pin "PCIE_TX_N" input
-			(at 187.96 66.04 180)
+			(at 227.965 71.755 180)
 			(uuid "9e1b837f-0d34-4a18-9644-9ee68f141f46")
 			(effects
 				(font
@@ -1521,7 +2782,7 @@
 			)
 		)
 		(pin "PCIE_nCLKREQ" output
-			(at 187.96 81.28 180)
+			(at 227.965 86.995 180)
 			(uuid "63ff1c93-3f96-4c33-b498-5dd8c33bccc0")
 			(effects
 				(font
@@ -1531,7 +2792,7 @@
 			)
 		)
 		(pin "PCIE_nRST" input
-			(at 187.96 78.74 180)
+			(at 227.965 84.455 180)
 			(uuid "b88717bd-086f-46cd-9d3f-0396009d0996")
 			(effects
 				(font
@@ -1541,7 +2802,7 @@
 			)
 		)
 		(pin "PCIE_RX_P" output
-			(at 187.96 68.58 180)
+			(at 227.965 74.295 180)
 			(uuid "61fe293f-6808-4b7f-9340-9aaac7054a97")
 			(effects
 				(font
@@ -1551,7 +2812,7 @@
 			)
 		)
 		(pin "PCIE_RX_N" output
-			(at 187.96 71.12 180)
+			(at 227.965 76.835 180)
 			(uuid "2f215f15-3d52-4c91-93e6-3ea03a95622f")
 			(effects
 				(font
@@ -1561,7 +2822,7 @@
 			)
 		)
 		(pin "PCIE_PWR_EN" input
-			(at 187.96 83.82 180)
+			(at 227.965 89.535 180)
 			(uuid "97775b76-6935-4c0f-9fc9-91db55c7f4d2")
 			(effects
 				(font
@@ -1571,7 +2832,7 @@
 			)
 		)
 		(pin "PCIE_nWAKE" output
-			(at 187.96 86.36 180)
+			(at 227.965 92.075 180)
 			(uuid "29caf48f-b190-47ea-a0b4-a078d43caa04")
 			(effects
 				(font
@@ -1589,1217 +2850,12 @@
 		)
 	)
 	(sheet
-		(at 25.4 45.72)
-		(size 45.72 30.48)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(stroke
-			(width 0.152)
-			(type solid)
-			(color 132 0 132 1)
-		)
-		(fill
-			(color 255 255 255 0)
-		)
-		(uuid "ed702e07-e156-4d9c-88a8-20fd12dbb3c2")
-		(property "Sheetname" "Power"
-			(at 25.4 45.0086 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left bottom)
-			)
-		)
-		(property "Sheetfile" "power.kicad_sch"
-			(at 25.4 76.7844 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left top)
-			)
-		)
-		(pin "VBAT" bidirectional
-			(at 71.12 48.26 0)
-			(uuid "a6a83c40-199c-48ec-ad25-a799bb6132d7")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(pin "NTC_SENSE" bidirectional
-			(at 71.12 50.8 0)
-			(uuid "5a517fe4-5675-42d7-adbd-6379241e92de")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(pin "SHUTDOWN_REQ_N" bidirectional
-			(at 71.12 53.34 0)
-			(uuid "d8bc39ed-74d4-46b9-98cb-0bbebf688869")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(pin "HALTED" bidirectional
-			(at 71.12 55.88 0)
-			(uuid "8f2bd491-2036-4079-bf41-46b51101bd79")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(pin "ESTOP_N" bidirectional
-			(at 71.12 58.42 0)
-			(uuid "1180dd43-026f-403a-a569-4b96c021a780")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(instances
-			(project "carrier-cm5"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(page "5")
-				)
-			)
-		)
-	)
-	(wire
-		(pts
-			(xy 116.84 107.95) (xy 116.84 132.08)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e4356097-793f-4832-9ac7-f3fa21f0a7f8")
-	)
-	(wire
-		(pts
-			(xy 119.38 107.95) (xy 119.38 132.08)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f22c6c7d-c5dc-4381-bbdb-9ae24318a3ec")
-	)
-	(wire
-		(pts
-			(xy 121.92 107.95) (xy 121.92 132.08)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "62fbc134-565d-43f7-9703-6f5b324f9597")
-	)
-	(wire
-		(pts
-			(xy 124.46 107.95) (xy 124.46 132.08)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "acd1f20e-1f1c-47b9-adbc-ba6c4beb6152")
-	)
-	(wire
-		(pts
-			(xy 127 107.95) (xy 127 132.08)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ff77c33e-03eb-4b5c-87ba-b2f3ee8deaf5")
-	)
-	(wire
-		(pts
-			(xy 129.54 107.95) (xy 129.54 132.08)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "820e8d92-219e-497c-a689-ec3211df315a")
-	)
-	(wire
-		(pts
-			(xy 132.08 107.95) (xy 132.08 132.08)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d2983723-65ec-4b45-b352-77aa720a71a3")
-	)
-	(symbol
-		(lib_id "Mechanical:MountingHole")
-		(at 53.34 172.72 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "26719b96-2618-46e3-9f0d-168db3c2448e")
-		(property "Reference" "H5"
-			(at 56.515 172.085 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "CM5 standoff M2.5"
-			(at 56.515 174.625 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "vector:MountingHole_2.7mm_M2.5_DIN965"
-			(at 53.34 172.72 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 53.34 172.72 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(instances
-			(project "carrier-cm5"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(reference "H5")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Mechanical:MountingHole")
-		(at 53.34 177.8 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "60241859-ef14-4dac-9aeb-de08cb774267")
-		(property "Reference" "H6"
-			(at 56.515 177.165 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "CM5 standoff M2.5"
-			(at 56.515 179.705 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "vector:MountingHole_2.7mm_M2.5_DIN965"
-			(at 53.34 177.8 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 53.34 177.8 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(instances
-			(project "carrier-cm5"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(reference "H6")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Mechanical:MountingHole")
-		(at 53.34 182.88 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "65421d08-08d6-4355-94f6-57f787c9ec8e")
-		(property "Reference" "H8"
-			(at 56.515 182.245 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "CM5 standoff M2.5"
-			(at 56.515 184.785 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "vector:MountingHole_2.7mm_M2.5_DIN965"
-			(at 53.34 182.88 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 53.34 182.88 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(instances
-			(project "carrier-cm5"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(reference "H8")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Mechanical:MountingHole")
-		(at 53.34 187.96 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "b46dbf53-9b8f-49f4-b2d0-96ea4a777a57")
-		(property "Reference" "H9"
-			(at 56.515 187.325 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "CM5 standoff M2.5"
-			(at 56.515 189.865 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "vector:MountingHole_2.7mm_M2.5_DIN965"
-			(at 53.34 187.96 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 53.34 187.96 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(instances
-			(project "carrier-cm5"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(reference "H9")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(wire
-		(pts
-			(xy 165.1 134.62) (xy 203.2 134.62)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1fffe133-93f0-4235-8eb2-34e95a953f7b")
-	)
-	(wire
-		(pts
-			(xy 165.1 137.16) (xy 203.2 137.16)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a94046d3-d1c9-4b02-b911-58e8967d9dbf")
-	)
-	(wire
-		(pts
-			(xy 165.1 147.32) (xy 184.15 147.32)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "0a8e96ea-38fa-4705-af8a-9b74023a5ba3")
-	)
-	(wire
-		(pts
-			(xy 184.15 147.32) (xy 203.2 147.32)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1b3e77ac-ae98-4edb-b34c-05aae3404b22")
-	)
-	(label "GNSS_PPS"
-		(at 184.15 147.32 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "58757f73-49b5-4d0b-9c6d-4f3121c16775")
-	)
-	(wire
-		(pts
-			(xy 203.2 149.86) (xy 195.58 149.86)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4450c4bd-9d17-4b5b-891c-968042892f8b")
-	)
-	(label "GNSS_TXD"
-		(at 195.58 149.86 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "1b4a6f2d-1f0f-4d19-a149-44b6162adf68")
-	)
-	(wire
-		(pts
-			(xy 203.2 152.4) (xy 195.58 152.4)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d296e1d1-a0e4-4ad8-ab56-d5d6b71fd313")
-	)
-	(label "GNSS_RXD"
-		(at 195.58 152.4 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "d8da0290-daef-4f54-a36c-babf43149042")
-	)
-	(wire
-		(pts
-			(xy 203.2 154.94) (xy 195.58 154.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "80eb6d6a-be91-4ee7-87b0-4e77c27746cb")
-	)
-	(label "VBAT"
-		(at 195.58 154.94 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "ad278cb0-e5c8-4b41-9440-a96429793a86")
-	)
-	(wire
-		(pts
-			(xy 203.2 157.48) (xy 195.58 157.48)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3c7a4814-a82f-4852-bfcf-897a46ede100")
-	)
-	(label "NTC_SENSE"
-		(at 195.58 157.48 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "82bfb265-b582-45df-9dbf-e9d9a5ff3dc8")
-	)
-	(wire
-		(pts
-			(xy 274.32 134.62) (xy 266.7 134.62)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4e805f4e-b9cd-496f-b016-0b844cad9417")
-	)
-	(label "GNSS_TXD"
-		(at 266.7 134.62 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "e8f0485a-adcf-4ecb-bb03-3a99a70c6107")
-	)
-	(wire
-		(pts
-			(xy 274.32 137.16) (xy 266.7 137.16)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "8e73d844-8823-4edf-82b5-78a0a90ecdad")
-	)
-	(label "GNSS_RXD"
-		(at 266.7 137.16 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "b1810b84-6655-4837-a40c-28a23031b070")
-	)
-	(wire
-		(pts
-			(xy 274.32 139.7) (xy 266.7 139.7)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f41b023d-1ea9-4041-aa55-2aeb79efb707")
-	)
-	(label "GNSS_PPS"
-		(at 266.7 139.7 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "7b5e92dc-41a5-412b-a819-c225a1ddf443")
-	)
-	(wire
-		(pts
-			(xy 71.12 48.26) (xy 73.66 48.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9d42dbc0-6db6-4be9-899a-ab8d771a1dae")
-	)
-	(label "VBAT"
-		(at 73.66 48.26 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "1b9a4985-8c75-49f6-bb14-59359f825cb2")
-	)
-	(wire
-		(pts
-			(xy 71.12 50.8) (xy 73.66 50.8)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "2b1a1515-b17b-427c-b4a7-2cf1783e8b5a")
-	)
-	(label "NTC_SENSE"
-		(at 73.66 50.8 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "8b18e274-c759-4274-bd04-b1d442a28466")
-	)
-	(sheet
-		(at 203.2 132.08)
-		(size 50.8 30.48)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(stroke
-			(width 0.152)
-			(type solid)
-			(color 132 0 132 1)
-		)
-		(fill
-			(color 255 255 255 0)
-		)
-		(uuid "dc0c6157-ca13-48c5-94d6-c9851ba60b87")
-		(property "Sheetname" "IO_MCU"
-			(at 203.2 131.3686 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left bottom)
-			)
-		)
-		(property "Sheetfile" "io_mcu.kicad_sch"
-			(at 203.2 163.2744 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left top)
-			)
-		)
-		(pin "IO_TXD" bidirectional
-			(at 203.2 134.62 180)
-			(uuid "ec583651-55ee-49df-8b75-a66e5812a385")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(pin "IO_RXD" bidirectional
-			(at 203.2 137.16 180)
-			(uuid "a96ee424-bb4e-41a0-87a8-f026b547b0a8")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(pin "SWDREC_SWDIO" bidirectional
-			(at 203.2 139.7 180)
-			(uuid "432f4a56-e29f-4f23-886c-1ffd03cdba51")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(pin "SWDREC_SWCLK" bidirectional
-			(at 203.2 142.24 180)
-			(uuid "daa53aa9-5f14-46ab-bf6f-adce1a9d746e")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(pin "SWDREC_NRST" bidirectional
-			(at 203.2 144.78 180)
-			(uuid "9636fb5b-2d8a-4f30-be7e-b4dc93e5790e")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(pin "GNSS_PPS" bidirectional
-			(at 203.2 147.32 180)
-			(uuid "3b9cbb94-9d3f-4817-b3fe-79369a03e821")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(pin "GNSS_TXD" bidirectional
-			(at 203.2 149.86 180)
-			(uuid "3ccba8d8-5cd8-4e9e-97be-d4023835e510")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(pin "GNSS_RXD" bidirectional
-			(at 203.2 152.4 180)
-			(uuid "566d65d1-38ec-49b0-8e73-d5657d42abe7")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(pin "VBAT" bidirectional
-			(at 203.2 154.94 180)
-			(uuid "cdf13fb4-8c5e-49ad-90c8-a0a09074c012")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(pin "NTC_SENSE" bidirectional
-			(at 203.2 157.48 180)
-			(uuid "d2868af3-60eb-4205-89ed-c5e843d19705")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(pin "LTE_EN" bidirectional
-			(at 254 152.4 0)
-			(uuid "54023d39-ff94-4681-9140-ed72e945aee2")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(pin "LTE_STATUS" bidirectional
-			(at 254 154.94 0)
-			(uuid "927d1f3a-166c-4add-8d12-cae6701a0807")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(instances
-			(project "carrier-cm5"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(page "6")
-				)
-			)
-		)
-	)
-	(text "IO MCU - ELRS - LoRa"
-		(exclude_from_sim no)
-		(at 236.22 158.75 0)
-		(effects
-			(font
-				(size 1.905 1.905)
-				(thickness 0.381)
-				(bold yes)
-			)
-		)
-		(uuid "d9874f8b-661d-48ce-9977-d29ea651e359")
-	)
-	(sheet
-		(at 274.32 132.08)
-		(size 38.1 15.24)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(stroke
-			(width 0.152)
-			(type solid)
-			(color 132 0 132 1)
-		)
-		(fill
-			(color 255 255 255 0)
-		)
-		(uuid "0f8f54fe-5f77-4ab7-a4c2-ce4b85bdda31")
-		(property "Sheetname" "GNSS"
-			(at 274.32 131.3686 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left bottom)
-			)
-		)
-		(property "Sheetfile" "gnss.kicad_sch"
-			(at 274.32 148.0344 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left top)
-			)
-		)
-		(pin "GNSS_TXD" bidirectional
-			(at 274.32 134.62 180)
-			(uuid "6ff0f0d1-55f1-49f5-bf04-d4a6210e5539")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(pin "GNSS_RXD" bidirectional
-			(at 274.32 137.16 180)
-			(uuid "c36e399f-0f88-4f9a-aaa4-9eaa610c4273")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(pin "GNSS_PPS" bidirectional
-			(at 274.32 139.7 180)
-			(uuid "793e1bad-d944-4cc2-b856-e67248b2dc1f")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(instances
-			(project "carrier-cm5"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(page "7")
-				)
-			)
-		)
-	)
-	(text "GNSS"
-		(exclude_from_sim no)
-		(at 293.37 139.7 0)
-		(effects
-			(font
-				(size 1.905 1.905)
-				(thickness 0.381)
-				(bold yes)
-			)
-		)
-		(uuid "59a37df1-2d4c-4dfb-8192-220a71e59f87")
-	)
-	(wire
-		(pts
-			(xy 165.1 160.02) (xy 172.72 160.02)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f002c33f-6601-4ff9-ba7d-c398a044620b")
-	)
-	(label "LTE_TXD"
-		(at 172.72 160.02 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "91af6958-16c7-44dd-add3-6abff642c7db")
-	)
-	(wire
-		(pts
-			(xy 165.1 162.56) (xy 172.72 162.56)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "633e3c33-d2bb-4e9f-8923-7d22f6815b28")
-	)
-	(label "LTE_RXD"
-		(at 172.72 162.56 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "b09d9276-0f06-4152-ab00-3f4db6c0702b")
-	)
-	(wire
-		(pts
-			(xy 165.1 165.1) (xy 172.72 165.1)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "aa132f1e-ab2b-4f2e-b589-c35396949498")
-	)
-	(label "LTE_PWRKEY"
-		(at 172.72 165.1 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "189c76af-4dda-401b-9f70-b7d50047c7d5")
-	)
-	(wire
-		(pts
-			(xy 165.1 167.64) (xy 172.72 167.64)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e4d55345-d557-4dd3-a449-6ca5be662436")
-	)
-	(label "LTE_SLEEP"
-		(at 172.72 167.64 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "64c7e52e-fde2-470e-aa08-7090a1d8bf13")
-	)
-	(wire
-		(pts
-			(xy 254 152.4) (xy 261.62 152.4)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3f0e3388-6ee9-4503-a03f-9584a8e001b4")
-	)
-	(label "LTE_EN"
-		(at 261.62 152.4 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "252ac817-b4e6-4ca3-95a1-d49a0a78298b")
-	)
-	(wire
-		(pts
-			(xy 254 154.94) (xy 261.62 154.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1ecf382c-1271-4192-b838-df30b219abd4")
-	)
-	(label "LTE_STATUS"
-		(at 261.62 154.94 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "23cb4ba8-6b09-4721-a0aa-728fe7e5d9c2")
-	)
-	(wire
-		(pts
-			(xy 274.32 167.64) (xy 266.7 167.64)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3bba5086-13e9-4e75-84d3-829c6c2c796f")
-	)
-	(label "LTE_TXD"
-		(at 266.7 167.64 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "a91e51e9-9317-49cf-8cce-a1f7a097a9b7")
-	)
-	(wire
-		(pts
-			(xy 274.32 170.18) (xy 266.7 170.18)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6c628862-706a-4227-8737-6ad272a53db8")
-	)
-	(label "LTE_RXD"
-		(at 266.7 170.18 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "b84c3eb8-6712-4aba-b3cc-d8749a40d989")
-	)
-	(wire
-		(pts
-			(xy 274.32 172.72) (xy 266.7 172.72)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "07f9cee9-c799-452f-a3ee-ed60855f118c")
-	)
-	(label "LTE_PWRKEY"
-		(at 266.7 172.72 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "416aadb9-0d42-47e0-8a69-c471792b334d")
-	)
-	(wire
-		(pts
-			(xy 274.32 175.26) (xy 266.7 175.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "cfc1c2be-ae56-49c2-8891-4248f0242883")
-	)
-	(label "LTE_SLEEP"
-		(at 266.7 175.26 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "66027456-e054-44f1-b22a-8da111b22639")
-	)
-	(wire
-		(pts
-			(xy 274.32 177.8) (xy 266.7 177.8)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e9628828-0899-4279-94dc-a99913ba6587")
-	)
-	(label "LTE_EN"
-		(at 266.7 177.8 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "b58f31ab-121c-4c8f-a1a9-3b6c79444c4d")
-	)
-	(wire
-		(pts
-			(xy 274.32 180.34) (xy 266.7 180.34)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "0f77dec5-e054-4371-afff-7f669a44a1a0")
-	)
-	(label "LTE_STATUS"
-		(at 266.7 180.34 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "6c866a37-da3d-4df8-a3b8-e8ebdd6de002")
-	)
-	(wire
-		(pts
-			(xy 274.32 182.88) (xy 266.7 182.88)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c5994034-2528-408b-8bbf-e96ea588907c")
-	)
-	(label "VBAT"
-		(at 266.7 182.88 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "d36b3eac-70dc-45ad-97d0-cbd5c6641501")
-	)
-	(sheet
-		(at 274.32 165.1)
+		(at 314.325 170.815)
 		(size 38.1 22.86)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(stroke
 			(width 0.152)
 			(type solid)
@@ -2810,7 +2866,7 @@
 		)
 		(uuid "0919b368-a999-465e-b816-ad074e6fa1a7")
 		(property "Sheetname" "LTE"
-			(at 274.32 164.3886 0)
+			(at 314.325 167.005 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -2821,7 +2877,7 @@
 			)
 		)
 		(property "Sheetfile" "lte.kicad_sch"
-			(at 274.32 188.6744 0)
+			(at 314.325 168.275 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -2832,7 +2888,7 @@
 			)
 		)
 		(pin "LTE_TXD" bidirectional
-			(at 274.32 167.64 180)
+			(at 314.325 173.355 180)
 			(uuid "38033434-14fb-46d7-8c11-8ef367f64848")
 			(effects
 				(font
@@ -2842,7 +2898,7 @@
 			)
 		)
 		(pin "LTE_RXD" bidirectional
-			(at 274.32 170.18 180)
+			(at 314.325 175.895 180)
 			(uuid "a1bd5daf-d62a-42bb-bda9-478e78a78b50")
 			(effects
 				(font
@@ -2852,7 +2908,7 @@
 			)
 		)
 		(pin "LTE_PWRKEY" bidirectional
-			(at 274.32 172.72 180)
+			(at 314.325 178.435 180)
 			(uuid "f3422551-d3fb-47b9-898c-5b583b919b01")
 			(effects
 				(font
@@ -2862,7 +2918,7 @@
 			)
 		)
 		(pin "LTE_SLEEP" bidirectional
-			(at 274.32 175.26 180)
+			(at 314.325 180.975 180)
 			(uuid "214390ca-17fd-47aa-ae85-d38917102996")
 			(effects
 				(font
@@ -2872,7 +2928,7 @@
 			)
 		)
 		(pin "LTE_EN" bidirectional
-			(at 274.32 177.8 180)
+			(at 314.325 183.515 180)
 			(uuid "f0cc9b5d-4e0f-4cc1-809f-b7fdf88fd02b")
 			(effects
 				(font
@@ -2882,7 +2938,7 @@
 			)
 		)
 		(pin "LTE_STATUS" bidirectional
-			(at 274.32 180.34 180)
+			(at 314.325 186.055 180)
 			(uuid "d770260c-7bcd-4ef6-bbe2-95e087aa078d")
 			(effects
 				(font
@@ -2892,7 +2948,7 @@
 			)
 		)
 		(pin "VBAT" bidirectional
-			(at 274.32 182.88 180)
+			(at 314.325 188.595 180)
 			(uuid "89c20f11-77a0-4547-9970-4eba356db483")
 			(effects
 				(font
@@ -2909,439 +2965,89 @@
 			)
 		)
 	)
-	(text "LTE"
-		(exclude_from_sim no)
-		(at 299.72 176.53 0)
-		(effects
-			(font
-				(size 1.905 1.905)
-				(thickness 0.381)
-				(bold yes)
-			)
-		)
-		(uuid "fc7cbed2-444c-40d4-9d56-1a566971cb2c")
-	)
-	(wire
-		(pts
-			(xy 96.52 170.18) (xy 96.52 190.5)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "28394b76-13c2-4f22-9389-af7153f1a57b")
-	)
-	(wire
-		(pts
-			(xy 99.06 170.18) (xy 99.06 190.5)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "92dc1a67-b33e-4768-924e-9b06eb4e9fd8")
-	)
-	(wire
-		(pts
-			(xy 101.6 170.18) (xy 101.6 190.5)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9ab716cc-d2c3-4a5d-9770-9e182008a281")
-	)
-	(wire
-		(pts
-			(xy 104.14 170.18) (xy 104.14 190.5)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "37c542a6-2ce9-4087-a5a5-56f136fc41e0")
-	)
-	(wire
-		(pts
-			(xy 106.68 170.18) (xy 106.68 190.5)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "82755058-acbb-4401-9055-245db8fbbef8")
-	)
-	(wire
-		(pts
-			(xy 109.22 170.18) (xy 109.22 190.5)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9262b145-47d8-4e9b-815a-d4e33216843d")
-	)
-	(wire
-		(pts
-			(xy 111.76 170.18) (xy 111.76 190.5)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1999ef86-28dc-4263-ac37-1f98c7d5692c")
-	)
-	(wire
-		(pts
-			(xy 114.3 170.18) (xy 114.3 190.5)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d496d1dc-e0b5-45c3-86bd-3f19b0eb1dbd")
-	)
-	(wire
-		(pts
-			(xy 116.84 170.18) (xy 116.84 190.5)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4051abdc-ffa8-4174-bc2c-4cc5bde8f3b3")
-	)
-	(wire
-		(pts
-			(xy 119.38 170.18) (xy 119.38 190.5)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4aac1c72-a682-4c6a-9ec0-58d084268d88")
-	)
-	(wire
-		(pts
-			(xy 121.92 170.18) (xy 121.92 190.5)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "0548257b-c57a-4a4d-92de-78c8b363bbae")
-	)
-	(wire
-		(pts
-			(xy 134.62 190.5) (xy 134.62 182.88)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b78c0c2d-2a79-4dca-88f2-0be1ee85572c")
-	)
-	(label "SWDREC_SWDIO"
-		(at 134.62 182.88 90)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "73544ebe-02ef-4e0e-9c98-995c220c35ee")
-	)
-	(wire
-		(pts
-			(xy 137.16 190.5) (xy 137.16 182.88)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "775b8531-ea97-44f3-a099-f6c403c63323")
-	)
-	(label "SWDREC_SWCLK"
-		(at 137.16 182.88 90)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "54efffff-64c2-4d48-893f-95a54ca1a578")
-	)
-	(wire
-		(pts
-			(xy 139.7 190.5) (xy 139.7 182.88)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c7d1b008-2753-4659-a5a6-0a7ef2ef5100")
-	)
-	(label "SWDREC_NRST"
-		(at 139.7 182.88 90)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "1c795cb2-fa7d-4619-9ef4-68b31adcbab0")
-	)
-	(wire
-		(pts
-			(xy 142.24 190.5) (xy 142.24 182.88)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "be7f1a9f-a721-41a6-99e0-e08d18042afa")
-	)
-	(label "ESTOP_N"
-		(at 142.24 182.88 90)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "53d4684a-b166-4689-a307-9b0094fec5a4")
-	)
-	(wire
-		(pts
-			(xy 71.12 53.34) (xy 73.66 53.34)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "2c4ff00e-5d85-4a28-81ab-f6ca1c81c56b")
-	)
-	(label "SHUTDOWN_REQ_N"
-		(at 73.66 53.34 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "c26176ef-90de-408c-9d90-f8ed675d35f4")
-	)
-	(wire
-		(pts
-			(xy 89.535 152.4) (xy 81.915 152.4)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3d74c9fa-95b0-4860-bce0-b36c18f3ddfd")
-	)
-	(label "SHUTDOWN_REQ_N"
-		(at 81.915 152.4 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "b3109b9d-eeb1-468d-bfec-d60c3a4f5a84")
-	)
-	(wire
-		(pts
-			(xy 71.12 55.88) (xy 73.66 55.88)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "2b4bb691-2b0a-4de0-bd5c-2347d767ad54")
-	)
-	(label "HALTED"
-		(at 73.66 55.88 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "4a16490b-5839-4f29-9d15-0b3d31c95c08")
-	)
-	(wire
-		(pts
-			(xy 89.535 154.94) (xy 81.915 154.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a784c6c3-2449-4c9a-bab5-c5666a56448b")
-	)
-	(label "HALTED"
-		(at 81.915 154.94 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "859d3d66-d7ad-455f-8cbe-39e6f9bbe3b0")
-	)
-	(wire
-		(pts
-			(xy 71.12 58.42) (xy 73.66 58.42)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d5948b05-1314-4c1a-8157-356a6b4e54eb")
-	)
-	(label "ESTOP_N"
-		(at 73.66 58.42 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "a44677a1-ef96-4ec1-b007-536f55e9ae44")
-	)
-	(wire
-		(pts
-			(xy 89.535 157.48) (xy 81.915 157.48)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b9d658f9-d177-4db8-9220-55fbdd5f5eb6")
-	)
-	(label "ESTOP_N"
-		(at 81.915 157.48 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "4556b00a-f0e3-4cbf-9512-c85704159785")
-	)
-	(wire
-		(pts
-			(xy 165.1 139.7) (xy 184.15 139.7)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "30573726-05d7-43ed-b6a2-77a0c48d0127")
-	)
-	(wire
-		(pts
-			(xy 184.15 139.7) (xy 203.2 139.7)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "0a0014b8-60f0-4712-9023-b402cecac1bb")
-	)
-	(label "SWDREC_SWDIO"
-		(at 184.15 139.7 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "e692b520-3aa8-40e6-9df8-c973812c76d2")
-	)
-	(wire
-		(pts
-			(xy 165.1 142.24) (xy 184.15 142.24)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3ad8eefb-2313-474c-9775-8df0d8f5592a")
-	)
-	(wire
-		(pts
-			(xy 184.15 142.24) (xy 203.2 142.24)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "5ba75749-ed29-4c35-9a0a-22846dbad946")
-	)
-	(label "SWDREC_SWCLK"
-		(at 184.15 142.24 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "6f48b40e-7e6e-483a-9c75-2ad0bb46bb2d")
-	)
-	(wire
-		(pts
-			(xy 165.1 144.78) (xy 184.15 144.78)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9875500c-e211-4bf5-b860-f060d27452ab")
-	)
-	(wire
-		(pts
-			(xy 184.15 144.78) (xy 203.2 144.78)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "17c1c269-e2c0-4454-b2b6-ebe1c1338bb9")
-	)
-	(label "SWDREC_NRST"
-		(at 184.15 144.78 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "2412572f-27a8-42d3-a006-9b37605c3471")
-	)
 	(sheet
-		(at 89.535 190.5)
-		(size 75.565 25.4)
+		(at 314.325 134.62)
+		(size 38.1 18.415)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
+		(stroke
+			(width 0.152)
+			(type solid)
+			(color 132 0 132 1)
+		)
+		(fill
+			(color 255 255 255 0)
+		)
+		(uuid "0f8f54fe-5f77-4ab7-a4c2-ce4b85bdda31")
+		(property "Sheetname" "GNSS"
+			(at 314.325 130.8606 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "gnss.kicad_sch"
+			(at 314.325 132.08 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "GNSS_TXD" bidirectional
+			(at 314.325 140.335 180)
+			(uuid "6ff0f0d1-55f1-49f5-bf04-d4a6210e5539")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GNSS_RXD" bidirectional
+			(at 314.325 142.875 180)
+			(uuid "c36e399f-0f88-4f9a-aaa4-9eaa610c4273")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GNSS_PPS" bidirectional
+			(at 314.325 145.415 180)
+			(uuid "793e1bad-d944-4cc2-b856-e67248b2dc1f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(instances
+			(project "carrier-cm5"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+					(page "7")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 129.54 202.565)
+		(size 72.39 36.83)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(stroke
 			(width 0.152)
 			(type solid)
@@ -3352,18 +3058,18 @@
 		)
 		(uuid "afcd644d-70b1-4ef8-b12e-251a4ca14a49")
 		(property "Sheetname" "Peripherals"
-			(at 89.535 216.6114 0)
+			(at 128.905 198.755 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left top)
+				(justify left bottom)
 			)
 		)
 		(property "Sheetfile" "periph.kicad_sch"
-			(at 89.535 218.6114 0)
+			(at 128.905 200.025 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -3374,7 +3080,7 @@
 			)
 		)
 		(pin "CAN_CS" bidirectional
-			(at 96.52 190.5 90)
+			(at 151.13 202.565 90)
 			(uuid "4f869543-7b20-4331-92ba-4d7507af61d1")
 			(effects
 				(font
@@ -3384,7 +3090,7 @@
 			)
 		)
 		(pin "CAN_MISO" bidirectional
-			(at 99.06 190.5 90)
+			(at 153.67 202.565 90)
 			(uuid "cebcd0cd-b47e-4143-923a-ff2ebde315d6")
 			(effects
 				(font
@@ -3394,7 +3100,7 @@
 			)
 		)
 		(pin "CAN_MOSI" bidirectional
-			(at 101.6 190.5 90)
+			(at 156.21 202.565 90)
 			(uuid "19424bb7-6b3b-44c0-b4b5-59d27b6b0dc4")
 			(effects
 				(font
@@ -3404,7 +3110,7 @@
 			)
 		)
 		(pin "CAN_SCK" bidirectional
-			(at 104.14 190.5 90)
+			(at 158.75 202.565 90)
 			(uuid "6cf07815-8f10-4dd6-b081-a4034047c6c5")
 			(effects
 				(font
@@ -3414,7 +3120,7 @@
 			)
 		)
 		(pin "CAN_INT" bidirectional
-			(at 106.68 190.5 90)
+			(at 161.29 202.565 90)
 			(uuid "2259ac0b-c2cc-43e4-ad40-7047e4bcbcc0")
 			(effects
 				(font
@@ -3424,7 +3130,7 @@
 			)
 		)
 		(pin "I2C1_SDA" bidirectional
-			(at 109.22 190.5 90)
+			(at 163.83 202.565 90)
 			(uuid "0b26a44f-cd08-46e3-b674-148425426f6c")
 			(effects
 				(font
@@ -3434,7 +3140,7 @@
 			)
 		)
 		(pin "I2C1_SCL" bidirectional
-			(at 111.76 190.5 90)
+			(at 166.37 202.565 90)
 			(uuid "5391a33a-c675-431a-812b-6067488220aa")
 			(effects
 				(font
@@ -3444,7 +3150,7 @@
 			)
 		)
 		(pin "IMU_INT" bidirectional
-			(at 114.3 190.5 90)
+			(at 168.91 202.565 90)
 			(uuid "ae7d93b0-e3cf-4449-a0bd-1b452a8630b0")
 			(effects
 				(font
@@ -3454,7 +3160,7 @@
 			)
 		)
 		(pin "TOF_INT" bidirectional
-			(at 116.84 190.5 90)
+			(at 171.45 202.565 90)
 			(uuid "86e7af64-dd24-4465-a708-a62fd70cb9e2")
 			(effects
 				(font
@@ -3464,7 +3170,7 @@
 			)
 		)
 		(pin "TOF_LPN" bidirectional
-			(at 119.38 190.5 90)
+			(at 173.99 202.565 90)
 			(uuid "1d4229f0-442e-4125-8ee9-2965cb2ff459")
 			(effects
 				(font
@@ -3474,7 +3180,7 @@
 			)
 		)
 		(pin "MAG_INT" bidirectional
-			(at 121.92 190.5 90)
+			(at 176.53 202.565 90)
 			(uuid "3e9d2b0f-913f-49b5-99f5-b43db910cdc1")
 			(effects
 				(font
@@ -3484,7 +3190,7 @@
 			)
 		)
 		(pin "SWDREC_SWDIO" bidirectional
-			(at 134.62 190.5 90)
+			(at 201.93 227.965 0)
 			(uuid "3bdae88d-e5c1-4818-9bfe-a23a0a56962a")
 			(effects
 				(font
@@ -3494,7 +3200,7 @@
 			)
 		)
 		(pin "SWDREC_SWCLK" bidirectional
-			(at 137.16 190.5 90)
+			(at 201.93 230.505 0)
 			(uuid "444dd6bb-9c02-449e-a73d-af609d5cdd95")
 			(effects
 				(font
@@ -3504,7 +3210,7 @@
 			)
 		)
 		(pin "SWDREC_NRST" bidirectional
-			(at 139.7 190.5 90)
+			(at 201.93 233.045 0)
 			(uuid "1da42caa-cd2c-41ef-a760-86651f465518")
 			(effects
 				(font
@@ -3514,7 +3220,7 @@
 			)
 		)
 		(pin "ESTOP_N" bidirectional
-			(at 142.24 190.5 90)
+			(at 201.93 235.585 0)
 			(uuid "e6ab2fdf-712d-423f-976c-2e035aba881e")
 			(effects
 				(font
@@ -3531,17 +3237,267 @@
 			)
 		)
 	)
-	(text "CAN - IMU - J-NOSE - SWD"
+	(sheet
+		(at 243.205 137.16)
+		(size 55.245 31.115)
 		(exclude_from_sim no)
-		(at 127.3175 208.28 0)
-		(effects
-			(font
-				(size 1.905 1.905)
-				(thickness 0.381)
-				(bold yes)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0.152)
+			(type solid)
+			(color 132 0 132 1)
+		)
+		(fill
+			(color 255 255 255 0)
+		)
+		(uuid "dc0c6157-ca13-48c5-94d6-c9851ba60b87")
+		(property "Sheetname" "IO_MCU"
+			(at 243.84 133.4006 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
 			)
 		)
-		(uuid "73c06365-305c-4a89-8307-3e7ea88be1eb")
+		(property "Sheetfile" "io_mcu.kicad_sch"
+			(at 243.84 134.62 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "IO_TXD" bidirectional
+			(at 243.205 140.335 180)
+			(uuid "ec583651-55ee-49df-8b75-a66e5812a385")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "IO_RXD" bidirectional
+			(at 243.205 142.875 180)
+			(uuid "a96ee424-bb4e-41a0-87a8-f026b547b0a8")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "SWDREC_SWDIO" bidirectional
+			(at 243.205 145.415 180)
+			(uuid "432f4a56-e29f-4f23-886c-1ffd03cdba51")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "SWDREC_SWCLK" bidirectional
+			(at 243.205 147.955 180)
+			(uuid "daa53aa9-5f14-46ab-bf6f-adce1a9d746e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "SWDREC_NRST" bidirectional
+			(at 243.205 150.495 180)
+			(uuid "9636fb5b-2d8a-4f30-be7e-b4dc93e5790e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GNSS_PPS" bidirectional
+			(at 243.205 153.035 180)
+			(uuid "3b9cbb94-9d3f-4817-b3fe-79369a03e821")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GNSS_TXD" bidirectional
+			(at 243.205 155.575 180)
+			(uuid "3ccba8d8-5cd8-4e9e-97be-d4023835e510")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "GNSS_RXD" bidirectional
+			(at 243.205 158.115 180)
+			(uuid "566d65d1-38ec-49b0-8e73-d5657d42abe7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "VBAT" bidirectional
+			(at 243.205 160.655 180)
+			(uuid "cdf13fb4-8c5e-49ad-90c8-a0a09074c012")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "NTC_SENSE" bidirectional
+			(at 243.205 163.195 180)
+			(uuid "d2868af3-60eb-4205-89ed-c5e843d19705")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "LTE_EN" bidirectional
+			(at 298.45 158.115 0)
+			(uuid "54023d39-ff94-4681-9140-ed72e945aee2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "LTE_STATUS" bidirectional
+			(at 298.45 160.655 0)
+			(uuid "927d1f3a-166c-4add-8d12-cae6701a0807")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(instances
+			(project "carrier-cm5"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+					(page "6")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 44.45 50.165)
+		(size 45.72 30.48)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0.152)
+			(type solid)
+			(color 132 0 132 1)
+		)
+		(fill
+			(color 255 255 255 0)
+		)
+		(uuid "ed702e07-e156-4d9c-88a8-20fd12dbb3c2")
+		(property "Sheetname" "Power"
+			(at 44.45 46.355 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "power.kicad_sch"
+			(at 44.45 47.625 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "VBAT" bidirectional
+			(at 90.17 52.705 0)
+			(uuid "a6a83c40-199c-48ec-ad25-a799bb6132d7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "NTC_SENSE" bidirectional
+			(at 90.17 55.245 0)
+			(uuid "5a517fe4-5675-42d7-adbd-6379241e92de")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "SHUTDOWN_REQ_N" bidirectional
+			(at 90.17 57.785 0)
+			(uuid "d8bc39ed-74d4-46b9-98cb-0bbebf688869")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "HALTED" bidirectional
+			(at 90.17 60.325 0)
+			(uuid "8f2bd491-2036-4079-bf41-46b51101bd79")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "ESTOP_N" bidirectional
+			(at 90.17 62.865 0)
+			(uuid "1180dd43-026f-403a-a569-4b96c021a780")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(instances
+			(project "carrier-cm5"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+					(page "5")
+				)
+			)
+		)
 	)
 	(sheet_instances
 		(path "/"
