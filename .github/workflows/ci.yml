@@ -1,0 +1,46 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  firmware:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi
+      - name: Host tests
+        run: |
+          for n in leg-node power-node io-node; do
+            cmake -S firmware/$n -B build/$n
+            cmake --build build/$n -j4
+            ctest --test-dir build/$n --output-on-failure
+          done
+      - name: STM32 images
+        run: |
+          for n in leg-node power-node io-node; do
+            cmake -S firmware/$n/stm32 -B build/$n-stm32
+            cmake --build build/$n-stm32 -j4
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: build/*-stm32/*.bin
+
+  ros:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      # vcan for the CAN tests; the container makes its own vcan0 in its own network
+      - run: sudo apt-get update && sudo apt-get install -y linux-modules-extra-$(uname -r) && sudo modprobe vcan
+      - run: docker build -f software/docker/Dockerfile --target build -t vector:build .
+      - name: colcon test (without Gazebo)
+        run: |
+          docker run --rm --cap-add NET_ADMIN vector:build bash -c '
+            set -e
+            ip link add vcan0 type vcan && ip link set vcan0 up
+            . /opt/ros/jazzy/setup.bash && . install/setup.bash
+            test $(colcon list --names-only | wc -l) -eq $(ls install | grep -c ^vector_)
+            colcon test --ctest-args -LE gazebo --event-handlers console_cohesion-
+            colcon test-result --verbose'
