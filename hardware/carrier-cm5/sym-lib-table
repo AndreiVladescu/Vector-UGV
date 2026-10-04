@@ -2,4 +2,5 @@
   (version 7)
   (lib (name "vector")(type "KiCad")(uri "${KIPRJMOD}/../lib/vector.kicad_sym")(options "")(descr "V.E.C.T.O.R. shared symbols"))
   (lib (name "carrier-cm5")(type "KiCad")(uri "${KIPRJMOD}/lib/carrier-cm5.kicad_sym")(options "")(descr ""))
+  (lib (name "carrier-cm5-extra")(type "KiCad")(uri "${KIPRJMOD}/lib/carrier-cm5-extra.kicad_sym")(options "")(descr "parts not from Library Loader; it rewrites carrier-cm5.kicad_sym"))
 )
