@@ -174,6 +174,18 @@ The receiver is any NMEA module on UART0 (GPIO14 TX, GPIO15 RX, 3.3 V), 115200 b
 
 `navsat_transform` needs an absolute heading from the IMU (0 = east). Gazebo's IMU has one; on the robot it comes from `imu_node.py` with the nose board's compass (below). Without the nose board the IMU's yaw is gyro only and `nav:=true` has no heading.
 
+## Operator page demo
+
+Everything the page shows, on the desktop with no hardware: the mock robot and gait, the link manager and the page, the carrier's IO MCU simulated on a pseudo-terminal (`sim_io.py`, speaking the real link protocol to the real `io_bridge`) and `imu_node` on simulated chips. Walking from the page moves the GNSS position (`gnss_scale` multiplies it, so the map shows it), the heading, the lidar's view of a 6 x 4 m yard and the battery current; ELRS link quality wanders, a LoRa "ping" arrives every 20 s, Beep and the LTE switch reach the simulated MCU.
+
+```sh
+ros2 launch vector_bringup demo.launch.py gnss_scale:=20       # then http://localhost:8080
+ros2 param set /sim_io radio false                              # also lidar, gnss, lora
+ros2 param set /sim_io vbat 13.3                                # low battery
+```
+
+There's no video in the demo; the page shows NO VIDEO until a stream answers.
+
 ## Carrier IO MCU and IMU
 
 The STM32C092 next to the CM5 (`firmware/io-node`) carries the ELRS receiver, the LD19 lidar, the MAX-M10S, the RFM95W and the battery / 5 V / NTC sensing, and talks to the CM5 on UART2 at 1 Mbaud. `io_bridge.py` turns that into `scan` (LaserScan, frame `lidar`), `gnss/nmea_sentence` (and through `nmea_topic_driver` the usual `gnss/fix`, `gnss/vel`), `io/crsf` for `elrs.py`, `lora/rx` / `lora/tx` and an `io: mcu` entry in `/diagnostics`. The MCU sends a LoRa position beacon every 30 s on its own (`beacon_s`, 0 = off), so a lost robot can be found with any SX127x receiver.

@@ -5,7 +5,7 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 
 ament_python_install_package(${PROJECT_NAME})
-install(PROGRAMS scripts/io_bridge.py scripts/io_flash.py DESTINATION lib/${PROJECT_NAME})
+install(PROGRAMS scripts/io_bridge.py scripts/io_flash.py scripts/sim_io.py DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_cmake_pytest REQUIRED)

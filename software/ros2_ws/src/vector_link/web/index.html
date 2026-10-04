@@ -917,6 +917,7 @@ function render(s) {
   renderTiles();
   updateMini(s);
 }
+let videoRetry = 0;
 async function poll() {
   try {
     const t0 = performance.now();
@@ -927,9 +928,14 @@ async function poll() {
     $('ping').style.color = ms < 150 ? '' : ms < 400 ? COL.warn : COL.err;
     if (r.ok) {
       const s = await r.json();
-      if (!$('video').src && s.video) {
-        $('video').src = location.protocol + '//' + videoHost + s.video;
-        $('video').onload = () => { $('novideo').style.display = 'none'; };
+      if (!$('video').src && s.video && Date.now() > videoRetry) {
+        // only load the stream once it answers: a refused connection would put the browser's error page there
+        const url = location.protocol + '//' + videoHost + s.video;
+        videoRetry = Date.now() + 10000;
+        fetch(url, {mode: 'no-cors'}).then(() => {
+          $('video').src = url;
+          $('video').onload = () => { $('novideo').style.display = 'none'; };
+        }).catch(() => { /* no video server yet: try again in 10 s */ });
       }
       render(s);
     }

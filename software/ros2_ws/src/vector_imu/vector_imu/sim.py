@@ -40,13 +40,14 @@ class SimBus:
 
 
 def turning(rate=0.0):
-    """A SimBus whose readings follow a body turning at rate rad/s about z, level."""
+    """A SimBus whose readings follow a body turning at bus.rate rad/s about z, level."""
     bus = SimBus(gyro=(0.0, 0.0, rate))
-    bus.yaw = 0.0
+    bus.yaw, bus.rate = 0.0, rate
     north = bus.field
 
     def step(dt):
-        bus.yaw += rate * dt
+        bus.gyro = (0.0, 0.0, bus.rate)
+        bus.yaw += bus.rate * dt
         c, s = math.cos(bus.yaw), math.sin(bus.yaw)
         bus.field = (c * north[0] + s * north[1], -s * north[0] + c * north[1], north[2])
     bus.step = step

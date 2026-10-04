@@ -8,7 +8,8 @@ The gyro bias is averaged over the first bias_s seconds (keep the robot still). 
 mag_axes map the chips' axes onto base_link, e.g. "-y,x,z" for a chip turned 90 degrees.
 imu/calibrate_mag (Trigger): turn the robot through every orientation for cal_s seconds; the
 hard- and soft-iron correction lands in mag_offset / mag_scale (logged, for the yaml).
-bus:=sim runs on simulated chips (sim_turn rad/s about z).
+bus:=sim runs on simulated chips, turning at sim_turn rad/s about z, or with the legs'
+odometry (odom/legs) when that is published, so the demo's heading follows the driving.
 """
 import math
 import time
@@ -51,6 +52,8 @@ class ImuNode(Node):
 
         if self.bus_name == 'sim':
             self.bus = sim.turning(self.sim_turn)
+            from nav_msgs.msg import Odometry
+            self.create_subscription(Odometry, 'odom/legs', lambda m: setattr(self.bus, 'rate', m.twist.twist.angular.z), 10)
         else:
             from vector_imu.i2c import Bus
             self.bus = Bus(self.bus_name)
