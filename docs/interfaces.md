@@ -22,7 +22,7 @@ Both ends of a cable use the same footprint and pin order.
 | J-SWD (per MCU) | Debug | Tag-Connect TC2030 or 1.27 mm 2×5 *TBD* | SWDIO, SWCLK, NRST, 3V3, GND |
 | J-SWDREC | Carrier → any MCU | 1.27 mm 2×5 | CM5 GPIO SWD recovery |
 | J-ELRS | Carrier → receiver | JST-GH 4-pin | 5 V, GND, TX, RX |
-| J-LIDAR | Carrier (IO MCU) → LDS01RR lidar | JST-XH 4-pin | 5 V, GND, TX (lidar → MCU, 3.3 V), RX (not used); the lidar end is JST-PH 2.0 |
+| J-LIDAR | Carrier (IO MCU) → LDS01RR lidar | JST-XH 4-pin | 1 TX (lidar → MCU, 3.3 V), 2 RX (not used), 3 GND, 4 5 V; the lidar end is JST-PH 2.0 |
 | J-LIDARMOT | Carrier → LDS01RR motor | JST-XH 2-pin | M+ (5 V), M− (low-side FET, PWM from the IO MCU) |
 | J-LTE | Carrier → A7670E board | 1x07 2.54 mm | GND, RXD, TXD, PWRKEY, VCC, GND, SLEEP; the alternative to the soldered-down A7670E |
 | J-CONSOLE | Carrier → USB-UART | 1x03 2.54 mm | GND, TX, RX (CM5 UART0) |

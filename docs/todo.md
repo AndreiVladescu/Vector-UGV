@@ -11,7 +11,6 @@
 
 ## Hardware
 
-- Carrier: J602 to JST-XH 4-pin and add J-LIDARMOT with its FET and diode for the LDS01RR (see the spec).
 - Decide whether J-SYSCTL and the power board's J-CAN merge into one 10-pin JST-GH to the carrier.
 - Side boards: add the e-stop diode (BAT54J, BUCK_EN → ESTOP_N) and the 1k in series with PB0 on each leg cell.
 - Carrier: pick the 4.7 µH inductor for the LTE buck, then layout (CM5 placement and the 90/100 Ω pairs from the CM5 IO board).
