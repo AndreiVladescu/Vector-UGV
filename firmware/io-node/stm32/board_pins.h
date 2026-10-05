@@ -1,7 +1,7 @@
 #ifndef BOARD_PINS_H
 #define BOARD_PINS_H
 
-/* IO MCU on the CM5 carrier (U30, STM32C092KCT6, LQFP32), sheet io_mcu.kicad_sch */
+/* IO MCU on the CM5 carrier (U601, STM32C092KCT6, LQFP32), sheet io_mcu.kicad_sch */
 
 /* USART1 to the CM5 (GPIO5 / GPIO4), also ST's ROM bootloader */
 #define HOST_PORT GPIOA

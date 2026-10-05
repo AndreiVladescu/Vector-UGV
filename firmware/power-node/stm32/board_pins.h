@@ -1,9 +1,8 @@
 #ifndef BOARD_PINS_H
 #define BOARD_PINS_H
 
-/* Pin map per board. BOARD_POWER is the power board (STM32C092KCT6, LQFP32; the board isn't
-   drawn yet, so this is the plan for the schematic), BOARD_NUCLEO a NUCLEO-C092RC with the
-   BQ76942 and BQ25798 EVMs on its I2C for bring-up. */
+/* Pin map per board. BOARD_POWER is the power board (IC103, STM32C092KCT6, LQFP32),
+   BOARD_NUCLEO a NUCLEO-C092RC with the BQ76942 and BQ25798 EVMs on its I2C for bring-up. */
 
 #if defined(BOARD_NUCLEO)
 

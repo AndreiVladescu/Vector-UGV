@@ -1,6 +1,6 @@
 # IO node
 
-The STM32C092KCT6 on the CM5 carrier (U30, sheet `io_mcu`). It takes the slow serial devices off the CM5 and talks to it over one UART: ExpressLRS (CRSF), the LDS01RR lidar (Roborock vacuum part), the MAX-M10S GNSS, the RFM95W LoRa module, battery / 5 V / NTC sensing, the buzzer and the LTE supply. It also sends a LoRa position beacon on its own, so the robot can be found with the CM5 down.
+The STM32C092KCT6 on the CM5 carrier (U601, sheet `io_mcu`). It takes the slow serial devices off the CM5 and talks to it over one UART: ExpressLRS (CRSF), the LDS01RR lidar (Roborock vacuum part), the MAX-M10S GNSS, the RFM95W LoRa module, battery / 5 V / NTC sensing, the buzzer and the LTE supply. It also sends a LoRa position beacon on its own, so the robot can be found with the CM5 down.
 
 Runs on the 48 MHz HSI (no crystal, no CAN), linked at the start of flash without the CAN bootloader. Logic in `src/`, tested on the PC (`test/test_io.c`, with a simulated SX1276 in `sim/`); `stm32/` holds the drivers (register-level UARTs, SPI, ADC and timers) and the pin map.
 
@@ -58,10 +58,10 @@ The LDS01RR's motor is the host's to drive: the IO MCU starts it at 60 % duty, t
 
 ## Flashing
 
-First time over the TC2050 (J30) with `stm32c0/flash_swd.sh`, or from the CM5 over SWD by closing JP30–JP32. After that from the CM5 over the link: `vector_io` sends BOOTLOADER, the MCU resets into the ROM bootloader on USART1, and `stm32flash` writes the image:
+First time over the TC2050 (J601) with `stm32c0/flash_swd.sh`, or from the CM5 over SWD by closing JP601–JP603. After that from the CM5 over the link: `vector_io` sends BOOTLOADER, the MCU resets into the ROM bootloader on USART1, and `stm32flash` writes the image:
 
 ```sh
 ros2 run vector_io io_flash.py build/io-stm32/io-node.bin
 ```
 
-The ROM bootloader also listens on USART2, where the ELRS receiver sends CRSF; stm32flash's 0x7F on USART1 normally wins, but if it doesn't, unpower the receiver (JP33) for the flash.
+The ROM bootloader also listens on USART2, where the ELRS receiver sends CRSF; stm32flash's 0x7F on USART1 normally wins, but if it doesn't, unpower the receiver for the flash (open JP604, or JP605 if it runs on 3.3 V).
