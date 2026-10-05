@@ -9492,7 +9492,7 @@
 				)
 			)
 		)
-		(property "Footprint" "vector:INDPM116102X400N"
+		(property "Footprint" "vector:INDPM4441X200N"
 			(at 367.03 41.91 0)
 			(hide yes)
 			(show_name no)
@@ -9503,7 +9503,7 @@
 				)
 			)
 		)
-		(property "Manufacturer_Part_Number" "AMRM001010404R7MA1"
+		(property "Manufacturer_Part_Number" "SRP4020TA-4R7M"
 			(at 367.03 41.91 0)
 			(hide yes)
 			(show_name no)

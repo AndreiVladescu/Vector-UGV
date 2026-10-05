@@ -4347,6 +4347,16 @@
 		)
 		(uuid "e9302230-2c90-4441-b155-6afe0793ec4d")
 	)
+	(label "SW"
+		(at 122.555 41.91 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "ef0886f2-28a9-4c92-ae06-43b9591ce533")
+	)
 	(label "SIDE_BIT"
 		(at 229.235 31.75 0)
 		(effects
@@ -4929,7 +4939,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
 			(at 137.922 57.15 90)
 			(hide yes)
 			(show_name no)
@@ -5089,7 +5099,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 37.1348 48.26 0)
 			(hide yes)
 			(show_name no)
@@ -5323,7 +5333,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3"
+		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_DIN965_Pad_TopBottom"
 			(at 78.74 102.235 0)
 			(hide yes)
 			(show_name no)
@@ -5397,7 +5407,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Connector_AMASS:AMASS_XT30PW-M_1x02_P2.50mm_Horizontal"
+		(property "Footprint" "Connector_AMASS:AMASS_XT30U-M_1x02_P5.0mm_Vertical"
 			(at 133.985 123.825 0)
 			(hide yes)
 			(show_name no)
@@ -5630,7 +5640,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 122.555 43.4848 0)
 			(hide yes)
 			(show_name no)
@@ -6168,7 +6178,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3"
+		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_DIN965_Pad_TopBottom"
 			(at 66.04 102.235 0)
 			(hide yes)
 			(show_name no)
@@ -6241,7 +6251,7 @@
 				)
 			)
 		)
-		(property "Footprint" "vector:INDPM116102X400N"
+		(property "Footprint" "vector:INDPM4441X200N"
 			(at 129.54 41.91 0)
 			(hide yes)
 			(show_name no)
@@ -6274,7 +6284,7 @@
 				)
 			)
 		)
-		(property "Manufacturer_Part_Number" "AMRM001010404R7MA1"
+		(property "Manufacturer_Part_Number" "SRP4020TA-4R7M"
 			(at 129.54 41.91 0)
 			(hide yes)
 			(show_name no)
@@ -6572,7 +6582,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 49.1998 48.26 0)
 			(hide yes)
 			(show_name no)
@@ -6728,7 +6738,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3"
+		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_DIN965_Pad_TopBottom"
 			(at 53.34 102.235 0)
 			(hide yes)
 			(show_name no)
@@ -6962,7 +6972,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
 			(at 137.922 45.72 90)
 			(hide yes)
 			(show_name no)
@@ -7118,7 +7128,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 112.6998 50.8 0)
 			(hide yes)
 			(show_name no)
@@ -8168,7 +8178,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3"
+		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_DIN965_Pad_TopBottom"
 			(at 40.64 102.235 0)
 			(hide yes)
 			(show_name no)
