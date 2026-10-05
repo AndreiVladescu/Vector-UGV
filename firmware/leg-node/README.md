@@ -31,8 +31,8 @@ From `stm32/leg-node.ioc`, checked by loading it in CubeMX 6.18. Labels match th
 | 27 | PB3 | in, pull-down | LEG_ID_B0 |
 | 32 | PB8 | in, pull-down | LEG_ID_B1 |
 | 1 | PB9 | in, pull-down | SIDE_BIT |
-| 28 | PB4 | in | TOF_INT |
-| 29 | PB5 | out | TOF_XSHUT |
+| 28 | PB4 | – | not connected |
+| 29 | PB5 | out | TOF_XSHUT, not on the side board's J-TOF |
 | 26 | PA15 | out | LED |
 | 6 | PF2 | NRST | |
 
@@ -155,7 +155,7 @@ LED: on = active; while off, the leg number every 3 s (short blinks = left, long
 
 `src/vl53l1x.c` is a small C port of ST's VL53L1X ultra lite driver, the one inside the SparkFun Arduino library; its init sequence, default config and timing tables are checked register by register against SparkFun's copy and Pololu's library, and `test_leg` runs it against a register model (`sim/tof_sim.c`).
 
-I2C1 at 400 kHz on PB6/PB7, XSHUT on PB5 (TOF_INT on PB4 is unused, the driver polls every 5 ms). Short mode, 20 ms budget, a reading every 25 ms. The driver is a state machine that never blocks for more than one I2C transfer (the default config goes over in 23-byte pieces): it looks for the sensor every 500 ms, brings it up, and starts over after three bus errors in a row or a second without a range, so a sensor plugged in, unplugged or browned out comes back on its own. While it waits it holds XSHUT low, which also frees a bus the sensor was holding (a glitch on the cable through the coxa), and the I2C block is reset with it. A stuck bus costs one 25 ms HAL timeout per failed transfer before that. `LEG_STATUS` carries 0 with no sensor or no reading in the last 200 ms, 65535 when nothing valid is in range.
+I2C1 at 400 kHz on PB6/PB7; the driver polls every 5 ms. The side board's J-TOF carries only 3V3, GND, SDA and SCL, so the XSHUT drive on PB5 reaches the sensor only on a dev setup wired to it; without it the breakout's pull-up keeps the sensor on and a held bus needs a power cycle. Short mode, 20 ms budget, a reading every 25 ms. The driver is a state machine that never blocks for more than one I2C transfer (the default config goes over in 23-byte pieces): it looks for the sensor every 500 ms, brings it up, and starts over after three bus errors in a row or a second without a range, so a sensor plugged in, unplugged or browned out comes back on its own. While it waits it holds XSHUT low, which also frees a bus the sensor was holding (a glitch on the cable through the coxa), and the I2C block is reset with it. A stuck bus costs one 25 ms HAL timeout per failed transfer before that. `LEG_STATUS` carries 0 with no sensor or no reading in the last 200 ms, 65535 when nothing valid is in range.
 
 On the Nucleo the breakout goes to the same pins on the morpho header. To check a breakout on its own first, the Pololu `VL53L1X` Arduino library's Continuous example on the Uno does the same thing.
 

@@ -18,7 +18,7 @@ Both ends of a cable use the same footprint and pin order.
 | J-SYSCTL | Power board ↔ Carrier | JST-XH 6-pin | see below |
 | J-CAN (×n) | Bus hops | JST-XH 4-pin | CANH, CANL, GND, ESTOP_N / spare |
 | J-SERVO (×9 per side) | Side board → servo | JST-XH 4-pin | V+ (6 V), GND, PWM, POT |
-| J-TOF (×3 per side) | Side board → ToF | JST-XH 6-pin | 3V3, GND, SDA, SCL, INT, XSHUT |
+| J-TOF (×3 per side) | Side board → ToF | JST-XH 4-pin | 3V3, GND, SDA, SCL |
 | J-SWD (per MCU) | Debug | Tag-Connect TC2030 or 1.27 mm 2×5 *TBD* | SWDIO, SWCLK, NRST, 3V3, GND |
 | J-SWDREC | Carrier → any MCU | 1.27 mm 2×5 | CM5 GPIO SWD recovery |
 | J-ELRS | Carrier → receiver | JST-GH 4-pin | 5 V, GND, TX, RX |
@@ -91,7 +91,7 @@ Keep the cable under ~30 cm for 1 MHz I2C.
 
 ## J-TOF pinout
 
-JST-XH 6-pin (board: B6B-XH-A). The pin order matches the VL53L1X breakout in use.
+JST-XH 4-pin (board: B4B-XH-A). The pin order matches the VL53L1X breakout in use; its own pull-ups hold XSHUT high, and the firmware polls instead of using INT. PB4 and PB5 on the MCU are spare.
 
 | Pin | Signal | Side board end |
 |---|---|---|
@@ -99,8 +99,6 @@ JST-XH 6-pin (board: B6B-XH-A). The pin order matches the VL53L1X breakout in us
 | 2 | GND | |
 | 3 | SDA | 2.2k pull-up to 3V3, DNP if the breakout has its own |
 | 4 | SCL | 2.2k pull-up to 3V3, DNP if the breakout has its own |
-| 5 | INT (GPIO1) | MCU GPIO input, 10k pull-up to 3V3 |
-| 6 | XSHUT | MCU GPIO output |
 
 ## Leg ID resistor divider
 
