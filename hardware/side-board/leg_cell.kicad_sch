@@ -9483,7 +9483,8 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 114.935 255.905 90)
+		(at 114.935 255.905 270)
+		(mirror x)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -9491,7 +9492,6 @@
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "0b359a67-e579-4c8c-b72b-601cfcf2de1c")
 		(property "Reference" "R204"
 			(at 114.935 250.19 90)
