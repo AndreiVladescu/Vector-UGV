@@ -13,8 +13,15 @@
 #define POT_CHANNELS {ADC_CHANNEL_0, ADC_CHANNEL_1, ADC_CHANNEL_4}
 #define ADC_EXTRA_CHANNELS 0
 
+#if defined(NUCLEO_CAN_PA11)
+/* the boards' CAN pins, to the on-board transceiver through wires PA11-PD0 and PA12-PD1 on the
+   morpho header; PD0/PD1 stay in their reset (analog) state */
+#define CAN_PORT GPIOA
+#define CAN_PINS (GPIO_PIN_11 | GPIO_PIN_12)
+#else
 #define CAN_PORT GPIOD
 #define CAN_PINS (GPIO_PIN_0 | GPIO_PIN_1)
+#endif
 #define CAN_STBY_PORT GPIOD /* MCP2562FD standby, low = on */
 #define CAN_STBY_PIN GPIO_PIN_2
 

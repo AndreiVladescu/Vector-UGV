@@ -57,4 +57,6 @@ cmake -S firmware/power-node -B build/power-host && cmake --build build/power-ho
 cmake -S firmware/power-node/stm32 -B build/power-stm32 [-DBOARD=nucleo] && cmake --build build/power-stm32
 ```
 
+On the Nucleo, `-DNUCLEO_CAN_PA11=ON` moves CAN to the power board's pins, PA11/PA12, wired to PD0/PD1 on the morpho header for the on-board transceiver.
+
 `test_power` runs the real logic against register-level models of both TI chips (CONFIG_UPDATE, checksums, CRC, FET control, CUV, coulomb counter, SHUTDOWN, the charger watchdog). The register addresses come from the BQ76942 TRM (SLUUBY1B) and the BQ25798 datasheet (SLUSDV2C); on the bench, key 39 reads any BMS setting back to check it.
