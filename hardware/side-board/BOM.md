@@ -30,13 +30,13 @@ Per board = 3 leg cells + shared parts. Small resistors and capacitors are 0402;
 | 3 | Pot RC | 0 Ω link, 100 nF at the ADC | 0402 | 0.02 | with the 10k series R: 160 Hz |
 | 3 | PWM series | 220 Ω | 0402 | 0.01 | |
 | 3 | PWM pull-down | 10k | 0402 | 0.01 | servo sees no pulses while the MCU boots |
-| 3 | Servo connector | JST XH 4-pin S4B-XH-A | TH, horizontal | 0.20 | 3 A/pin; V+, GND, PWM, POT |
+| 3 | Servo connector | 2.54 mm pin header 1×04 (or one 3×4 header per leg) | TH, vertical | 0.05 | ~3 A/pin; GND, V+, PWM, POT: the servo's own plug on pins 1–3, the pot wire on a 1-pin Dupont on pin 4; glued |
 | 1 | NTC | NCP18XH103F03RB | 0603 | 0.10 | next to the inductor |
 | 1 | NTC pull-up | 10k 1 % | 0402 | 0.01 | |
 | 2 | VBAT divider | 100k / 15k 1 % + 100 nF | 0402 | 0.03 | PA5 |
 | 2 | 6V0 divider | 15k / 10k 1 % + 100 nF | 0402 | 0.03 | PA6 |
 | 2 | LED + resistor | any 0805 LED, 1k | 0805 / 0402 | 0.05 | PA15 (green), 6V0 present (red) |
-| 1 | ToF connector | JST XH 4-pin B4B-XH-A | TH, vertical | 0.15 | 3V3, GND, SDA, SCL |
+| 1 | ToF connector | 2.54 mm pin header 1×04 | TH, vertical | 0.05 | 3V3, GND, SDA, SCL |
 | 2 | I2C pull-ups | 2.2k, DNP by default | 0402 | – | most VL53L1X breakouts have their own |
 | 1 | Cell fuse | 5 A fast, Littelfuse 0466005.NR | 1206 | 0.30 | in the buck's VIN: a shorted leg can't take the side down; 32 V, 11 mΩ |
 | – | Leg ID | 3 solder jumpers | PCB | – | |

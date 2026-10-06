@@ -38,7 +38,7 @@ Both sides use the same PCB, rotated 180°, at most 100 mm long. Each side board
 - **Current sense:** one 10 mΩ shunt and an INA181 for the whole leg. The load on each joint comes from the pot error (commanded minus measured angle).
 - **Position:** the MG996R pot wiper goes into the ADC through a series resistor and RC filter (about 10k + 100 nF). Measured 15.2 mV and 11.1 µs per degree, linear over 400–2600 µs (0.13–3.14 V, about 198°), the same at 5 V and 6 V supply. No divider: the joints stay within about ±80° (≤ 2.85 V); past 3.3 V the reading just saturates and the 10k limits clamp current to well under the STM32's injection limit. Firmware treats readings above ~3.2 V as "out of range", not an angle. Resolution checked: a 12 µs (1°) step shows as a clean 10 mV change. It carries ~200 mV of spikes from the servo's own electronics, so average many samples. Always restart the PWM at the measured position: this MG996R ignores commands if the first pulse after a stop is well below where it sits.
 - **PWM:** the outputs are tri-stated before power-off, otherwise the servo gets back-powered through the signal pin.
-- **ToF:** a VL53L1X on its own I2C bus, so there's no address clash (JST-XH 4-pin: 3V3, GND, SDA, SCL). The sensor sits on a breakout on the coxa link; pinout in `interfaces.md`.
+- **ToF:** a VL53L1X on its own I2C bus, so there's no address clash (2.54 mm header 1×04: 3V3, GND, SDA, SCL). The sensor sits on a breakout on the coxa link; pinout in `interfaces.md`.
 - **Protection:** a fuse or PTC per cell, an NTC at the buck, VBAT and 6 V rail sensing.
 - **Leg ID:** a resistor divider on one ADC pin.
 - **SWD:** pads for debugging and recovery.

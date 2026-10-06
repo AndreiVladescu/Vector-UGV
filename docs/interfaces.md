@@ -17,8 +17,8 @@ Both ends of a cable use the same footprint and pin order.
 | J-USBDEV | Carrier → laptop | USB-C receptacle | CM5 USB 2.0 for rpiboot, data only |
 | J-SYSCTL | Power board ↔ Carrier | JST-XH 6-pin | see below |
 | J-CAN (×n) | Bus hops | JST-XH 4-pin | CANH, CANL, GND, ESTOP_N / spare |
-| J-SERVO (×9 per side) | Side board → servo | JST-XH 4-pin | V+ (6 V), GND, PWM, POT |
-| J-TOF (×3 per side) | Side board → ToF | JST-XH 4-pin | 3V3, GND, SDA, SCL |
+| J-SERVO (×9 per side) | Side board → servo | 2.54 mm header 1×04, three per leg as a 3×4 block | GND, V+ (6 V), PWM, POT |
+| J-TOF (×3 per side) | Side board → ToF | 2.54 mm header 1×04 | 3V3, GND, SDA, SCL |
 | J-SWD (per MCU) | Debug | Tag-Connect TC2030 or 1.27 mm 2×5 *TBD* | SWDIO, SWCLK, NRST, 3V3, GND |
 | J-SWDREC | Carrier → any MCU | 1.27 mm 2×5 | CM5 GPIO SWD recovery |
 | J-ELRS | Carrier → receiver | JST-GH 4-pin | 5 V, GND, TX, RX |
@@ -91,7 +91,7 @@ Keep the cable under ~30 cm for 1 MHz I2C.
 
 ## J-TOF pinout
 
-JST-XH 4-pin (board: B4B-XH-A). The pin order matches the VL53L1X breakout in use; its own pull-ups hold XSHUT high, and the firmware polls instead of using INT. PB4 and PB5 on the MCU are spare.
+2.54 mm header 1×04 (footprint `vector:PinHeader_1x04_P2.54mm_Vertical_Tile`), a 4-way Dupont housing on the lead, glued once it works. The pin order matches the VL53L1X breakout in use; its own pull-ups hold XSHUT high, and the firmware polls instead of using INT. PB4 and PB5 on the MCU are spare.
 
 | Pin | Signal | Side board end |
 |---|---|---|

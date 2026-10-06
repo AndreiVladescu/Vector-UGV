@@ -4975,6 +4975,12 @@
 		(uuid "5b80145f-1154-4167-aa71-bab1e0a9c855")
 	)
 	(junction
+		(at 184.15 86.36)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "5e3343d7-f85a-49ea-b7d9-df4a379e9f4d")
+	)
+	(junction
 		(at 260.35 43.18)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -5077,20 +5083,20 @@
 		(uuid "fcf2c9a2-6550-4877-8fd1-6c86275c029e")
 	)
 	(no_connect
-		(at 76.2 39.37)
-		(uuid "ecc84e14-8761-42e8-a4fc-9016181d1c5e")
+		(at 272.415 162.56)
+		(uuid "1797c679-5243-45e2-bb77-5b4c98c45343")
 	)
 	(no_connect
 		(at 73.66 39.37)
 		(uuid "438e44cf-af6a-4a47-8043-c47fec2f5728")
 	)
 	(no_connect
-		(at 272.415 162.56)
-		(uuid "1797c679-5243-45e2-bb77-5b4c98c45343")
-	)
-	(no_connect
 		(at 272.415 154.94)
 		(uuid "bcd25745-9362-4189-9c86-ad7b2b36ef76")
+	)
+	(no_connect
+		(at 76.2 39.37)
+		(uuid "ecc84e14-8761-42e8-a4fc-9016181d1c5e")
 	)
 	(wire
 		(pts
@@ -5854,7 +5860,7 @@
 	)
 	(wire
 		(pts
-			(xy 362.585 188.595) (xy 372.745 188.595)
+			(xy 362.585 193.675) (xy 372.745 193.675)
 		)
 		(stroke
 			(width 0)
@@ -6444,7 +6450,7 @@
 	)
 	(wire
 		(pts
-			(xy 371.475 193.675) (xy 372.745 193.675)
+			(xy 371.475 198.755) (xy 372.745 198.755)
 		)
 		(stroke
 			(width 0)
@@ -6864,7 +6870,7 @@
 	)
 	(wire
 		(pts
-			(xy 370.205 186.055) (xy 372.745 186.055)
+			(xy 370.205 191.135) (xy 372.745 191.135)
 		)
 		(stroke
 			(width 0)
@@ -7294,7 +7300,7 @@
 	)
 	(wire
 		(pts
-			(xy 371.475 191.135) (xy 372.745 191.135)
+			(xy 371.475 196.215) (xy 372.745 196.215)
 		)
 		(stroke
 			(width 0)
@@ -8043,7 +8049,7 @@
 		(uuid "4caafa3e-2494-4cd2-b988-663b595bc327")
 	)
 	(label "I2C_SCL"
-		(at 371.475 193.675 180)
+		(at 371.475 198.755 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8353,7 +8359,7 @@
 		(uuid "9f3f8e5d-40d8-40c1-861b-ac8182aceebb")
 	)
 	(label "I2C_SDA"
-		(at 371.475 191.135 180)
+		(at 371.475 196.215 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -10436,7 +10442,7 @@
 	)
 	(symbol
 		(lib_id "Connector_Generic:Conn_01x04")
-		(at 377.825 188.595 0)
+		(at 377.825 193.675 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -10447,7 +10453,7 @@
 		(fields_autoplaced yes)
 		(uuid "214d67dd-06c4-4a39-bcde-7360aae45246")
 		(property "Reference" "J205"
-			(at 380.365 186.0549 0)
+			(at 380.365 191.1349 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10457,8 +10463,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "Conn_01x04"
-			(at 380.365 188.5949 0)
+		(property "Value" "ToF"
+			(at 380.365 193.6749 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10468,8 +10474,8 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical"
-			(at 377.825 188.595 0)
+		(property "Footprint" "vector:PinHeader_1x04_P2.54mm_Vertical_Tile"
+			(at 377.825 193.675 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10480,7 +10486,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 377.825 188.595 0)
+			(at 377.825 193.675 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10491,7 +10497,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x04, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 377.825 188.595 0)
+			(at 377.825 193.675 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12019,7 +12025,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 362.585 188.595 270)
+		(at 362.585 193.675 270)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -12030,7 +12036,7 @@
 		(fields_autoplaced yes)
 		(uuid "42c1429a-9502-4429-a704-909e64686bea")
 		(property "Reference" "#PWR0224"
-			(at 356.235 188.595 0)
+			(at 356.235 193.675 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12041,7 +12047,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 359.41 188.5949 90)
+			(at 359.41 193.6749 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -12052,7 +12058,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 362.585 188.595 0)
+			(at 362.585 193.675 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12063,7 +12069,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 362.585 188.595 0)
+			(at 362.585 193.675 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12074,7 +12080,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 362.585 188.595 0)
+			(at 362.585 193.675 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16261,7 +16267,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical"
+		(property "Footprint" "vector:PinHeader_1x04_P2.54mm_Vertical_Tile"
 			(at 377.825 208.28 0)
 			(hide yes)
 			(show_name no)
@@ -16881,7 +16887,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical"
+		(property "Footprint" "vector:PinHeader_1x04_P2.54mm_Vertical_Tile"
 			(at 377.825 237.49 0)
 			(hide yes)
 			(show_name no)
@@ -20146,7 +20152,7 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 370.205 186.055 90)
+		(at 370.205 191.135 90)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -20157,7 +20163,7 @@
 		(fields_autoplaced yes)
 		(uuid "d45d2c31-6b50-4cf8-a182-2205a6428fb9")
 		(property "Reference" "#PWR0225"
-			(at 374.015 186.055 0)
+			(at 374.015 191.135 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20168,7 +20174,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 367.03 186.0549 90)
+			(at 367.03 191.1349 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -20179,7 +20185,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 370.205 186.055 0)
+			(at 370.205 191.135 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20190,7 +20196,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 370.205 186.055 0)
+			(at 370.205 191.135 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20201,7 +20207,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3V3\""
-			(at 370.205 186.055 0)
+			(at 370.205 191.135 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21023,7 +21029,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical"
+		(property "Footprint" "vector:PinHeader_1x04_P2.54mm_Vertical_Tile"
 			(at 377.825 222.885 0)
 			(hide yes)
 			(show_name no)
