@@ -369,13 +369,18 @@ private:
     RCLCPP_INFO(get_logger(), "mode: %s", msg.data.c_str());
   }
 
+  // The GPIO controller applies only the latest message each cycle, so every message carries
+  // both interfaces: an e-stop release followed at once by ~/wake must not lose the release.
   void legs_gpio(const std::vector<std::string> & names, const std::vector<double> & values)
   {
+    for (size_t i = 0; i < names.size(); ++i) {
+      (names[i] == "estop" ? gpio_estop_ : gpio_enable_) = values[i];
+    }
     control_msgs::msg::DynamicInterfaceGroupValues msg;
     msg.interface_groups = {"legs"};
     msg.interface_values.resize(1);
-    msg.interface_values[0].interface_names = names;
-    msg.interface_values[0].values = values;
+    msg.interface_values[0].interface_names = {"enable", "estop"};
+    msg.interface_values[0].values = {gpio_enable_, gpio_estop_};
     power_pub_->publish(msg);
   }
 
@@ -549,6 +554,7 @@ private:
   Mode mode_ = Mode::Walk;
   rclcpp::Time mode_t_;
   double sentinel_height_ = 0.03, power_timeout_ = 10.0, sentinel_z_ = 0, legs_active_ = 1.0;
+  double gpio_enable_ = 1.0, gpio_estop_ = 0.0;  // last values sent to leg_power
   bool have_power_ = false, legs_were_up_ = false, estop_ = false;
   rclcpp::Publisher<control_msgs::msg::DynamicInterfaceGroupValues>::SharedPtr power_pub_;
   rclcpp::Subscription<control_msgs::msg::DynamicInterfaceGroupValues>::SharedPtr power_sub_;
