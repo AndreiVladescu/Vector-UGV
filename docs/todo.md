@@ -2,7 +2,9 @@
 
 ## Software
 
-- **3D robot on the operator page.** Once the Fusion 360 model exists: export it with fusion2urdf (body and every coxa / femur / tibia as its own component, revolute joints on the real axes, zero pose and signs as in `vector_gait` kinematics), decimate the meshes to a few MB, replace the placeholder geometry in `vector.urdf.xacro` (rviz, Gazebo and Foxglove then show the real robot, and Gazebo gets real masses), and render it on the page with three.js + urdf-loader, driven by `/api/pose`. Keep the 2D drawing as the offline fallback.
+- **3D robot on the operator page.** `vector_cad.urdf.xacro` exists: decimate its meshes to a few MB and render it with three.js + urdf-loader, driven by `/api/pose`, keeping the 2D drawing as the fallback. Set materials in Fusion so the CAD masses mean something (the export is scaled by volume).
+- Wave gait: give each gait its own period (wave needs 2 s at the 1 s tripod stride).
+- Sentinel Stance: step the feet out to about 125 mm reach before lowering, so the belly can rest on the ground instead of dropping the last ~16 mm.
 - Check the VL53L8CX zone orientation (`flip_x`, `flip_y` in `tof_front`) with a hand in one corner.
 - Calibrate the OV5647 (checkerboard): the ground projection and the ToF fusion use datasheet angles.
 - LTE (A7670E on UART4): APN on the modem, PPP over the UART, then a drive over LTE with the operator page.
@@ -11,11 +13,6 @@
 
 ## Hardware
 
-- Decide whether J-SYSCTL and the power board's J-CAN merge into one 10-pin JST-GH to the carrier.
-- Side boards: add the e-stop diode (BAT54J, BUCK_EN → ESTOP_N) and the 1k in series with PB0 on each leg cell.
-- Carrier: pick the 4.7 µH inductor for the LTE buck, then layout (CM5 placement and the 90/100 Ω pairs from the CM5 IO board).
+- Decide whether J-SYSCTL and the power board's J-CAN merge into one 10-pin JST-XH to the carrier.
+- Carrier: layout (CM5 placement and the 90/100 Ω pairs from the CM5 IO board).
 - XT60 / XT30 aren't on Mouser: order from TME.
-
-## Mechanical
-
-- Leg geometry and mass: 2.5 kg is too much for MG996Rs with the current legs (`gait_report`).

@@ -83,7 +83,7 @@ ros2 topic echo /gait_node/mode                                # walk, stopping,
 ros2 service call /gait_node/estop std_srvs/srv/SetBool "{data: true}"   # e-stop; false releases, then wake
 ```
 
-The legs switch through the `leg_power` GPIO controller (`legs/enable`): on CAN it sets the enable bit in `LEG_CMD`, and its state reads 1 only when all six legs report active. If they don't within `power_timeout` (10 s) the robot stays down. Keys are ignored while sitting or getting up. `sentinel_height` (30 mm hip height) should become the real belly height once the body is designed. In Gazebo there is no leg power, so it only lowers and raises (body at 49 mm, back to 90 mm).
+The legs switch through the `leg_power` GPIO controller (`legs/enable`): on CAN it sets the enable bit in `LEG_CMD`, and its state reads 1 only when all six legs report active. If they don't within `power_timeout` (10 s) the robot stays down. Keys are ignored while sitting or getting up. `sentinel_height` (45 mm hip height) is as low as the tibia limit allows with the feet at the standing reach; the belly then sits about 16 mm off the ground and the robot drops onto it when the legs switch off. In Gazebo there is no leg power, so it only lowers and raises (body at 45 mm, back to 100 mm).
 
 If a leg drops out while walking (a fault, see below), the node stops in `halted`: the other legs finish their step and stand, keys are ignored. Sentinel then wake power-cycles the legs, which clears the fault if its cause is gone.
 
@@ -280,7 +280,7 @@ Ultralytics itself runs the same ONNX model at half the speed and needs 430 MB, 
 ## Checks
 
 ```sh
-ros2 run vector_gait gait_report src/vector_description/config/legs.yaml --mass 2.5
+ros2 run vector_gait gait_report src/vector_description/config/legs.yaml --mass 3.0
 colcon test --ctest-args -LE gazebo          # unit tests, kinematic sim, CAN loop (skips without vcan0)
                                              # also checks that the DBC, firmware, C++ and leg_config.py agree
 colcon test --ctest-args -L gazebo           # headless Gazebo: flat walk, slope leveling, rough walk
@@ -289,15 +289,7 @@ colcon test-result --verbose
 
 `gait_report` runs every gait offline and flags joint speeds over the servo limit, joints near their limits, low stability margin and static torques over half of stall. Rerun it whenever `legs.yaml` changes.
 
-First numbers with the placeholder legs (coxa 50 / femur 80 / tibia 120 mm):
-
-| | 2.5 kg | 1.8 kg |
-|---|---|---|
-| femur, standing (Gazebo median) | 2.8 kg·cm | 1.9 kg·cm |
-| femur, tripod static worst case (`gait_report`) | 8.8 kg·cm | |
-| femur at the 11 kg·cm cap while walking (Gazebo) | 30% of samples | 12.5% |
-
-So with these legs, 2.5 kg is too much for comfortable tripod walking on MG996Rs. Shorter femur reach or less mass is where to look. Wave gait also needs a longer period than 1 s (joints too fast).
+With the CAD legs (coxa 51 / femur 67.6 / tibia 118.6 mm), 3 kg and the stance in `legs.yaml` (reach 108 mm, hip 100 mm): standing takes 2.9 kg·cm on the femur; the static worst case is 7.4 kg·cm walking forward and 8.3 sideways (tripod), so the femur servos work at up to about 75% of stall. Every joint keeps at least 10° from its limits in every gait, the stability margin is at least 73 mm, and walking stays in range from about 95 to 130 mm hip height (hence `height_min` -0.005 in `gait.yaml`). Femur torque follows the reach: each 4 mm less saves about 0.4 kg·cm but costs tibia margin. Wave needs a period of 2 s to stay under the servo speed; the period is shared by all gaits.
 
 `tools/` holds bring-up scripts (python-can, cantools), the CAN flasher and the robot-side tests: `sync_jitter.py` (SYNC timing), `mem_report.py` (memory per process), `walk_test.py` (walk, turn, Sentinel and wake in a loop while watching the legs, run inside the robot container) and `soak.py` (a line a minute of memory, temperature, CPU, SYNC and YOLO rate).
 

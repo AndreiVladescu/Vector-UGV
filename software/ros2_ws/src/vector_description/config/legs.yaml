@@ -1,20 +1,20 @@
-# Leg geometry, metres and radians. From the previous hexapod (SPECTRA, const_data.h),
-# which matches the measured coxa axle at 52 mm from its mount.
-# Leg frame: origin at the coxa axis, x pointing outward, z up.
+# Leg geometry, metres and radians, from the Fusion 360 model (tools/cad_urdf.py prints these
+# after every export). Leg frame: origin at the coxa axis, x pointing outward, z up.
 coxa: 0.051
-femur: 0.079
-tibia: 0.126
+femur: 0.0676
+tibia: 0.1186
 
-body: {length: 0.28, width: 0.17, thickness: 0.04}
+# the two body plates; the coxa servo mounts outside them count as legs
+body: {length: 0.192, width: 0.110, thickness: 0.04}
 
 # Hip (coxa axis) position in base_link and the leg's mounting yaw.
 mounts:
-  L1: {x: 0.1228, y: 0.0698, yaw: 0.7854}
-  L2: {x: 0.0, y: 0.1075, yaw: 1.5708}
-  L3: {x: -0.1228, y: 0.0698, yaw: 2.3562}
-  R1: {x: 0.1228, y: -0.0698, yaw: -0.7854}
-  R2: {x: 0.0, y: -0.1075, yaw: -1.5708}
-  R3: {x: -0.1228, y: -0.0698, yaw: -2.3562}
+  L1: {x: 0.1142, y: 0.0631, yaw: 0.7854}
+  L2: {x: 0.0, y: 0.0967, yaw: 1.5708}
+  L3: {x: -0.1142, y: 0.0631, yaw: 2.3562}
+  R1: {x: 0.1142, y: -0.0631, yaw: -0.7854}
+  R2: {x: 0.0, y: -0.0967, yaw: -1.5708}
+  R3: {x: -0.1142, y: -0.0631, yaw: -2.3562}
 
 limits:
   coxa: [-0.8, 0.8]
@@ -24,17 +24,19 @@ limits:
   effort: 1.08    # N·m, MG996R stall at 6 V (11 kg·cm)
 
 # Neutral stance: foot distance from the hip (horizontal) and hip height above ground.
+# From a gait_report sweep at 3 kg: every joint keeps 10 deg from its limits in all gaits; a
+# longer reach costs femur torque, a lower hip runs the femur and tibia into their limits.
 stand:
-  reach: 0.116
-  height: 0.080
+  reach: 0.108
+  height: 0.100
 
-# Mass estimates, kg (2.5 kg total). Coxa servos, battery and electronics sit in the body;
+# Mass estimates, kg (3.0 kg total). Coxa servos, battery and electronics sit in the body;
 # the femur servo rides on the coxa link, the tibia servo on the femur link.
 mass:
-  body: 1.45
-  coxa_link: 0.070
-  femur_link: 0.075
-  tibia_link: 0.030
+  body: 1.83
+  coxa_link: 0.075
+  femur_link: 0.080
+  tibia_link: 0.040
 
 foot_friction: 0.9   # TPU on dirt/wood, rough guess
 

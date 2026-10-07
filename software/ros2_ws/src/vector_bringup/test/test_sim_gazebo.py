@@ -67,5 +67,5 @@ class TestFlat(GazeboTest):
         self.spin_for(1.0)
         up = self.odom.pose.pose.position.z
         print(f'sentinel: body at {down * 1000:.0f} mm down, {up * 1000:.0f} mm back up')
-        self.assertLess(down, 0.05, 'body did not come down')
+        self.assertLess(down, 0.065, 'body did not come down')  # sentinel_height 45 mm, Gazebo sits ~10 mm higher
         self.assertGreater(up, 0.075, 'body did not get back up')

@@ -7,6 +7,7 @@ import launch
 import launch_testing.actions
 import pytest
 import rclpy
+import yaml
 from ament_index_python.packages import get_package_share_directory
 from geometry_msgs.msg import Twist
 from launch.actions import IncludeLaunchDescription
@@ -247,7 +248,9 @@ class TestKinematicSim(unittest.TestCase):
         self.assertTrue(self.call('/gait_node/sentinel'))
         self.assertTrue(self.wait_mode('sentinel', 15.0), f'mode {self.mode}')
         self.spin_for(1.0)
-        self.assertAlmostEqual(pose().z, 0.03, delta=0.003, msg='body not lowered')
+        with open(os.path.join(get_package_share_directory('vector_gait'), 'config', 'gait.yaml')) as f:
+            down = yaml.safe_load(f)['gait_node']['ros__parameters']['sentinel_height']
+        self.assertAlmostEqual(pose().z, down, delta=0.003, msg='body not lowered')
         self.assertEqual(self.power, 0.0, 'legs still powered')
 
         fwd = Twist()

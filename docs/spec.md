@@ -129,9 +129,8 @@ All MCUs get flashed from the CM5:
 - **Series links:** use 0.2 mm pure nickel, doubled, or nickel-plated copper. Never nickel-plated steel.
 - **Walking:** 40–70 W for the servos, 12–18 W for the rest.
 - **Sentinel:** 9–15 W, so about 9–14 h.
-- **Weight:** aim for 2.5 kg or less all-up. The estimate is already 2.4–2.6 kg.
-  - In tripod gait each leg carries about a third of the mass. At 8 cm from the femur joint to the foot, that's roughly 6.7 kg·cm static per femur servo, which is near the MG996R's real limit.
-  - Keep the femur and tibia short and the battery low. The frame is where to save weight.
+- **Weight:** about 3 kg all-up. With the CAD legs (femur 67.6, tibia 118.6 mm) and the stance in `legs.yaml` (108 mm reach, 100 mm hip height), `gait_report` puts the static worst case at 7.4 kg·cm per femur servo walking forward and 8.3 sideways, up to about 75% of the MG996R's stall; standing takes 2.9.
+  - The reach sets the femur torque, so keep the feet close in; the frame is where to save weight.
 
 ## Software
 

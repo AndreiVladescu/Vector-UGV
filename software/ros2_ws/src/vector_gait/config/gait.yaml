@@ -9,8 +9,8 @@ gait_node:
     rate: 200.0         # Hz
     cmd_timeout: 0.0    # s without cmd_vel before stopping; 0 = latch the last key, 0.6 = hold-to-move
     height_step: 0.005  # m per t/b press (cmd_vel with only linear.z)
-    height_min: -0.04   # m, limits for that height offset
-    height_max: 0.03
+    height_min: -0.005  # m, limits for that height offset; below ~95 mm hip height the femur
+    height_max: 0.03    # and tibia hit their limits while walking (gait_report)
     # body offset from the walking frame, m and rad; ramped, can be set live
     body_x: 0.0
     body_y: 0.0
@@ -22,8 +22,10 @@ gait_node:
     level: false
     level_gain: 2.0     # 1/s
     level_max: 0.3      # rad
-    # Sentinel Stance: hip height when resting on the belly, and how long to wait for the legs
-    sentinel_height: 0.03
+    # Sentinel Stance: hip height to lower to before the legs switch off, and how long to wait for
+    # them. 45 mm is as low as the tibia limit allows with the feet at the standing reach; the
+    # belly (bottom plate, ~29 mm below the femur axis) is then ~16 mm off the ground.
+    sentinel_height: 0.045
     power_timeout: 10.0
     # Touchdown: plant each foot where it meets the ground
     touchdown: false
