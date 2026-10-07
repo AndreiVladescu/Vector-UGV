@@ -3,7 +3,7 @@
 Runs on the Pi 5 during development and on the CM5 later: Raspberry Pi OS, with ROS 2 Jazzy in Docker.
 
 Packages in `ros2_ws/src/`:
-- `vector_description`: URDF and `config/legs.yaml`, the one place leg lengths and hip positions live
+- `vector_description`: URDF and `config/legs.yaml`, the one place leg lengths and hip positions live; `vector_cad.urdf.xacro` is the full Fusion 360 export (view it with `ros2 launch vector_bringup view_cad.launch.py`)
 - `vector_gait`: kinematics and gait in plain C++ (`vector_core`, no ROS), plus `gait_node`
 - `vector_hw`: ros2_control hardware for the leg nodes over SocketCAN, plus `sim_legs` (the leg firmware logic with simulated servos) and `leg_config.py` (calibration and settings over CAN)
 - `vector_bringup`: launch files, controller config, rviz config, Gazebo worlds

@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="V.E.C.T.O.R." xmlns:xacro="http://www.ros.org/wiki/xacro">
+   <material name="silver_default">
+      <color rgba="0.700 0.700 0.700 1.000" />
+   </material>
+   <material name="Plastic_Matte{Black}">
+      <color rgba="0.09803921568627451 0.09803921568627451 0.09803921568627451 1.0" />
+   </material>
+   <material name="ABS{White}">
+      <color rgba="0.2196078431372549 0.00784313725490196 0.3843137254901961 1.0" />
+   </material>
+   <material name="Steel_Satin">
+      <color rgba="0.6274509803921569 0.6274509803921569 0.6274509803921569 1.0" />
+   </material>
+   <material name="Brass_Polished">
+      <color rgba="0.9529411764705882 0.796078431372549 0.48627450980392156 1.0" />
+   </material>
+   <material name="Plastic_Glossy{Grey}">
+      <color rgba="0.7019607843137254 0.7019607843137254 0.7019607843137254 1.0" />
+   </material>
+   <material name="Plastic_Glossy{Black}">
+      <color rgba="0.09803921568627451 0.09803921568627451 0.09803921568627451 1.0" />
+   </material>
+   <material name="Rubber_Soft">
+      <color rgba="0.15294117647058825 0.15294117647058825 0.15294117647058825 1.0" />
+   </material>
+   <material name="FR4">
+      <color rgba="0.12941176470588237 0.12941176470588237 0.12941176470588237 1.0" />
+   </material>
+   <material name="Silicone{Black}">
+      <color rgba="0.26666666666666666 0.26666666666666666 0.26666666666666666 1.0" />
+   </material>
+   <material name="Plastic_Matte{yellowish}">
+      <color rgba="0.7098039215686275 0.6509803921568628 0.4627450980392157 1.0" />
+   </material>
+</robot>
