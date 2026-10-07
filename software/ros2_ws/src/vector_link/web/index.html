@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#0a0d12">
 <title>VECTOR</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" id="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VECTOR">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
   :root {
@@ -364,6 +371,8 @@ const params = new URLSearchParams(location.search), key = params.get('key');
 const videoHost = params.get('video') || location.hostname;  // when the video comes through another address
 const api = p => '/api/' + p + (key ? '?key=' + encodeURIComponent(key) : '');
 const $ = id => document.getElementById(id);
+// the home screen shortcut opens the page with the same key
+if (key) $('manifest').href = '/manifest.webmanifest?key=' + encodeURIComponent(key);
 const COL = {ok: '#34d17a', warn: '#f5b83d', err: '#ff4d5a', dim: '#5a6474', accent: '#3ea6ff'};
 const lvl = l => ['ok', 'warn', 'err', 'dim'][l] || 'dim';
 

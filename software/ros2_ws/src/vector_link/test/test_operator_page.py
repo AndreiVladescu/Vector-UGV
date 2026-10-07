@@ -189,6 +189,16 @@ class TestOperatorPage(unittest.TestCase):
             self.assertEqual(r.headers['Content-Encoding'], 'gzip')
             self.assertEqual(json.loads(gzip.decompress(r.read())), plain)
 
+    def test_icons_and_manifest(self):
+        status, body = request('/icon.svg', key=None)  # the browser asks without the key
+        self.assertEqual(status, 200)
+        self.assertIn(b'<svg', body)
+        status, body = request('/apple-touch-icon.png', key=None)
+        self.assertEqual((status, body[:4]), (200, b'\x89PNG'))
+        self.assertEqual(json.loads(request('/manifest.webmanifest')[1])['start_url'], '/?key=k')
+        self.assertEqual(json.loads(request('/manifest.webmanifest', key='wrong')[1])['start_url'], '/')
+        self.assertEqual(request('/api/state', key=None)[0], 403)  # everything else still needs it
+
     def test_snapshot(self):
         self.assertEqual(request('/api/snapshot')[0], 404)
         for _ in range(5):

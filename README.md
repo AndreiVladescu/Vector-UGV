@@ -1,3 +1,5 @@
+![V.E.C.T.O.R.](docs/img/banner.png)
+
 # V.E.C.T.O.R.
 
 An 18-DOF hexapod research platform: a smart controller per leg on CAN, a Raspberry Pi CM5 carrier, camera and SDR payload, ELRS / Wi-Fi / 4G links. Built for the [PCBWay 9th Project Design Contest](https://www.pcbway.com/activity/9th-project-design-contest.html).

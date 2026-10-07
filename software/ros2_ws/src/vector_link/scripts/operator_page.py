@@ -20,6 +20,8 @@ JSON API (all POST bodies JSON; with the token parameter set, every request need
   POST /api/beep                    two beeps from the carrier's buzzer, to find the robot
   POST /api/lte {on}                the LTE module's supply, through the IO MCU
   GET  /api/snapshot                the latest annotated camera frame, JPEG
+The icons and manifest.webmanifest need no key (the manifest's start_url carries the key it
+was asked with, when that key is right, so the home screen shortcut opens the page).
 """
 import gzip
 import json
@@ -310,7 +312,19 @@ class Operator(Node):
         return True
 
 
-def handler(node, page):
+ICONS = {'/icon.svg': 'image/svg+xml', '/icon-192.png': 'image/png', '/icon-512.png': 'image/png',
+         '/apple-touch-icon.png': 'image/png'}
+
+
+def manifest(key):
+    return {'name': 'V.E.C.T.O.R.', 'short_name': 'VECTOR', 'display': 'fullscreen', 'orientation': 'landscape',
+            'background_color': '#0a0d12', 'theme_color': '#0a0d12', 'start_url': '/' + (f'?key={key}' if key else ''),
+            'icons': [{'src': '/icon-192.png', 'sizes': '192x192', 'type': 'image/png'},
+                      {'src': '/icon-512.png', 'sizes': '512x512', 'type': 'image/png'},
+                      {'src': '/icon.svg', 'sizes': 'any', 'type': 'image/svg+xml'}]}
+
+
+def handler(node, page, icons):
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
             pass
@@ -319,21 +333,26 @@ def handler(node, page):
             q = parse_qs(urlparse(self.path).query)
             return not node.token or q.get('key', [''])[0] == node.token
 
-        def reply(self, code, body, ctype='application/json', encoding=None):
+        def reply(self, code, body, ctype='application/json', encoding=None, cache='no-store'):
             data = body if isinstance(body, bytes) else json.dumps(body).encode()
             self.send_response(code)
             self.send_header('Content-Type', ctype)
             if encoding:
                 self.send_header('Content-Encoding', encoding)
-            self.send_header('Cache-Control', 'no-store')
+            self.send_header('Cache-Control', cache)
             self.send_header('Content-Length', str(len(data)))
             self.end_headers()
             self.wfile.write(data)
 
         def do_GET(self):
+            path = urlparse(self.path).path
+            if path in icons:
+                return self.reply(200, icons[path], ICONS[path], cache='max-age=86400')
+            if path == '/manifest.webmanifest':
+                key = parse_qs(urlparse(self.path).query).get('key', [''])[0] if self.allowed() else ''
+                return self.reply(200, manifest(key if node.token else ''), 'application/manifest+json')
             if not self.allowed():
                 return self.reply(403, {'error': 'key'})
-            path = urlparse(self.path).path
             if path in ('/', '/index.html'):
                 return self.reply(200, page, 'text/html; charset=utf-8')
             if path == '/api/state':
@@ -398,8 +417,16 @@ def handler(node, page):
 def main():
     rclpy.init()
     node = Operator()
-    page = open(os.path.join(get_package_share_directory('vector_link'), 'web', 'index.html'), 'rb').read()
-    server = ThreadingHTTPServer(('0.0.0.0', node.port), handler(node, page))
+    web = os.path.join(get_package_share_directory('vector_link'), 'web')
+    page = open(os.path.join(web, 'index.html'), 'rb').read()
+    icons = {}
+    for path in ICONS:
+        try:
+            with open(os.path.join(web, path[1:]), 'rb') as f:
+                icons[path] = f.read()
+        except OSError:
+            pass
+    server = ThreadingHTTPServer(('0.0.0.0', node.port), handler(node, page, icons))
     server.daemon_threads = True
     threading.Thread(target=server.serve_forever, daemon=True).start()
     node.get_logger().info(f'operator page on http://0.0.0.0:{node.port}' + (' (key required)' if node.token else ''))
