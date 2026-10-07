@@ -70,6 +70,10 @@ public:
 
   void set_type(GaitType type);
   double period() const;  // of the current gait type
+  // Move the neutral feet to a new reach. step: the feet step there, one gait cycle at a
+  // time while standing (standing() turns true again once they're all there); otherwise
+  // they're set there at once (legs switched off).
+  void set_reach(double reach, bool step);
   // Per-leg foot contact (load) from the hardware, used when params.touchdown is on.
   void set_contact(const std::array<bool, kLegs> & contact) {contact_ = contact;}
   double ground_z(int leg) const {return ground_z_[leg];}

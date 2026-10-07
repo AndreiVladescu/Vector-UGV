@@ -3,7 +3,6 @@
 ## Software
 
 - **3D robot on the operator page.** `vector_cad.urdf.xacro` exists: decimate its meshes to a few MB and render it with three.js + urdf-loader, driven by `/api/pose`, keeping the 2D drawing as the fallback. Set materials in Fusion so the CAD masses mean something (the export is scaled by volume).
-- Sentinel Stance: step the feet out to about 125 mm reach before lowering, so the belly can rest on the ground instead of dropping the last ~16 mm.
 - Check the VL53L8CX zone orientation (`flip_x`, `flip_y` in `tof_front`) with a hand in one corner.
 - Calibrate the OV5647 (checkerboard): the ground projection and the ToF fusion use datasheet angles.
 - LTE (A7670E on UART4): APN on the modem, PPP over the UART, then a drive over LTE with the operator page.

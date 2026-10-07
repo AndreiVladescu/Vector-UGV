@@ -236,3 +236,39 @@ TEST(Gait, EachGaitHasItsOwnPeriod)
   EXPECT_DOUBLE_EQ(g.period(), g.params().wave_period);
   EXPECT_GT(g.params().wave_period, g.params().period);
 }
+
+TEST(Gait, StepsOutToANewReachOneLegAtATime)
+{
+  auto g = make(vector::GaitType::Wave);
+  const auto before = g.feet();
+  g.set_reach(g.params().reach + 0.02, true);
+  EXPECT_FALSE(g.standing());
+  int steps = 0;
+  while (!g.standing() && steps < 2000) {  // 10 s
+    ASSERT_TRUE(g.update({}, kDt));
+    int swinging = 0;
+    for (int l = 0; l < vector::kLegs; ++l) {
+      swinging += g.swinging(l);
+    }
+    EXPECT_LE(swinging, 1);
+    ++steps;
+  }
+  ASSERT_TRUE(g.standing());
+  for (int l = 0; l < vector::kLegs; ++l) {
+    const auto & n = g.neutral()[l];
+    EXPECT_NEAR(g.feet()[l].x, n.x, 0.003);
+    EXPECT_NEAR(g.feet()[l].y, n.y, 0.003);
+    EXPECT_NEAR(std::hypot(n.x - before[l].x, n.y - before[l].y), 0.02, 1e-9);  // straight out
+  }
+}
+
+TEST(Gait, SetReachWithoutStepsMovesTheFeetAtOnce)
+{
+  auto g = make(vector::GaitType::Tripod);
+  g.set_reach(g.params().reach + 0.02, false);
+  EXPECT_TRUE(g.standing());
+  for (int l = 0; l < vector::kLegs; ++l) {
+    EXPECT_NEAR(g.feet()[l].x, g.neutral()[l].x, 1e-12);
+    EXPECT_NEAR(g.feet()[l].y, g.neutral()[l].y, 1e-12);
+  }
+}

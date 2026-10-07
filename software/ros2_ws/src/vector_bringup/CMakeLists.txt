@@ -11,7 +11,7 @@ if(BUILD_TESTING)
   # the operator page demo: mock robot, simulated IO MCU and IMU (uses port 8080 and /tmp/vector-io-sim)
   add_launch_test(test/test_demo.py TIMEOUT 150)
   # Needs a vcan0 interface, skips itself otherwise
-  add_launch_test(test/test_can_sim_legs.py TIMEOUT 120 LABELS can)
+  add_launch_test(test/test_can_sim_legs.py TIMEOUT 240 LABELS can)
   add_launch_test(test/test_leg_config.py TIMEOUT 180 LABELS can)
   add_launch_test(test/test_can_sim_power.py TIMEOUT 120 LABELS can)
   # Needs Gazebo; slow, run with: colcon test --ctest-args -L gazebo

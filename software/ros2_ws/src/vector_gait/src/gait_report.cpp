@@ -1,7 +1,7 @@
 // Offline check of the gait against the servos, no ROS needed.
 //
 //   gait_report <legs.yaml> [--mass kg] [--period s] [--ripple-period s] [--wave-period s] [--step m]
-//               [--stride m] [--com-x m] [--com-y m]
+//               [--stride m] [--com-x m] [--com-y m] [--sentinel-reach m] [--sentinel-height m]
 //
 // Runs each gait for a few cycles and prints joint speeds, how close joints get to their
 // limits, the static stability margin and the static joint torques from carrying the robot.
@@ -14,6 +14,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <iterator>
 #include <limits>
 #include <string>
 #include <vector>
@@ -133,6 +134,43 @@ struct Result
   int ik_fail = 0;
 };
 
+// Joint speeds, limit margins, stability and static torques for the gait's current state.
+void measure(
+  const vector::Gait & g, const vector::LegGeometry & geo, const Limits & lim, double mass, const Pt & com,
+  const std::array<vector::JointAngles, kLegs> * prev, Result & r)
+{
+  const auto & q = g.joints();
+  r.applied = g.applied();
+  for (int l = 0; l < kLegs; ++l) {
+    const double a[3] = {q[l].coxa, q[l].femur, q[l].tibia};
+    for (int j = 0; j < 3; ++j) {
+      if (prev) {
+        const auto & p = (*prev)[l];
+        const double b[3] = {p.coxa, p.femur, p.tibia};
+        r.speed[j] = std::max(r.speed[j], std::abs(a[j] - b[j]) / kDt);
+      }
+      r.margin[j] = std::min(r.margin[j], std::min(a[j] - lim.lo[j], lim.hi[j] - a[j]));
+    }
+  }
+
+  std::vector<Pt> feet;
+  std::vector<int> legs;
+  for (int l = 0; l < kLegs; ++l) {
+    if (!g.swinging(l)) {
+      feet.push_back({g.feet()[l].x, g.feet()[l].y});
+      legs.push_back(l);
+    }
+  }
+  r.stability = std::min(r.stability, stability_margin(feet, com));
+  const auto f = split_weight(feet, com, mass * kG);
+  for (size_t i = 0; i < legs.size(); ++i) {
+    const auto t = vector::joint_torques(geo, q[legs[i]], {0, 0, f[i]});
+    r.torque[0] = std::max(r.torque[0], std::abs(t.coxa));
+    r.torque[1] = std::max(r.torque[1], std::abs(t.femur));
+    r.torque[2] = std::max(r.torque[2], std::abs(t.tibia));
+  }
+}
+
 Result run(
   const Scenario & sc, const vector::LegGeometry & geo, const std::array<vector::LegMount, kLegs> & mounts,
   vector::GaitParams params, const Limits & lim, double mass, const Pt & com)
@@ -149,39 +187,43 @@ Result run(
     if (!g.update(sc.cmd, kDt)) {
       r.ik_fail++;
     }
-    const auto & q = g.joints();
     if (n >= warmup || n == 0) {
-      r.applied = g.applied();
-      for (int l = 0; l < kLegs; ++l) {
-        const double a[3] = {q[l].coxa, q[l].femur, q[l].tibia};
-        const double b[3] = {prev[l].coxa, prev[l].femur, prev[l].tibia};
-        for (int j = 0; j < 3; ++j) {
-          if (n > 0) {
-            r.speed[j] = std::max(r.speed[j], std::abs(a[j] - b[j]) / kDt);
-          }
-          r.margin[j] = std::min(r.margin[j], std::min(a[j] - lim.lo[j], lim.hi[j] - a[j]));
-        }
-      }
-
-      std::vector<Pt> feet;
-      std::vector<int> legs;
-      for (int l = 0; l < kLegs; ++l) {
-        if (!g.swinging(l)) {
-          feet.push_back({g.feet()[l].x, g.feet()[l].y});
-          legs.push_back(l);
-        }
-      }
-      r.stability = std::min(r.stability, stability_margin(feet, com));
-      const auto f = split_weight(feet, com, mass * kG);
-      for (size_t i = 0; i < legs.size(); ++i) {
-        const auto t = vector::joint_torques(geo, q[legs[i]], {0, 0, f[i]});
-        r.torque[0] = std::max(r.torque[0], std::abs(t.coxa));
-        r.torque[1] = std::max(r.torque[1], std::abs(t.femur));
-        r.torque[2] = std::max(r.torque[2], std::abs(t.tibia));
-      }
+      measure(g, geo, lim, mass, com, n > 0 ? &prev : nullptr, r);
     }
-    prev = q;
+    prev = g.joints();
   }
+  return r;
+}
+
+// Sentinel Stance as gait_node does it: the feet step out to the sentinel reach in wave order,
+// then the body goes down to the sentinel height (the legs still carry it all the way).
+Result run_sentinel(
+  const vector::LegGeometry & geo, const std::array<vector::LegMount, kLegs> & mounts,
+  vector::GaitParams params, const Limits & lim, double mass, const Pt & com, double reach, double height)
+{
+  params.type = vector::GaitType::Wave;
+  vector::Gait g(geo, mounts, params);
+  Result r;
+  auto prev = g.joints();
+  g.set_reach(reach, true);
+  vector::BodyPose down;
+  down.z = height - params.body_height;
+  bool lowering = false;
+  for (int n = 0; n < static_cast<int>(20.0 / kDt); ++n) {
+    if (!lowering && g.standing()) {
+      g.set_body_pose(down);
+      lowering = true;
+    }
+    if (!g.update({}, kDt)) {
+      r.ik_fail++;
+    }
+    measure(g, geo, lim, mass, com, n > 0 ? &prev : nullptr, r);
+    prev = g.joints();
+    if (lowering && std::abs(g.body_pose().z - down.z) < 1e-6) {
+      return r;
+    }
+  }
+  r.ik_fail++;  // never got there
   return r;
 }
 
@@ -202,7 +244,7 @@ int main(int argc, char ** argv)
   if (argc < 2) {
     std::fprintf(stderr,
       "usage: gait_report <legs.yaml> [--mass kg] [--period s] [--ripple-period s] [--wave-period s] [--step m] "
-      "[--stride m] [--com-x m] [--com-y m]\n");
+      "[--stride m] [--com-x m] [--com-y m] [--sentinel-reach m] [--sentinel-height m]\n");
     return 2;
   }
 
@@ -227,6 +269,8 @@ int main(int argc, char ** argv)
   p.period = arg(argc, argv, "--period", p.period);
   p.ripple_period = arg(argc, argv, "--ripple-period", p.ripple_period);
   p.wave_period = arg(argc, argv, "--wave-period", p.wave_period);
+  const double sentinel_reach = arg(argc, argv, "--sentinel-reach", 0.14);
+  const double sentinel_height = arg(argc, argv, "--sentinel-height", 0.03);
   p.step_height = arg(argc, argv, "--step", p.step_height);
   p.max_stride = arg(argc, argv, "--stride", p.max_stride);
   const double mass = arg(argc, argv, "--mass", 2.5);
@@ -254,8 +298,12 @@ int main(int argc, char ** argv)
     "coxa femur tibia", "coxa femur tibia", "mm", "femur tibia", "notes");
 
   bool any_warning = false;
-  for (const auto & sc : scenarios) {
-    const Result r = run(sc, geo, mounts, p, lim, mass, com);
+  for (size_t k = 0; k <= std::size(scenarios); ++k) {
+    const bool sentinel = k == std::size(scenarios);
+    const Scenario sc = sentinel ? Scenario{"sentinel", GaitType::Wave, {0, 0, 0}} : scenarios[k];
+    const Result r = sentinel ?
+      run_sentinel(geo, mounts, p, lim, mass, com, sentinel_reach, sentinel_height) :
+      run(sc, geo, mounts, p, lim, mass, com);
     std::string notes;
     const double fastest = std::max({r.speed[0], r.speed[1], r.speed[2]});
     if (fastest > lim.velocity) {notes += "too fast; ";}

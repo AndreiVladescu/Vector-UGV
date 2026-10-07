@@ -24,10 +24,12 @@ gait_node:
     level: false
     level_gain: 2.0     # 1/s
     level_max: 0.3      # rad
-    # Sentinel Stance: hip height to lower to before the legs switch off, and how long to wait for
-    # them. 45 mm is as low as the tibia limit allows with the feet at the standing reach; the
-    # belly (bottom plate, ~29 mm below the femur axis) is then ~16 mm off the ground.
-    sentinel_height: 0.045
+    # Sentinel Stance: the feet step out to sentinel_reach (wave order, five legs carrying), then
+    # the hip goes down to sentinel_height, just above where the belly (bottom plate, ~29 mm
+    # below the femur axis) touches; 140 mm is the narrowest reach that gets there with 5 deg
+    # of femur margin. Then how long to wait for the legs to power back up.
+    sentinel_height: 0.03
+    sentinel_reach: 0.14
     power_timeout: 10.0
     # Touchdown: plant each foot where it meets the ground
     touchdown: false

@@ -81,6 +81,24 @@ double Gait::period() const
   }
 }
 
+void Gait::set_reach(double reach, bool step)
+{
+  params_.reach = reach;
+  for (int i = 0; i < kLegs; ++i) {
+    const auto & m = mounts_[i];
+    neutral_[i].x = m.x + reach * std::cos(m.yaw);
+    neutral_[i].y = m.y + reach * std::sin(m.yaw);
+    if (!step) {
+      feet_[i].x = neutral_[i].x;
+      feet_[i].y = neutral_[i].y;
+      solve(i);
+    }
+  }
+  if (step) {
+    standing_ = false;
+  }
+}
+
 double Gait::duty() const
 {
   switch (params_.type) {

@@ -563,8 +563,8 @@ fetch(api('robot')).then(r => r.json()).then(g => {
   if (shape) geom.body = {...geom.body, ...shape.box};
 }).catch(() => {});
 const LEGS = ['L1', 'L2', 'L3', 'R1', 'R2', 'R3'];
-const SAY = {walk: 'Standing', stopping: 'Stopping…', lowering: 'Sitting down…', sentinel: 'Resting · Sentinel',
-             powering: 'Powering legs…', raising: 'Standing up…', halted: 'Halted · leg fault'};
+const SAY = {walk: 'Standing', stopping: 'Stopping…', spreading: 'Sitting down…', lowering: 'Sitting down…', sentinel: 'Resting · Sentinel',
+             powering: 'Powering legs…', raising: 'Standing up…', gathering: 'Standing up…', halted: 'Halted · leg fault'};
 const RINGS = [[0.3, COL.err], [0.6, COL.warn], [1.2, COL.ok]];
 // the robot's own dead reckoning, only to move the floor and the footprints
 const odo = {x: 0, y: 0, yaw: 0};

@@ -5,10 +5,11 @@
 // A cmd_vel with only linear.z set (teleop keys t/b) steps the body height up/down by
 // height_step and leaves the walking command alone.
 //
-// Sentinel Stance (~/sentinel, ~/wake services): stop, lower the body to sentinel_height,
+// Sentinel Stance (~/sentinel, ~/wake services): stop, step the feet out to sentinel_reach
+// one leg at a time (wave order, so five legs carry the body), lower it to sentinel_height,
 // switch the legs off through the leg_power GPIO controller; waking powers them, waits
-// until they all report active, raises the body and walks again. Without the GPIO
-// (Gazebo) it only lowers and raises.
+// until they all report active, raises the body, steps the feet back in and walks again.
+// Without the GPIO (Gazebo) it only does the moves.
 //
 // A leg that drops out while walking (fault, lost power) halts the gait: the other legs
 // finish their step and stand. ~/sentinel then ~/wake power-cycles the legs, which clears
@@ -92,6 +93,8 @@ public:
     p.touch_after = declare_parameter("touch_after", 0.7);
     contact_threshold_ = declare_parameter("contact_threshold", 0.6);
     sentinel_height_ = declare_parameter("sentinel_height", 0.03);
+    sentinel_reach_ = declare_parameter("sentinel_reach", 0.14);
+    stand_reach_ = p.reach;
     power_timeout_ = declare_parameter("power_timeout", 10.0);
     // Off in Gazebo, where odom -> base_link comes from the simulator's ground truth.
     publish_odom_ = declare_parameter("publish_odom_tf", true);
@@ -217,6 +220,8 @@ public:
           } else if (!vector::parse_gait(prm.as_string(), t)) {
             res.successful = false;
             res.reason = "use tripod, ripple or wave";
+          } else if (spread_) {
+            walk_type_ = t;  // sitting or getting up in wave order: the next walk uses it
           } else {
             gait_->set_type(t);
           }
@@ -358,11 +363,12 @@ private:
     gait_->set_contact(contact);
   }
 
-  enum class Mode { Walk, Stopping, Lowering, Sentinel, Powering, Raising, Halted };
+  enum class Mode { Walk, Stopping, Spreading, Lowering, Sentinel, Powering, Raising, Gathering, Halted };
 
   void set_mode(Mode m)
   {
-    static const char * names[] = {"walk", "stopping", "lowering", "sentinel", "powering", "raising", "halted"};
+    static const char * names[] = {"walk", "stopping", "spreading", "lowering", "sentinel", "powering", "raising",
+      "gathering", "halted"};
     mode_ = m;
     mode_t_ = now();
     std_msgs::msg::String msg;
@@ -421,6 +427,7 @@ private:
     legs_gpio({"enable", "estop"}, {0.0, 1.0});
     cmd_ = {};
     // the body is on the ground by now; command the sentinel pose so waking starts from it
+    spread_feet(false);
     sentinel_z_ = (sentinel_height_ - gait_->params().body_height) - (get_parameter("body_z").as_double() + height_);
     pose_dirty_ = true;
     RCLCPP_ERROR(get_logger(), "e-stop");
@@ -429,12 +436,31 @@ private:
 
   bool body_at(double z) const {return std::abs(gait_->body_pose().z - z) < 1e-4;}
 
+  // Feet out to sentinel_reach, where the hip can get down to sentinel_height within the
+  // joint limits, in wave order (one leg in the air at a time). step false: set them there
+  // at once, for legs that are already off.
+  void spread_feet(bool step)
+  {
+    if (!spread_) {
+      walk_type_ = gait_->params().type;
+      spread_ = true;
+    }
+    gait_->set_type(vector::GaitType::Wave);
+    gait_->set_reach(sentinel_reach_, step);
+  }
+
   void sentinel_step(const rclcpp::Time & t)
   {
     const double down = sentinel_height_ - gait_->params().body_height;
     const double up = get_parameter("body_z").as_double() + height_;
     switch (mode_) {
       case Mode::Stopping:
+        if (gait_->standing()) {
+          spread_feet(true);
+          set_mode(Mode::Spreading);
+        }
+        break;
+      case Mode::Spreading:
         if (gait_->standing()) {
           sentinel_z_ = down - up;
           pose_dirty_ = true;
@@ -460,6 +486,14 @@ private:
         break;
       case Mode::Raising:
         if (body_at(up)) {
+          gait_->set_reach(stand_reach_, true);
+          set_mode(Mode::Gathering);
+        }
+        break;
+      case Mode::Gathering:
+        if (gait_->standing()) {
+          gait_->set_type(walk_type_);
+          spread_ = false;
           set_mode(Mode::Walk);
         }
         break;
@@ -557,6 +591,9 @@ private:
   rclcpp::Time mode_t_;
   double sentinel_height_ = 0.03, power_timeout_ = 10.0, sentinel_z_ = 0, legs_active_ = 1.0;
   double gpio_enable_ = 1.0, gpio_estop_ = 0.0;  // last values sent to leg_power
+  double sentinel_reach_ = 0.14, stand_reach_ = 0.108;
+  bool spread_ = false;  // feet at sentinel_reach, walk_type_ holds the gait to go back to
+  vector::GaitType walk_type_ = vector::GaitType::Tripod;
   bool have_power_ = false, legs_were_up_ = false, estop_ = false;
   rclcpp::Publisher<control_msgs::msg::DynamicInterfaceGroupValues>::SharedPtr power_pub_;
   rclcpp::Subscription<control_msgs::msg::DynamicInterfaceGroupValues>::SharedPtr power_sub_;
