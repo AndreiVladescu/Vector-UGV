@@ -19,6 +19,8 @@ meshes/) and run this. It:
 - adds base_link (centred between the hips, at femur-axis height, like vector.urdf.xacro)
   and an <leg>_foot frame at each tibia tip
 - scales every mass and inertia so the robot weighs --mass kg (Fusion has no materials yet)
+- writes the operator page's models: silhouette.json (outlines from above) and robot3d.json
+  (every part simplified on a --cell grid, for the 3D view)
 
 It prints the geometry it finds, in legs.yaml's terms.
 """
@@ -189,6 +191,92 @@ def thin3d(P, n):
     return P[pick]
 
 
+def cluster_mesh(P, cell):
+    """Triangle soup -> (vertices, triangles), simplified by merging the vertices in each cell."""
+    key = np.floor(P / cell).astype(np.int64)
+    _, inv, count = np.unique(key, axis=0, return_inverse=True, return_counts=True)
+    inv = inv.reshape(-1)
+    V = np.zeros((len(count), 3))
+    np.add.at(V, inv, P)
+    V /= count[:, None]
+    T = inv.reshape(-1, 3)
+    T = T[(T[:, 0] != T[:, 1]) & (T[:, 1] != T[:, 2]) & (T[:, 0] != T[:, 2])]
+    _, keep = np.unique(np.sort(T, axis=1), axis=0, return_index=True)
+    T = T[np.sort(keep)]
+    used, T = np.unique(T, return_inverse=True)
+    return V[used], T.reshape(-1, 3)
+
+
+def write_mesh3d(m, legs, report, path, unit=2.5e-4, cell=0.002, min_size=0.004):
+    """The model for the operator page's 3D view: every part simplified (vertices merged on a
+    `cell` grid), grouped by colour; body parts in base_link, leg parts in their segment's
+    frame like the silhouette. Lengths in `unit` m, as integers."""
+    colours, rgb = [], {}
+    for mat in ET.parse(os.path.join(DESC, 'urdf', 'vector_cad_materials.xacro')).getroot().findall('material'):
+        c = [float(x) for x in mat.find('color').get('rgba').split()[:3]]
+        rgb[mat.get('name')] = '#%02x%02x%02x' % tuple(round(255 * x) for x in c)
+
+    def colour(v):
+        mat = v.find('material')
+        c = rgb.get(mat.get('name') if mat is not None else '', '#b3b3b3')
+        if c not in colours:
+            colours.append(c)
+        return colours.index(c)
+
+    def parts(link):
+        for v in m.links[link].findall('visual'):
+            mesh = v.find('geometry/mesh')
+            if mesh is None:
+                continue
+            f = os.path.join(m.meshdir, os.path.basename(mesh.get('filename')))
+            if f not in m._mesh:
+                m._mesh[f] = read_stl(f)
+            s = np.array([float(x) for x in mesh.get('scale', '1 1 1').split()])
+            M = m.world(link) @ from_origin(v.find('origin'))
+            P = (M[:3, :3] @ (m._mesh[f] * s).T).T + M[:3, 3]
+            if np.ptp(P, axis=0).max() >= min_size:  # skip screws and stickers
+                yield P, colour(v)
+
+    def pack(groups):
+        out = []
+        for c, soup in sorted(groups.items()):
+            V, T = cluster_mesh(np.vstack(soup), cell)
+            out.append({'c': c, 'v': np.round(V / unit).astype(int).reshape(-1).tolist(), 'i': T.reshape(-1).tolist()})
+        return out
+
+    out = {'unit': unit, 'colours': colours, 'legs': {}, 'body': [], 'parts': {}}
+    in_leg = set()
+    for n, (c, f, t) in legs.items():
+        r = report[n]
+        sub = {k: set(m.subtree(j.find('child').get('link'))) for k, j in (('coxa', c), ('femur', f), ('tibia', t))}
+        seg = {'coxa': sub['coxa'] - sub['femur'], 'femur': sub['femur'] - sub['tibia'], 'tibia': sub['tibia']}
+        in_leg |= sub['coxa']
+        yaw = YAW[n]
+        R = np.array([[math.cos(yaw), -math.sin(yaw), 0], [math.sin(yaw), math.cos(yaw), 0], [0, 0, 1]])
+        hip = np.array([r['x'], r['y'], 0.0])
+        origin = {'coxa': hip, 'femur': hip + R @ [r['coxa'], 0, 0], 'tibia': hip + R @ [r['coxa'] + r['femur'], 0, 0]}
+        out['legs'][n] = {'x': round(r['x'], 4), 'y': round(r['y'], 4), 'yaw': round(yaw, 6),
+                          'coxa': round(r['coxa'], 4), 'femur': round(r['femur'], 4), 'tibia': round(r['tibia'], 4)}
+        out['parts'][n] = {}
+        for k in ('coxa', 'femur', 'tibia'):
+            groups = {}
+            for link in sorted(seg[k]):
+                for P, col in parts(link):
+                    groups.setdefault(col, []).append((P - origin[k]) @ R)  # into the segment frame
+            out['parts'][n][k] = pack(groups)
+    groups = {}
+    for link in m.links:
+        if link not in in_leg:
+            for P, col in parts(link):
+                groups.setdefault(col, []).append(P)
+    out['body'] = pack(groups)
+    with open(path, 'w') as fh:
+        json.dump(out, fh, separators=(',', ':'))
+    tris = sum(len(p['i']) // 3 for p in out['body']) + sum(
+        len(p['i']) // 3 for leg in out['parts'].values() for seg in leg.values() for p in seg)
+    print(f'wrote {os.path.relpath(path)}: {tris} triangles, {os.path.getsize(path) // 1024} kB')
+
+
 def write_silhouette(m, legs, report, path, unit=5e-4, min_size=0.004, corners=16):
     """Every visible part as a convex outline, for a top-down drawing.
 
@@ -257,6 +345,9 @@ def main():
     ap.add_argument('--no-symmetry', action='store_true', help='leave the legs where Fusion put them')
     ap.add_argument('--silhouette', default=os.path.join(DESC, 'config', 'silhouette.json'),
                     help="top-down outline of every part, for the operator page's robot view")
+    ap.add_argument('--mesh3d', default=os.path.join(DESC, 'config', 'robot3d.json'),
+                    help="simplified 3D model, for the operator page's 3D view")
+    ap.add_argument('--cell', type=float, default=0.002, help='3D model: vertices within this many m merge')
     args = ap.parse_args()
     cfg = yaml.safe_load(open(args.legs))
     m = Model(args.input)
@@ -462,6 +553,7 @@ def main():
     m.reindex()
     m.links = {l.get('name'): l for l in m.root.findall('link')}
     write_silhouette(m, legs, report, args.silhouette)
+    write_mesh3d(m, legs, report, args.mesh3d, cell=args.cell)
     ET.indent(m.tree, space='   ')
     with open(args.output, 'w') as fh:
         fh.write("<?xml version='1.0' encoding='utf-8'?>\n")

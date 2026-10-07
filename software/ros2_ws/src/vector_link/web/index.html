@@ -13,6 +13,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="VECTOR">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script type="importmap">
+{"imports": {"three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+             "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"}}
+</script>
 <style>
   :root {
     --bg: #0a0d12; --glass: rgba(14, 18, 25, 0.64); --glass-2: rgba(22, 28, 38, 0.72);
@@ -88,8 +92,16 @@
   #stick.held #knob { box-shadow: 0 0 36px rgba(62, 166, 255, .9); }
 
   /* radar card */
-  .radar { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 250px; }
+  .radar { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 250px; position: relative; }
   #view { width: 222px; height: 222px; }
+  /* the CAD model in 3D, drag to look around; three.js loads the first time it's opened */
+  #view3d { width: 222px; height: 222px; border-radius: 16px; overflow: hidden; display: none; touch-action: none;
+            background: radial-gradient(circle at 50% 60%, rgba(62, 166, 255, .10), transparent 70%); }
+  .radar.three #view { display: none; }
+  .radar.three #view3d { display: block; }
+  #viewMode { position: absolute; top: 10px; right: 10px; z-index: 1; padding: 3px 9px; border-radius: 999px;
+              border: 1px solid var(--edge); background: var(--glass-2); font-size: 11px; font-weight: 800; letter-spacing: .06em; }
+  .radar.three #viewMode { background: var(--accent); border-color: var(--accent); color: #031526; }
   #pose { font-weight: 700; font-size: 15px; }
   #speed { color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
 
@@ -280,8 +292,10 @@
 </div>
 
 <div class="dock" id="rightDock">
-  <div class="card glass radar">
+  <div class="card glass radar" id="radar">
+    <button id="viewMode" title="3D view of the robot">3D</button>
     <canvas id="view" width="444" height="444"></canvas>
+    <div id="view3d"></div>
     <div id="pose">-</div>
     <div id="speed">-</div>
   </div>
@@ -641,6 +655,96 @@ function describe(p) {
 const toWorld = ([x, y]) => [odo.x + x * Math.cos(odo.yaw) - y * Math.sin(odo.yaw), odo.y + x * Math.sin(odo.yaw) + y * Math.cos(odo.yaw)];
 const toRobot = ([x, y]) => { const dx = x - odo.x, dy = y - odo.y, c = Math.cos(odo.yaw), s = Math.sin(odo.yaw); return [c * dx + s * dy, -s * dx + c * dy]; };
 
+// ---- 3D view: the simplified CAD model (tools/cad_urdf.py -> robot3d.json), three.js loaded on first use ----
+let view3d = null, use3d = params.get('view') === '3d' || load('view3d', false), loading3d = null;
+async function start3d() {
+  const [THREE, {OrbitControls}, data] = await Promise.all([
+    import('three'), import('three/addons/controls/OrbitControls.js'),
+    fetch(api('robot3d')).then(r => { if (!r.ok) throw new Error('no model'); return r.json(); })]);
+  const box = $('view3d'), size = 222;
+  const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(size, size);
+  box.appendChild(renderer.domElement);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 10);
+  camera.position.set(-0.78, 0.58, 0.42);  // behind, above and a little left, like a game's chase view
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 0.04, 0);
+  controls.enablePan = false; controls.enableDamping = true;
+  controls.minDistance = 0.35; controls.maxDistance = 1.6; controls.maxPolarAngle = 1.5;
+  scene.add(new THREE.HemisphereLight(0xe6eeff, 0x2a3140, 2.1));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+  sun.position.set(0.6, 1.4, 0.8);
+  scene.add(sun);
+  // ROS frames inside (x forward, y left, z up), three.js y up outside
+  const world = new THREE.Group();
+  world.rotation.x = -Math.PI / 2;
+  scene.add(world);
+  const grid = new THREE.GridHelper(1.6, 16, 0x3ea6ff, 0x3a4658);
+  grid.rotation.x = Math.PI / 2;
+  grid.material.transparent = true; grid.material.opacity = 0.35;
+  const floor = new THREE.Group();
+  floor.add(grid);
+  world.add(floor);
+  const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.22, 40),
+    new THREE.MeshBasicMaterial({color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false}));
+  shadow.position.z = 0.001;
+  world.add(shadow);
+
+  const u = data.unit;
+  const mats = data.colours.map(c => new THREE.MeshStandardMaterial({color: c, flatShading: true, roughness: 0.65,
+                                                                     metalness: 0.1, side: THREE.DoubleSide}));
+  const add = (group, parts) => parts.forEach(p => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(p.v.map(x => x * u), 3));
+    g.setIndex(p.i);
+    group.add(new THREE.Mesh(g, mats[p.c]));
+  });
+  const body = new THREE.Group();
+  world.add(body);
+  add(body, data.body);
+  const legs = LEGS.map(n => {
+    const L = data.legs[n], hip = new THREE.Group(), femur = new THREE.Group(), tibia = new THREE.Group();
+    hip.position.set(L.x, L.y, 0);
+    femur.position.x = L.coxa;
+    tibia.position.x = L.femur;
+    hip.add(femur); femur.add(tibia); body.add(hip);
+    add(hip, data.parts[n].coxa); add(femur, data.parts[n].femur); add(tibia, data.parts[n].tibia);
+    return {L, hip, femur, tibia};
+  });
+
+  return {
+    render(q) {
+      // joints as vector.urdf.xacro: coxa about z, femur and tibia about -y (positive lifts)
+      let low = 0;
+      legs.forEach((l, i) => {
+        l.hip.rotation.z = l.L.yaw + q[i][0];
+        l.femur.rotation.y = -q[i][1];
+        l.tibia.rotation.y = -q[i][2];
+        low = Math.min(low, l.L.femur * Math.sin(q[i][1]) + l.L.tibia * Math.sin(q[i][1] + q[i][2]));
+      });
+      body.position.z = -low;  // the lowest foot on the ground
+      // the floor slides and turns under the robot, like the 2D grid
+      const c = Math.cos(odo.yaw), s = Math.sin(odo.yaw), ox = -(odo.x % 0.1), oy = -(odo.y % 0.1);
+      floor.rotation.z = -odo.yaw;
+      floor.position.set(c * ox + s * oy, -s * ox + c * oy, 0);
+      controls.update();
+      renderer.render(scene, camera);
+    },
+  };
+}
+function apply3d() {
+  $('radar').classList.toggle('three', use3d);
+  if (!use3d || view3d || loading3d) return;
+  loading3d = start3d().then(v => { view3d = v; }).catch(e => {
+    use3d = false; save('view3d', false); $('radar').classList.remove('three');
+    toast('3D view unavailable: ' + (e.message || e), true);
+  }).finally(() => { loading3d = null; });
+}
+$('viewMode').onclick = () => { use3d = !use3d; save('view3d', use3d); apply3d(); };
+apply3d();
+
 function frame(now) {
   const dt = Math.min(0.1, (now - lastFrame) / 1000);
   lastFrame = now;
@@ -648,7 +752,8 @@ function frame(now) {
   odo.x += (vx * Math.cos(odo.yaw) - vy * Math.sin(odo.yaw)) * dt;
   odo.y += (vx * Math.sin(odo.yaw) + vy * Math.cos(odo.yaw)) * dt;
   odo.yaw += wz * dt;
-  draw(now / 1000);
+  if (use3d && view3d) view3d.render(LEGS.map(l => ['coxa', 'femur', 'tibia'].map(j => (pose && pose.joints[`${l}_${j}`]) || 0)));
+  else draw(now / 1000);
   requestAnimationFrame(frame);
 }
 

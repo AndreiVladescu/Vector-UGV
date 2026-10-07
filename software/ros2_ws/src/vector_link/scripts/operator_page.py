@@ -11,6 +11,7 @@ JSON API (all POST bodies JSON; with the token parameter set, every request need
                                     around the robot, for the top-down drawing (polled at 10 Hz)
   GET  /api/robot                   the leg geometry (legs.yaml) and the parts' outlines from the CAD
                                     model (silhouette.json, from tools/cad_urdf.py), once; gzip
+  GET  /api/robot3d                 the simplified CAD model for the 3D view (robot3d.json), gzip
   POST /api/cmd {vx, vy, wz}        -1..1 each, scaled by max_v / max_w, to cmd_vel/teleop
   POST /api/heartbeat
   POST /api/mission {points: [[lat, lon], ...]}    POST /api/cancel
@@ -108,6 +109,11 @@ class Operator(Node):
             except (OSError, ValueError):
                 pass
         self.robot_gz = gzip.compress(json.dumps(self.robot or {}).encode())
+        try:  # loaded by the page only when the 3D view is opened
+            with open(os.path.join(config, 'robot3d.json'), 'rb') as f:
+                self.robot3d_gz = gzip.compress(f.read())
+        except OSError:
+            self.robot3d_gz = None
         self.last_cmd = 0.0
         self.create_timer(0.1, self.cmd_watchdog)
         self.set_params = self.create_client(SetParameters, 'gait_node/set_parameters')
@@ -363,6 +369,12 @@ def handler(node, page, icons):
                 if 'gzip' in self.headers.get('Accept-Encoding', ''):
                     return self.reply(200, node.robot_gz, encoding='gzip')
                 return self.reply(200, node.robot or {})
+            if path == '/api/robot3d':
+                if node.robot3d_gz is None:
+                    return self.reply(404, {'error': 'no robot3d.json'})
+                if 'gzip' in self.headers.get('Accept-Encoding', ''):
+                    return self.reply(200, node.robot3d_gz, encoding='gzip', cache='max-age=3600')
+                return self.reply(200, gzip.decompress(node.robot3d_gz), cache='max-age=3600')
             if path == '/api/snapshot':
                 if node.jpeg is None:
                     return self.reply(404, {'error': 'no camera frame yet'})

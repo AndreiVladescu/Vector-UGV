@@ -189,6 +189,18 @@ class TestOperatorPage(unittest.TestCase):
             self.assertEqual(r.headers['Content-Encoding'], 'gzip')
             self.assertEqual(json.loads(gzip.decompress(r.read())), plain)
 
+    def test_robot3d(self):
+        self.assertEqual(request('/api/robot3d', key=None)[0], 403)
+        req = urllib.request.Request(BASE + '/api/robot3d?key=k', headers={'Accept-Encoding': 'gzip'})
+        with urllib.request.urlopen(req, timeout=5) as r:
+            self.assertEqual(r.headers['Content-Encoding'], 'gzip')
+            body = gzip.decompress(r.read())
+        self.assertEqual(request('/api/robot3d')[1], body)  # the same without gzip
+        if not body.startswith(b'version https://git-lfs'):  # a checkout without LFS has the pointer
+            data = json.loads(body)
+            self.assertEqual(set(data['parts']), {'L1', 'L2', 'L3', 'R1', 'R2', 'R3'})
+            self.assertTrue(data['body'] and data['colours'])
+
     def test_icons_and_manifest(self):
         status, body = request('/icon.svg', key=None)  # the browser asks without the key
         self.assertEqual(status, 200)

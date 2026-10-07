@@ -187,7 +187,7 @@ ros2 param set /sim_io vbat 13.3                                # low battery
 
 On the desktop there's no video; the page shows NO VIDEO until a stream answers.
 
-The robot view draws the CAD model seen from above (`vector_description/config/silhouette.json`, written by `tools/cad_urdf.py` with the URDF, about 14 kB gzipped), moved by the real joint angles; without that file it falls back to lines.
+The robot view draws the CAD model seen from above (`vector_description/config/silhouette.json`, written by `tools/cad_urdf.py` with the URDF, about 14 kB gzipped), moved by the real joint angles; without that file it falls back to lines. The 3D button on that card shows the CAD model in 3D instead (`robot3d.json`, the meshes simplified on a 2 mm grid: 87k triangles, about 460 kB gzipped, loaded with three.js only when opened); drag to look around, `?view=3d` opens the page in it. Without WebGL or the file it stays 2D.
 
 On the Pi (or the robot) in Docker: `DEMO=true` in `/etc/vector.env` (or `sudo DEMO=true software/host/setup.sh`) makes the robot container start the demo instead, `DEMO_GNSS_SCALE` sets the scale (default 20). `sudo systemctl restart vector-stack`, then `http://<pi>:8080`; with the vision profile the page also shows the camera with YOLO. `DEMO=false` and another restart go back to the robot.
 
