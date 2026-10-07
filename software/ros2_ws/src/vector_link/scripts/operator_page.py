@@ -9,7 +9,8 @@ JSON API (all POST bodies JSON; with the token parameter set, every request need
   GET  /api/state                   everything the page shows
   GET  /api/pose                    joint angles, walking speed, gait mode and the obstacles
                                     around the robot, for the top-down drawing (polled at 10 Hz)
-  GET  /api/robot                   the leg geometry (legs.yaml), once
+  GET  /api/robot                   the leg geometry (legs.yaml) and the parts' outlines from the CAD
+                                    model (silhouette.json, from tools/cad_urdf.py), once; gzip
   POST /api/cmd {vx, vy, wz}        -1..1 each, scaled by max_v / max_w, to cmd_vel/teleop
   POST /api/heartbeat
   POST /api/mission {points: [[lat, lon], ...]}    POST /api/cancel
@@ -20,6 +21,7 @@ JSON API (all POST bodies JSON; with the token parameter set, every request need
   POST /api/lte {on}                the LTE module's supply, through the IO MCU
   GET  /api/snapshot                the latest annotated camera frame, JPEG
 """
+import gzip
 import json
 import math
 import os
@@ -90,12 +92,20 @@ class Operator(Node):
         self.sub(JointState, 'joint_states', self.on_joints)
         self.sub(Odometry, 'odom/legs', self.on_legs)
         self.sub(Float32MultiArray, 'obstacles/sectors', self.on_sectors)
+        config = os.path.join(get_package_share_directory('vector_description'), 'config')
         try:
-            with open(os.path.join(get_package_share_directory('vector_description'), 'config', 'legs.yaml')) as f:
+            with open(os.path.join(config, 'legs.yaml')) as f:
                 g = yaml.safe_load(f)
             self.robot = {k: g[k] for k in ('coxa', 'femur', 'tibia', 'body', 'mounts', 'stand')}
         except (OSError, KeyError, yaml.YAMLError):
             self.robot = None
+        if self.robot is not None:
+            try:  # the page falls back to plain lines without it
+                with open(os.path.join(config, 'silhouette.json')) as f:
+                    self.robot['shape'] = json.load(f)
+            except (OSError, ValueError):
+                pass
+        self.robot_gz = gzip.compress(json.dumps(self.robot or {}).encode())
         self.last_cmd = 0.0
         self.create_timer(0.1, self.cmd_watchdog)
         self.set_params = self.create_client(SetParameters, 'gait_node/set_parameters')
@@ -309,10 +319,12 @@ def handler(node, page):
             q = parse_qs(urlparse(self.path).query)
             return not node.token or q.get('key', [''])[0] == node.token
 
-        def reply(self, code, body, ctype='application/json'):
+        def reply(self, code, body, ctype='application/json', encoding=None):
             data = body if isinstance(body, bytes) else json.dumps(body).encode()
             self.send_response(code)
             self.send_header('Content-Type', ctype)
+            if encoding:
+                self.send_header('Content-Encoding', encoding)
             self.send_header('Cache-Control', 'no-store')
             self.send_header('Content-Length', str(len(data)))
             self.end_headers()
@@ -329,6 +341,8 @@ def handler(node, page):
             if path == '/api/pose':
                 return self.reply(200, node.pose_state())
             if path == '/api/robot':
+                if 'gzip' in self.headers.get('Accept-Encoding', ''):
+                    return self.reply(200, node.robot_gz, encoding='gzip')
                 return self.reply(200, node.robot or {})
             if path == '/api/snapshot':
                 if node.jpeg is None:

@@ -526,8 +526,12 @@ $('release').onclick = () => { if (confirm('Release the e-stop? Wake the robot a
 
 // ---- top-down robot: legs from the real joint angles, the floor sliding under it, footprints,
 // the path ahead as backup-camera guide lines, parking-sensor rings around it ----
-let geom = null, pose = null, lastMode = null, stoppedAt = 0;
-fetch(api('robot')).then(r => r.json()).then(g => { geom = g && g.mounts ? g : null; }).catch(() => {});
+let geom = null, shape = null, pose = null, lastMode = null, stoppedAt = 0;
+fetch(api('robot')).then(r => r.json()).then(g => {
+  geom = g && g.mounts ? g : null;
+  shape = geom && geom.shape ? prepShape(geom.shape) : null;
+  if (shape) geom.body = {...geom.body, ...shape.box};
+}).catch(() => {});
 const LEGS = ['L1', 'L2', 'L3', 'R1', 'R2', 'R3'];
 const SAY = {walk: 'Standing', stopping: 'Stopping…', lowering: 'Sitting down…', sentinel: 'Resting · Sentinel',
              powering: 'Powering legs…', raising: 'Standing up…', halted: 'Halted · leg fault'};
@@ -541,6 +545,61 @@ function legPoints(g, name, q) {
   const knee = g.coxa + g.femur * Math.cos(q[1]), reach = knee + g.tibia * Math.cos(q[1] + q[2]);
   const at = r => [m.x + r * Math.cos(a), m.y + r * Math.sin(a)];
   return {hip: [m.x, m.y], coxa: at(g.coxa), knee: at(knee), foot: at(reach), z: g.femur * Math.sin(q[1]) + g.tibia * Math.sin(q[1] + q[2])};
+}
+// the CAD model's parts (silhouette.json from tools/cad_urdf.py): leg kinematics with the CAD
+// lengths and every part drawn as its outline seen from above
+function prepShape(s) {
+  const u = s.unit, sc = a => a.map(p => p.map(v => v * u));
+  s.body.forEach(b => { b.p = sc(b.p); b.z *= u; });
+  for (const n in s.parts) for (const k in s.parts[n]) s.parts[n][k] = s.parts[n][k].map(sc);
+  const xs = s.body.flatMap(b => b.p.map(p => p[0])), ys = s.body.flatMap(b => b.p.map(p => p[1]));
+  s.box = {length: Math.max(...xs) - Math.min(...xs), width: Math.max(...ys) - Math.min(...ys)};
+  return s;
+}
+function hull(p) {  // convex hull of [x, y] points, monotone chain
+  p = p.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], hi = [];
+  for (const q of p) { while (lo.length > 1 && cross(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+  for (const q of p.reverse()) { while (hi.length > 1 && cross(hi[hi.length - 2], hi[hi.length - 1], q) <= 0) hi.pop(); hi.push(q); }
+  return lo.slice(0, -1).concat(hi.slice(0, -1));
+}
+// a point in each segment's frame -> [x, y, z] in base_link; same conventions as vector.urdf.xacro
+function legXf(L, q) {
+  const a = L.yaw + q[0], ca = Math.cos(a), sa = Math.sin(a);
+  const base = (x, y, z) => [L.x + x * ca - y * sa, L.y + x * sa + y * ca, z];
+  const pitch = (t, x, z) => [x * Math.cos(t) - z * Math.sin(t), x * Math.sin(t) + z * Math.cos(t)];
+  const coxa = p => base(p[0], p[1], p[2]);
+  const femur = p => { const [x, z] = pitch(q[1], p[0], p[2]); return base(x + L.coxa, p[1], z); };
+  const tibia = p => { const [x, z] = pitch(q[2], p[0], p[2]); return femur([x + L.femur, p[1], z]); };
+  return {coxa, femur, tibia};
+}
+function shapePoints(L, q) {
+  const f = legXf(L, q), foot = f.tibia([L.tibia, 0, 0]);
+  return {hip: [L.x, L.y], coxa: f.femur([0, 0, 0]), knee: f.tibia([0, 0, 0]), foot, z: foot[2], xf: f};
+}
+function drawShape(ctx, P, legs, powered, off) {
+  const items = shape.body.map(b => ({p: b.p, z: b.z, body: true}));
+  LEGS.forEach((n, i) => ['coxa', 'femur', 'tibia'].forEach(k => shape.parts[n][k].forEach(part => {
+    const w = part.map(legs[i].xf[k]);
+    items.push({p: w, z: Math.max(...w.map(v => v[2]))});
+  })));
+  ctx.fillStyle = 'rgba(0,0,0,.35)';  // shadow of the whole robot, offset with the body height
+  items.forEach(it => {
+    const h = hull(it.p.map(P));
+    ctx.beginPath(); h.forEach(([x, y], k) => k ? ctx.lineTo(x + off, y + off) : ctx.moveTo(x + off, y + off)); ctx.fill();
+  });
+  items.sort((a, b) => a.z - b.z);  // lowest first, so what is on top is drawn last
+  ctx.lineWidth = 1.5; ctx.lineJoin = 'round';
+  items.forEach(it => {
+    const h = hull(it.p.map(P));
+    const lift = Math.max(-0.1, Math.min(0.1, it.z));  // higher parts a little lighter
+    const l = it.body ? (powered ? 26 : 20) + lift * 120 : (powered ? 78 : 36) + lift * 100;
+    ctx.fillStyle = it.body ? `hsl(215, 18%, ${l}%)` : `hsl(214, 14%, ${l}%)`;
+    ctx.strokeStyle = 'rgba(0,0,0,.45)';
+    ctx.beginPath(); h.forEach(([x, y], k) => k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+  });
 }
 function describe(p) {
   const moving = Math.hypot(p.motion[0], p.motion[1]) > 0.003 || Math.abs(p.motion[2]) > 0.02;
@@ -646,7 +705,7 @@ function draw(t) {
 
   if (!geom) { ctx.restore(); return; }
   const q = LEGS.map(l => ['coxa', 'femur', 'tibia'].map(j => (pose && pose.joints[`${l}_${j}`]) || 0));
-  const legs = LEGS.map((l, i) => legPoints(geom, l, q[i]));
+  const legs = LEGS.map((l, i) => shape ? shapePoints(shape.legs[l], q[i]) : legPoints(geom, l, q[i]));
   const low = Math.min(...legs.map(l => l.z)), height = Math.max(0, -low);
   const powered = pose && !['sentinel', 'lowering', 'powering'].includes(pose.mode);
   const b = geom.body, bw = b.width * S, bl = b.length * S;
@@ -665,27 +724,34 @@ function draw(t) {
 
   // shadow grows with the body height, gone when it rests
   const off = height * S * 0.6;
-  ctx.fillStyle = `rgba(0,0,0,${0.2 + height * 2.5})`;
-  ctx.beginPath(); ctx.roundRect(-bw / 2 + off, -bl / 2 + off, bw, bl, 18); ctx.fill();
+  if (shape) drawShape(ctx, P, legs, powered, off);
+  else {
+    ctx.fillStyle = `rgba(0,0,0,${0.2 + height * 2.5})`;
+    ctx.beginPath(); ctx.roundRect(-bw / 2 + off, -bl / 2 + off, bw, bl, 18); ctx.fill();
+  }
   legs.forEach((l, i) => {
     const pts = [l.hip, l.coxa, l.knee, l.foot].map(P);
-    ctx.beginPath();
-    pts.forEach(([x, y], k) => k ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
-    ctx.strokeStyle = powered ? '#d7dee8' : '#4b5462';
-    ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.stroke();
+    if (!shape) {
+      ctx.beginPath();
+      pts.forEach(([x, y], k) => k ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+      ctx.strokeStyle = powered ? '#d7dee8' : '#4b5462';
+      ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.stroke();
+    }
     const [fx, fy] = pts[3], lifted = l.z - low > 0.01;
     // a foot touching down leaves a print where it stands
     if (!lifted && planted[i] === false && moving) prints.push({w: toWorld(l.foot), t});
     planted[i] = !lifted;
-    ctx.beginPath(); ctx.arc(fx, fy, 11, 0, 2 * Math.PI);
+    ctx.beginPath(); ctx.arc(fx, fy, shape ? 7 : 11, 0, 2 * Math.PI);
     if (lifted) { ctx.strokeStyle = COL.accent; ctx.lineWidth = 4; ctx.stroke(); }
     else { ctx.fillStyle = powered ? COL.accent : '#4b5462'; ctx.shadowColor = COL.accent; ctx.shadowBlur = powered ? 12 : 0; ctx.fill(); ctx.shadowBlur = 0; }
   });
-  const grad = ctx.createLinearGradient(0, -bl / 2, 0, bl / 2);
-  grad.addColorStop(0, powered ? '#3a4a60' : '#2a303a'); grad.addColorStop(1, powered ? '#232d3b' : '#1c2129');
-  ctx.fillStyle = grad; ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.roundRect(-bw / 2, -bl / 2, bw, bl, 18); ctx.fill(); ctx.stroke();
+  if (!shape) {
+    const grad = ctx.createLinearGradient(0, -bl / 2, 0, bl / 2);
+    grad.addColorStop(0, powered ? '#3a4a60' : '#2a303a'); grad.addColorStop(1, powered ? '#232d3b' : '#1c2129');
+    ctx.fillStyle = grad; ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(-bw / 2, -bl / 2, bw, bl, 18); ctx.fill(); ctx.stroke();
+  }
   // nose: camera and ToF, with a faint field of view
   const fov = ctx.createRadialGradient(0, -bl / 2, 0, 0, -bl / 2, 0.3 * S);
   fov.addColorStop(0, 'rgba(62,166,255,.18)'); fov.addColorStop(1, 'rgba(62,166,255,0)');

@@ -3,7 +3,7 @@
 Runs on the Pi 5 during development and on the CM5 later: Raspberry Pi OS, with ROS 2 Jazzy in Docker.
 
 Packages in `ros2_ws/src/`:
-- `vector_description`: URDF and `config/legs.yaml`, the one place leg lengths and hip positions live; `vector_cad.urdf.xacro` is the full Fusion 360 export (view it with `ros2 launch vector_bringup view_cad.launch.py`)
+- `vector_description`: URDF and `config/legs.yaml`, the one place leg lengths and hip positions live; `vector_cad.urdf.xacro` is the full Fusion 360 model, generated from the raw export `vector_cad_raw.urdf.xacro` by `tools/cad_urdf.py` (run it after every export; view the result with `ros2 launch vector_bringup view_cad.launch.py`)
 - `vector_gait`: kinematics and gait in plain C++ (`vector_core`, no ROS), plus `gait_node`
 - `vector_hw`: ros2_control hardware for the leg nodes over SocketCAN, plus `sim_legs` (the leg firmware logic with simulated servos) and `leg_config.py` (calibration and settings over CAN)
 - `vector_bringup`: launch files, controller config, rviz config, Gazebo worlds
@@ -25,7 +25,8 @@ sudo apt update
 sudo apt install ros-jazzy-desktop ros-jazzy-ros2-control ros-jazzy-ros2-controllers \
   ros-jazzy-xacro ros-jazzy-teleop-twist-keyboard ros-jazzy-plotjuggler-ros \
   ros-jazzy-ros-gz ros-jazzy-gz-ros2-control ros-jazzy-robot-localization \
-  ros-jazzy-nmea-navsat-driver python3-colcon-common-extensions python3-can can-utils
+  ros-jazzy-nmea-navsat-driver ros-jazzy-joint-state-publisher-gui \
+  python3-colcon-common-extensions python3-can can-utils
 pip install --user --break-system-packages cantools
 ```
 
@@ -185,6 +186,8 @@ ros2 param set /sim_io vbat 13.3                                # low battery
 ```
 
 On the desktop there's no video; the page shows NO VIDEO until a stream answers.
+
+The robot view draws the CAD model seen from above (`vector_description/config/silhouette.json`, written by `tools/cad_urdf.py` with the URDF, about 14 kB gzipped), moved by the real joint angles; without that file it falls back to lines.
 
 On the Pi (or the robot) in Docker: `DEMO=true` in `/etc/vector.env` (or `sudo DEMO=true software/host/setup.sh`) makes the robot container start the demo instead, `DEMO_GNSS_SCALE` sets the scale (default 20). `sudo systemctl restart vector-stack`, then `http://<pi>:8080`; with the vision profile the page also shows the camera with YOLO. `DEMO=false` and another restart go back to the robot.
 
