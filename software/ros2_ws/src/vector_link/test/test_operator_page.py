@@ -1,4 +1,5 @@
 """The operator page's HTTP API against the ROS side: state in, commands out."""
+import gzip
 import json
 import time
 import unittest
@@ -176,6 +177,17 @@ class TestOperatorPage(unittest.TestCase):
         self.assertEqual(self.request_spinning('/api/gait', {'name': 'wave'})[0], 200)
         self.assertEqual(self.gait.get_parameter('gait').value, 'wave')
         self.assertEqual(request('/api/gait', {'name': 'gallop'})[0], 400)
+
+    def test_robot(self):
+        status, body = request('/api/robot')
+        self.assertEqual(status, 200)
+        plain = json.loads(body)
+        self.assertEqual(set(plain['mounts']), {'L1', 'L2', 'L3', 'R1', 'R2', 'R3'})
+        self.assertTrue(plain['shape']['parts'])  # silhouette.json from the CAD model
+        req = urllib.request.Request(BASE + '/api/robot?key=k', headers={'Accept-Encoding': 'gzip'})
+        with urllib.request.urlopen(req, timeout=2) as r:
+            self.assertEqual(r.headers['Content-Encoding'], 'gzip')
+            self.assertEqual(json.loads(gzip.decompress(r.read())), plain)
 
     def test_snapshot(self):
         self.assertEqual(request('/api/snapshot')[0], 404)

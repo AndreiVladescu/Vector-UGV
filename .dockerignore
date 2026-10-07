@@ -1,0 +1,8 @@
+# build context is the repo root; the images only need software/, firmware/, protocol/ and docs/servos.md
+hardware
+mechanical
+**/build
+**/install
+**/log
+software/ros2_ws/src/vector_description/meshes
+software/ros2_ws/src/vector_description/urdf/vector_cad_raw.urdf.xacro

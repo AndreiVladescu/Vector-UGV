@@ -49,6 +49,11 @@
            letter-spacing: .06em; color: #fff; background: radial-gradient(circle at 35% 30%, #ff7480, #d8111f 70%);
            box-shadow: 0 0 0 4px rgba(255, 77, 90, .25), 0 8px 24px rgba(216, 17, 31, .5); flex: none; }
   #estop:active { transform: scale(.95); }
+  /* when the bar runs out of room the readouts shrink and clip; the buttons and STOP keep their size */
+  header > .pill, header > .sig, header > .batt { flex-shrink: 1; min-width: 0; overflow: hidden; }
+  @media (max-width: 1360px) { .brand, .pill small, .batt .v { display: none; } }
+  @media (max-width: 1000px) { .sig b { display: none; } }
+  @media (max-width: 760px) { header > .sig { display: none; } }
 
   /* banners */
   .banner { position: fixed; left: 50%; transform: translateX(-50%); top: calc(92px + var(--safe-t)); z-index: 6;
@@ -189,7 +194,7 @@
   #tilesMenu input[type=range] { width: 100%; margin: 0; accent-color: var(--accent); }
 
   /* narrow / portrait: video on top, the cards below it */
-  @media (max-width: 820px), (orientation: portrait) {
+  @media (orientation: portrait), (max-width: 820px) and (min-height: 561px) {
     html, body { overflow: auto; }
     #stage { position: relative; height: 42vh; }
     header { position: absolute; flex-wrap: wrap; padding: 8px; gap: 6px; }
@@ -213,6 +218,22 @@
     #sys.open, #tilesMenu.open { display: flex; flex-direction: column; }
     #tilesMenu .opts { grid-template-columns: 1fr 1fr; }
     #miniBox { width: 150px; height: 150px; }
+  }
+
+  /* phone held sideways: smaller cards, no d-pad (the joystick drives), the mission bar on top */
+  @media (orientation: landscape) and (max-height: 560px) {
+    header { padding: 6px 6px 6px 12px; gap: 6px; }
+    .tool { width: 32px; height: 32px; }
+    #estop { width: 46px; height: 46px; font-size: 11px; }
+    #leftDock, #rightDock { zoom: .72; }
+    .dpad { display: none; }
+    #missionBar { top: calc(80px + var(--safe-t)); bottom: auto; padding: 4px 4px 4px 12px;
+                  max-width: max(150px, calc(100vw - 500px)); }
+    #missionBar .btn { padding: 6px 10px; }
+    #hud { top: calc(80px + var(--safe-t)); max-height: calc(100vh - 250px); }
+    .tile { padding: 5px 10px; }
+    .banner, #sys, #tilesMenu { top: calc(76px + var(--safe-t)); }
+    #sys, #tilesMenu { max-height: calc(100vh - 90px); }
   }
 </style>
 </head>
@@ -967,6 +988,9 @@ function renderTiles() {
     const [val, col, sub] = r || ['-', '', ''];
     return `<div class="tile glass"><small>${name}</small><b style="color:${col || ''}">${val}</b>${sub ? `<em>${sub}</em>` : ''}</div>`;
   }).join('');
+  // a short screen shows the tiles that fit whole, never half of one
+  const bottom = $('hud').getBoundingClientRect().bottom;
+  for (const t of $('tiles').children) t.style.visibility = t.getBoundingClientRect().bottom > bottom + 0.5 ? 'hidden' : '';
 }
 buildMenu();
 applyMap();

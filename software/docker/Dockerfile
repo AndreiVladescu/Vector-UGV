@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM base AS build
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ros-jazzy-launch-testing-ament-cmake ros-jazzy-launch-testing-ros ros-jazzy-ament-cmake-pytest \
-      ros-jazzy-ament-cmake-gtest iproute2 \
+      ros-jazzy-ament-cmake-gtest python3-pytest iproute2 \
     && rm -rf /var/lib/apt/lists/*
 # the repo layout matters: vector_hw builds sim_legs from ../../../../firmware
 COPY firmware/common /ws/firmware/common

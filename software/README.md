@@ -215,6 +215,12 @@ CAN_INTERFACE=can0 docker compose -f software/docker/compose.yaml up -d      # r
 CAN_INTERFACE=vcan0 docker compose -f software/docker/compose.yaml --profile sim up -d   # with sim_legs
 ```
 
+`.dockerignore` keeps the CAD meshes and the raw Fusion export out of the image: the robot has no rviz, and the operator page only needs `silhouette.json`. To update a Pi without git, copy the tree over from the desktop and build there:
+
+```sh
+rsync -a --exclude build/ --exclude install/ --exclude log/ --exclude meshes/ -R software firmware protocol docs .dockerignore pi@<pi>:vector/
+```
+
 Always run ROS containers with a normal open-files limit (`nofile: 65536`, set in `compose.yaml`). Docker's default is about 2^30, and LTTng, which every ROS 2 process loads through `tracetools`, allocates a bitmap sized by it: 128 MB per process, 1.4 GB for this stack.
 
 Measured on a Pi 5 2 GB (`software/tools/`): the stack uses 481 MB system-wide, Docker itself 133 MB of that; SYNC runs at 5.00 ms with a worst gap of 8 ms idle and 15 ms with all four cores busy (the legs crouch after 100 ms); the control loop gets SCHED_FIFO 50.
