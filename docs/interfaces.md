@@ -19,7 +19,7 @@ Both ends of a cable use the same footprint and pin order.
 | J-CAN (×n) | Bus hops | JST-XH 4-pin | CANH, CANL, GND, ESTOP_N / spare |
 | J-SERVO (×9 per side) | Side board → servo | 2.54 mm header 1×04, three per leg as a 3×4 block | GND, V+ (6 V), PWM, POT |
 | J-TOF (×3 per side) | Side board → ToF | 2.54 mm header 1×04 | 3V3, GND, SDA, SCL |
-| J-SWD (per MCU) | Debug | Tag-Connect TC2030 or 1.27 mm 2×5 *TBD* | SWDIO, SWCLK, NRST, 3V3, GND |
+| J-SWD (per MCU) | Debug | side board: 1 mm pads for PCBite probes (SWDIO, SWCLK, NRST) plus one shared 2.54 mm 1×02 (3V3, GND) per board; carrier and power board: TC2050 | SWDIO, SWCLK, NRST, 3V3, GND |
 | J-SWDREC | Carrier → any MCU | 1.27 mm 2×5 | CM5 GPIO SWD recovery |
 | J-ELRS | Carrier → receiver | JST-GH 4-pin | 5 V, GND, TX, RX |
 | J-LIDAR | Carrier (IO MCU) → LDS01RR lidar | JST-XH 4-pin | 1 TX (lidar → MCU, 3.3 V), 2 RX (not used), 3 GND, 4 5 V; the lidar end is JST-PH 2.0 |

@@ -2,7 +2,7 @@
 
 One board: BMS, USB-C charger, power MCU on CAN. Everything from Mouser except the XT60/XT30 (Amass, TME) and the panel button. Prices single-unit, rounded; passives rough. Start each block from TI's reference design (BQ76952EVM for the BMS, BQ25798EVM for the charger).
 
-Parts shared with the side boards use the same MPN and the same 0603 / 1206 footprints, so one reel covers both.
+Parts shared with the side boards (the NTC, BAT54J) use the same MPN. Passives here are 0603 resistors and 0805 capacitors; the side boards use 0402.
 
 ## Battery management
 
