@@ -124,7 +124,7 @@ ros2 run rqt_robot_monitor rqt_robot_monitor
 ros2 topic echo /legs/L1/tof          # sensor_msgs/Range in frame L1_tof (+inf: nothing in range)
 ```
 
-Fault changes also go to the log as they happen. The `<leg>_tof` frames sit on the coxa links at a placeholder pose (`tof` in `legs.yaml`) until the sensor bracket exists.
+Fault changes also go to the log as they happen. The `<leg>_tof` frames sit on the tibia links where the CAD has the sensor (`tof` in `legs.yaml`), with x along the beam.
 
 ## Power board
 

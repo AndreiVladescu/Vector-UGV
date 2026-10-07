@@ -40,6 +40,8 @@ mass:
 
 foot_friction: 0.9   # TPU on dirt/wood, rough guess
 
-# VL53L1X on the coxa link, in the coxa link frame (x outward along the link, z up);
-# pitch > 0 tips it down. Placeholder until the bracket is drawn.
-tof: {x: 0.025, z: -0.015, pitch: 0.35}
+# VL53L1X on the tibia, in front of the leg (the CAD's ToF front plate): in the tibia link
+# frame (x from the knee toward the foot, z up at the zero pose, so outward when standing).
+# The sensor frame's x is the beam; pitch turns it from along the tibia to 6 deg short of
+# the tibia's z, so standing it looks outward and about 10 deg down.
+tof: {x: 0.051, z: 0.0456, pitch: -1.465}

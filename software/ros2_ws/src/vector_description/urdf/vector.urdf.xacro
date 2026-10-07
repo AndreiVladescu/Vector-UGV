@@ -140,7 +140,7 @@
     <!-- ToF sensor frame, x along the beam (sensor_msgs/Range on legs/${name}/tof) -->
     <link name="${name}_tof"/>
     <joint name="${name}_tof_joint" type="fixed">
-      <parent link="${name}_coxa_link"/>
+      <parent link="${name}_tibia_link"/>
       <child link="${name}_tof"/>
       <origin xyz="${g['tof']['x']} 0 ${g['tof']['z']}" rpy="0 ${g['tof']['pitch']} 0"/>
     </joint>
