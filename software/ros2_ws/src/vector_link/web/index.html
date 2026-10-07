@@ -56,6 +56,7 @@
   .batt { display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; }
   .batt .pct { font-weight: 700; font-variant-numeric: tabular-nums; width: 4.4ch; text-align: right; }
   .batt .v { color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; width: 16ch; white-space: nowrap; }
+  .batt .rt { color: var(--dim); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; width: 5ch; white-space: nowrap; }
   #estop { width: 58px; height: 58px; border-radius: 50%; border: 3px solid #ffd0d4; font-weight: 900; font-size: 12px;
            letter-spacing: .06em; color: #fff; background: radial-gradient(circle at 35% 30%, #ff7480, #d8111f 70%);
            box-shadow: 0 0 0 4px rgba(255, 77, 90, .25), 0 8px 24px rgba(216, 17, 31, .5); flex: none; }
@@ -64,7 +65,7 @@
   header > .pill, header > .sig, header > .batt { flex-shrink: 1; min-width: 0; overflow: hidden; }
   @media (max-width: 1360px) { .brand, .pill small, .batt .v { display: none; } }
   @media (max-width: 1000px) { .sig b { display: none; } }
-  @media (max-width: 760px) { header > .sig { display: none; } }
+  @media (max-width: 760px) { header > .sig, .batt .rt { display: none; } }
 
   /* banners */
   .banner { position: fixed; left: 50%; transform: translateX(-50%); top: calc(92px + var(--safe-t)); z-index: 6;
@@ -191,10 +192,24 @@
 
   /* systems panel: the carrier's IO MCU and the sensors */
   /* landscape: wide and short, so they end above the drive card instead of covering it */
-  #sys, #tilesMenu { position: fixed; top: calc(84px + var(--safe-t)); right: var(--gap); z-index: 6;
+  #sys, #tilesMenu, #calWiz { position: fixed; top: calc(84px + var(--safe-t)); right: var(--gap); z-index: 6;
          width: min(860px, calc(100vw - 2 * var(--gap))); padding: 14px 16px; display: none; gap: 10px 22px;
          align-items: start; max-height: calc(100vh - 110px); overflow: auto; background: rgba(14, 18, 25, 0.95); overflow-x: hidden; }
   #sys.open { display: grid; grid-template-columns: 1fr 1.25fr 1fr; }
+  #calWiz.open { display: grid; grid-template-columns: 1fr 1.3fr; }
+  /* calibration wizard: the six legs where they are on the robot, front at the top */
+  .legpick { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 40px; position: relative; padding: 4px 0; }
+  .legpick::before { content: ""; position: absolute; left: 50%; top: 4px; bottom: 4px; width: 26px; transform: translateX(-50%);
+                     border-radius: 10px; background: rgba(255,255,255,.06); border: 1px solid var(--edge); }
+  .legpick button { padding: 9px 0; border-radius: 10px; border: 1px solid var(--edge); background: var(--glass-2); font-weight: 800; }
+  .legpick button.on { background: var(--accent); border-color: var(--accent); color: #031526; }
+  .calbar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.08); overflow: hidden; }
+  .calbar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .5s linear; }
+  #calTable { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  #calTable th { color: var(--faint); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; text-align: right; padding: 4px 6px; }
+  #calTable td { text-align: right; padding: 5px 6px; border-top: 1px solid var(--edge); }
+  #calTable th:first-child, #calTable td:first-child { text-align: left; }
+  #calNote { color: var(--dim); font-size: 12px; line-height: 1.45; }
   #tilesMenu.open { display: grid; grid-template-columns: 2fr 1fr; }
   .col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
   #sys .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -233,8 +248,8 @@
     .tile b { font-size: 12px; }
     .tool { width: 34px; height: 34px; }
     /* below the header, so STOP stays reachable */
-    #sys, #tilesMenu { position: absolute; left: var(--gap); right: var(--gap); width: auto; top: calc(170px + var(--safe-t)); max-height: none; }
-    #sys.open, #tilesMenu.open { display: flex; flex-direction: column; }
+    #sys, #tilesMenu, #calWiz { position: absolute; left: var(--gap); right: var(--gap); width: auto; top: calc(170px + var(--safe-t)); max-height: none; }
+    #sys.open, #tilesMenu.open, #calWiz.open { display: flex; flex-direction: column; }
     #tilesMenu .opts { grid-template-columns: 1fr 1fr; }
     #miniBox { width: 150px; height: 150px; }
   }
@@ -251,8 +266,8 @@
     #missionBar .btn { padding: 6px 10px; }
     #hud { top: calc(80px + var(--safe-t)); max-height: calc(100vh - 250px); }
     .tile { padding: 5px 10px; }
-    .banner, #sys, #tilesMenu { top: calc(76px + var(--safe-t)); }
-    #sys, #tilesMenu { max-height: calc(100vh - 90px); }
+    .banner, #sys, #tilesMenu, #calWiz { top: calc(76px + var(--safe-t)); }
+    #sys, #tilesMenu, #calWiz { max-height: calc(100vh - 90px); }
   }
 </style>
 </head>
@@ -354,6 +369,29 @@
   </div>
 </div>
 
+<div class="glass" id="calWiz">
+  <div class="col">
+    <div class="label">Calibrate a leg</div>
+    <div id="calNote"></div>
+    <div class="row"><button class="btn" id="calSit">Sit down</button></div>
+    <div class="label">Leg</div>
+    <div class="legpick" id="calLegs"><button data-l="L1">L1</button><button data-l="R1">R1</button>
+      <button data-l="L2">L2</button><button data-l="R2">R2</button><button data-l="L3">L3</button><button data-l="R3">R3</button></div>
+    <div class="label">Joints</div>
+    <div class="seg" id="calJoint"><button data-j="all">All</button><button data-j="coxa">Coxa</button><button data-j="femur">Femur</button><button data-j="tibia">Tibia</button></div>
+    <div class="label">Range</div>
+    <div class="seg" id="calMode"><button data-m="full" title="500-2500 µs: the first time">Full sweep</button><button data-m="limits" title="the joint's limits plus 5°: once mounted">Within limits</button></div>
+  </div>
+  <div class="col">
+    <div class="label" id="calTitle">Result</div>
+    <div class="calbar"><i id="calBar"></i></div>
+    <div id="calStatus" class="none">Nothing calibrated yet.</div>
+    <table id="calTable"></table>
+    <div class="row"><button class="btn primary" id="calStart">Start</button><button class="btn" id="calSave">Save to the leg</button></div>
+    <div class="row"><button class="btn" id="calCopy" title="rows in the docs/servos.md table">Copy for servos.md</button><button class="btn" id="calClose">Close</button></div>
+  </div>
+</div>
+
 <div class="glass" id="sys">
   <div class="col">
   <div class="label">Carrier</div>
@@ -375,7 +413,8 @@
   <div id="loraMsg"></div>
   <hr style="width:100%;border:0;border-top:1px solid var(--edge);margin:2px 0">
   <label class="switch">LTE module power<input type="checkbox" id="lteSw"><i></i></label>
-  <div class="row"><button class="btn" id="beep">Beep</button><button class="btn" id="sysClose">Close</button></div>
+  <div class="row"><button class="btn" id="beep">Beep</button><button class="btn" id="blackboxBtn" title="save the last two minutes to a bag on the robot">Save black box</button></div>
+  <div class="row"><button class="btn" id="calOpen" title="sweep a leg's servos to calibrate their pots">Calibrate legs</button><button class="btn" id="sysClose">Close</button></div>
   </div>
 </div>
 
@@ -417,14 +456,22 @@ function signal(el, label, d) {
   el.innerHTML = bars(n, COL[lvl(level)]) + `<b>${label}</b>`;
   el.title = label + ': ' + (d ? d.message : 'no data');
 }
+// "1 h 40 min" / "1:40", from seconds
+const fmtLeft = (s, short) => { const m = Math.round(s / 60), h = Math.floor(m / 60);
+  return short ? `${h}:${String(m % 60).padStart(2, '0')}` : (h ? `${h} h ${m % 60} min` : `${m} min`); };
+const leftColour = s => s == null ? '' : s < 600 ? COL.err : s < 1200 ? COL.warn : COL.ok;
+let lowWarned = false;
 function battery(b) {
   if (!b) { $('batt').innerHTML = '<span class="v">battery -</span>'; return; }
+  const left = b.remaining_s;
+  if (left != null && left < 600 && !lowWarned) { lowWarned = true; toast(`About ${fmtLeft(left)} of battery left`, true); }
+  if (left != null && left > 900) lowWarned = false;
   const p = Math.max(0, Math.min(100, b.percent)), c = p < 15 ? COL.err : p < 30 ? COL.warn : COL.ok;
   const charging = b.status === 1;
   $('batt').innerHTML = `<svg width="30" height="16" viewBox="0 0 30 16"><rect x="1" y="1" width="25" height="14" rx="3" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5"/>
     <rect x="27" y="5" width="2.5" height="6" rx="1" fill="rgba(255,255,255,.55)"/><rect x="3" y="3" width="${21 * p / 100}" height="10" rx="1.5" fill="${c}"/>
     ${charging ? '<path d="M14 2l-4 7h3l-1 5 5-8h-3z" fill="#fff"/>' : ''}</svg>
-    <span class="pct" style="color:${c}">${p}%</span><span class="v">${b.voltage.toFixed(1)} V · ${Math.abs(b.current).toFixed(1)} A</span>`;
+    <span class="pct" style="color:${c}">${p}%</span>${left != null ? `<span class="rt" title="time left at the last minute's draw">${fmtLeft(left, true)}</span>` : ''}<span class="v">${b.voltage.toFixed(1)} V · ${Math.abs(b.current).toFixed(1)} A</span>`;
 }
 
 // ---- map drawer (Leaflet from a CDN; without internet the rest still works) ----
@@ -458,15 +505,15 @@ $('send').onclick = async () => {
   if (await post('mission', {points}, `Mission sent: ${points.length} waypoint${points.length > 1 ? 's' : ''}`)) openMap(false);
 };
 $('cancel').onclick = () => post('cancel', {}, 'Mission stopped');
+// home lives on the robot (link_manager walks back to it if every link is lost); the first
+// GNSS fix sets it unless it's set here
 $('setHome').onclick = () => {
   if (!lastFix) return toast('No GNSS fix yet', true);
-  try { localStorage.setItem('home', JSON.stringify(lastFix)); } catch (e) { /* fine */ }
-  toast('Home set here');
+  post('home', {lat: lastFix[0], lon: lastFix[1]}, 'Home set here: the robot walks back here if it loses every link');
 };
 $('goHome').onclick = async () => {
-  let home = null;
-  try { home = JSON.parse(localStorage.getItem('home')); } catch (e) { /* none */ }
-  if (!home) return toast('Set home first', true);
+  const home = lastState && lastState.home;
+  if (!home) return toast('No home yet: it is set by the first GNSS fix or Set home', true);
   if (await post('mission', {points: [home]}, 'Going home')) openMap(false);
 };
 
@@ -913,6 +960,12 @@ requestAnimationFrame(frame);
 
 // ---- systems panel ----
 $('beep').onclick = () => post('beep', {}, 'Beep');
+$('blackboxBtn').onclick = () => post('blackbox', {}, 'Saving the black box in 10 s');
+let lastBlackbox = null;  // a toast when the robot saves one, whatever the reason
+function blackboxSaved(b) {
+  if (b && lastBlackbox && b.t !== lastBlackbox.t) toast(`Black box saved: ${b.name}`);
+  lastBlackbox = b || lastBlackbox || {t: null};
+}
 $('lteSw').onchange = e => post('lte', {on: e.target.checked}, 'LTE ' + (e.target.checked ? 'on' : 'off'));
 const FIX = {0: 'no fix', 1: 'GPS', 2: 'DGPS', 4: 'RTK', 5: 'RTK float', 6: 'dead reckoning'};
 function upTime(s) {
@@ -968,14 +1021,65 @@ function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch 
 
 // ---- panels: one open at a time ----
 function panel(id, open) {
-  ['sys', 'tilesMenu'].forEach(p => {
-    const on = p === id && open;
-    $(p).classList.toggle('open', on);
-    $({sys: 'sysBtn', tilesMenu: 'tilesBtn'}[p]).classList.toggle('on', on);
-  });
+  ['sys', 'tilesMenu', 'calWiz'].forEach(p => $(p).classList.toggle('open', p === id && open));
+  const isOpen = p => $(p).classList.contains('open');
+  $('sysBtn').classList.toggle('on', isOpen('sys') || isOpen('calWiz'));  // the wizard opens from the systems panel
+  $('tilesBtn').classList.toggle('on', isOpen('tilesMenu'));
 }
-$('sysBtn').onclick = () => panel('sys', !$('sys').classList.contains('open'));
+$('sysBtn').onclick = () => panel('sys', !($('sys').classList.contains('open') || $('calWiz').classList.contains('open')));
 $('sysClose').onclick = () => panel('sys', false);
+
+// ---- servo calibration wizard (leg_config.py's calibration through the page) ----
+const cal = {leg: 'L1', joint: 'all', mode: 'full'};
+const pick = (box, attr, key) => $(box).querySelectorAll('button').forEach(b => {
+  b.onclick = () => { cal[key] = b.dataset[attr]; renderCal(); };
+});
+pick('calLegs', 'l', 'leg'); pick('calJoint', 'j', 'joint'); pick('calMode', 'm', 'mode');
+$('calOpen').onclick = () => { panel('calWiz', true); renderCal(); };
+$('calClose').onclick = () => panel('calWiz', false);
+$('calSit').onclick = () => post('sentinel', {}, 'Sitting down');
+$('calStart').onclick = () => post('calibrate', cal, `Calibrating ${cal.leg}`);
+$('calSave').onclick = () => post('calibrate/save', {}, 'Saved to the leg');
+$('calCopy').onclick = () => {
+  const c = lastState && lastState.cal;
+  if (!c || !Object.keys(c.results).length) return toast('Nothing to copy yet', true);
+  const day = new Date().toISOString().slice(0, 10);
+  const rows = Object.entries(c.results).map(([j, r]) => `| ${c.leg}_${j} |  | ${day} | ${r.mid_mv.toFixed(0)} | ${r.slope.toFixed(3)} | ` +
+    `${(r.mid_mv - 1000 * r.slope).toFixed(0)} | ${(r.mid_mv + 1000 * r.slope).toFixed(0)} | ${r.fit_err_mv.toFixed(0)} |  | on the leg, ${c.mode} range |`).join('\n');
+  (navigator.clipboard ? navigator.clipboard.writeText(rows) : Promise.reject()).then(() => toast('Rows copied'), () => toast('No clipboard here (needs https)', true));
+};
+function renderCal() {
+  if (!$('calWiz').classList.contains('open')) return;
+  const s = lastState || {}, c = s.cal, sitting = ['sentinel', 'halted'].includes(s.mode), running = c && c.phase === 'running';
+  $('calLegs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.l === cal.leg));
+  $('calJoint').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.j === cal.joint));
+  $('calMode').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === cal.mode));
+  $('calNote').innerHTML = sitting
+    ? 'The legs are off. Support the body so the leg you pick hangs free: its joints sweep their whole range, about 10 s each.'
+    : '<b style="color:var(--warn)">Sit the robot down first</b>: the legs have to be off. Then support the body so the leg hangs free.';
+  $('calSit').style.display = sitting ? 'none' : '';
+  $('calStart').disabled = !sitting || running;
+  $('calStart').style.opacity = $('calStart').disabled ? .45 : 1;
+  const done = c && c.phase === 'done' && !c.saved;
+  $('calSave').disabled = !done; $('calSave').style.opacity = done ? 1 : .45;
+  if (!c) { $('calBar').style.width = '0'; $('calTable').innerHTML = ''; return; }
+  $('calTitle').textContent = `${c.leg} · ${c.joint === 'all' ? 'all joints' : c.joint} · ${c.mode === 'full' ? 'full sweep' : 'within limits'}`;
+  const expect = (c.joint === 'all' ? 3 : 1) * 11, pct = running ? Math.min(95, (Date.now() / 1000 - c.t) / expect * 100) : 100;
+  $('calBar').style.width = pct + '%';
+  $('calBar').style.background = c.phase === 'error' || c.phase === 'failed' ? COL.err : COL.accent;
+  $('calStatus').textContent = running ? `Sweeping… about ${Math.max(0, Math.round(expect - (Date.now() / 1000 - c.t)))} s left` :
+    c.phase === 'error' ? `Didn't work: ${c.message}` :
+    c.phase === 'failed' ? 'A joint failed: is its pot wire on pin 4, and does the servo move?' :
+    c.saved ? 'Saved in the leg.' : 'Done. Save it to the leg, or copy the rows for docs/servos.md.';
+  $('calStatus').style.color = c.phase === 'error' || c.phase === 'failed' ? COL.err : '';
+  const joints = Object.keys(c.results).concat(Object.keys(c.failed).filter(j => !(j in c.results)));
+  $('calTable').innerHTML = joints.length ? '<tr><th>Joint</th><th>mid mV</th><th>mV/µs</th><th>fit mV</th><th></th></tr>' + joints.map(j => {
+    const r = c.results[j], bad = j in c.failed;
+    return `<tr><td>${j}</td><td>${r ? r.mid_mv.toFixed(0) : '-'}</td><td>${r ? r.slope.toFixed(3) : '-'}</td>` +
+      `<td>${r ? r.fit_err_mv.toFixed(0) : c.failed[j].toFixed(0)}</td><td style="color:${bad ? COL.err : COL.ok}">${bad ? 'failed' : 'ok'}</td></tr>`;
+  }).join('') : '';
+}
+setInterval(renderCal, 500);
 $('tilesBtn').onclick = () => panel('tilesMenu', !$('tilesMenu').classList.contains('open'));
 $('tilesClose').onclick = () => panel('tilesMenu', false);
 
@@ -1064,8 +1168,11 @@ const TILES = {
     tone(Math.max(Math.abs(s.attitude.roll), Math.abs(s.attitude.pitch)), 10, 20), 'roll / pitch'] : null],
   speed: ['Speed', (s, p) => p ? [`${(Math.hypot(p.motion[0], p.motion[1]) * 100).toFixed(1)} cm/s`, '',
     `${Math.round(p.motion[2] * 180 / Math.PI)}°/s`] : null],
-  battery: ['Battery', s => s.battery ? [`${s.battery.voltage.toFixed(2)} V`, tone(s.battery.percent, 30, 15, true),
-    `${Math.abs(s.battery.current).toFixed(1)} A · ${Math.round(Math.abs(s.battery.voltage * s.battery.current))} W`] : null],
+  battery: ['Battery', s => !s.battery ? null : s.battery.remaining_s != null ?
+    [`${fmtLeft(s.battery.remaining_s)} left`, leftColour(s.battery.remaining_s),
+     `${s.battery.percent} % · ${Math.round(Math.abs(s.battery.voltage * s.battery.current))} W`] :
+    [`${s.battery.voltage.toFixed(2)} V`, tone(s.battery.percent, 30, 15, true),
+     `${Math.abs(s.battery.current).toFixed(1)} A · ${Math.round(Math.abs(s.battery.voltage * s.battery.current))} W`]],
   carrier: ['Carrier', s => s.io ? [`${s.io.v5 != null ? s.io.v5.toFixed(2) : '-'} V`, '',
     s.io.temp != null ? `${Math.round(s.io.temp)} °C` : ''] : null],
   obstacle: ['Nearest obstacle', (s, p) => {
@@ -1073,7 +1180,7 @@ const TILES = {
     return d.length ? [`${Math.min(...d).toFixed(2)} m`, tone(Math.min(...d), 1.2, 0.6, true)] : null;
   }],
   home: ['Home', s => {
-    const h = load('home', null);
+    const h = s.home;
     if (!h || !lastFix) return null;
     const [m, b] = dist(lastFix, h);
     return [m < 1000 ? `${m.toFixed(0)} m` : `${(m / 1000).toFixed(2)} km`, '', `${CARD[Math.round(b / 45) % 8]} ${Math.round(b)}°`];
@@ -1081,7 +1188,7 @@ const TILES = {
   mission: ['Mission', s => s.mission && s.mission !== 'idle' ? [s.mission, COL.accent] : null],
   latency: ['Latency', () => lastPing == null ? null : [`${lastPing} ms`, tone(lastPing, 150, 400)]],
 };
-const TILE_DEFAULT = ['elrs', 'position', 'heading', 'speed'];
+const TILE_DEFAULT = ['elrs', 'battery', 'position', 'heading'];
 let tileOn = load('tiles', TILE_DEFAULT), lastState = null, lastPing = null;
 function buildMenu() {
   $('tileOpts').innerHTML = Object.entries(TILES).map(([k, [name]]) =>
@@ -1144,6 +1251,7 @@ function render(s) {
     }
   }
   lastState = s;
+  blackboxSaved(s.blackbox);
   renderTiles();
   updateMini(s);
 }

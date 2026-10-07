@@ -12,7 +12,7 @@ import launch_testing.actions
 import pytest
 import rclpy
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
-from geographic_msgs.msg import GeoPath
+from geographic_msgs.msg import GeoPath, GeoPoint
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import BatteryState, CompressedImage, Imu, NavSatFix
 from std_msgs.msg import Empty, UInt8MultiArray
@@ -141,6 +141,39 @@ class TestOperatorPage(unittest.TestCase):
         s = json.loads(request('/api/state')[1])
         self.assertEqual(s['battery']['percent'], 64)
         self.assertEqual(s['video'], ':8889/yolo')
+
+    def test_battery_time_left(self):
+        for _ in range(10):
+            self.battery.publish(BatteryState(voltage=15.2, current=-3.0, percentage=0.5, capacity=7.5,
+                                              power_supply_status=BatteryState.POWER_SUPPLY_STATUS_DISCHARGING))
+            self.spin(0.1)
+        left = json.loads(request('/api/state')[1])['battery']['remaining_s']
+        self.assertAlmostEqual(left, 7.5 * 0.5 / 3.0 * 3600, delta=120)  # 1 h 15 min
+        self.battery.publish(BatteryState(voltage=16.8, current=1.0, percentage=0.9, capacity=7.5,
+                                          power_supply_status=BatteryState.POWER_SUPPLY_STATUS_CHARGING))
+        self.spin(0.3)
+        self.assertIsNone(json.loads(request('/api/state')[1])['battery']['remaining_s'])  # charging
+
+    def test_home(self):
+        homes = []
+        self.node.create_subscription(GeoPoint, '/home/set', homes.append, 10)
+        self.spin(0.3)
+        self.assertEqual(request('/api/home', {'lat': 44.43, 'lon': 26.1})[0], 200)
+        self.assertEqual(request('/api/home', {'lat': 144.0, 'lon': 26.1})[0], 400)
+        self.spin(0.5)
+        self.assertAlmostEqual(homes[-1].latitude, 44.43)
+        # link_manager answers on `home`, latched; the page shows that one
+        pub = self.node.create_publisher(GeoPoint, '/home', rclpy.qos.QoSProfile(
+            depth=1, durability=rclpy.qos.DurabilityPolicy.TRANSIENT_LOCAL))
+        pub.publish(GeoPoint(latitude=44.43, longitude=26.1))
+        self.spin(0.5)
+        self.assertEqual(json.loads(request('/api/state')[1])['home'], [44.43, 26.1])
+
+    def test_calibration_needs_the_legs_off(self):
+        status, body = request('/api/calibrate', {'leg': 'L1'})
+        self.assertEqual(status, 409)
+        self.assertIn('sit the robot down', json.loads(body)['error'])
+        self.assertEqual(request('/api/calibrate/save', {})[0], 409)
 
     def test_drive_scaled_and_stopped_by_the_watchdog(self):
         self.cmd.clear()

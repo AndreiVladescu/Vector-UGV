@@ -218,26 +218,34 @@ def cmd_push(bus, args):
         print(f'{name}: {"saved" if ok and status == ST_OK else "check the messages above"}')
 
 
-def cmd_calibrate(bus, args):
-    node = LEGS[args.leg]
-    joint = 0xff if args.joint == 'all' else JOINTS.index(args.joint)
-    mode = 1 if args.mode == 'limits' else 0
-    status, _ = bus.request(node, joint, 0, mode, OP_CALIBRATE)
+def calibrate(bus, leg, joint='all', mode='full'):
+    """Sweep a leg's joints: ({joint index: {mid_mv, slope, fit_err_mv}}, {joint index: fit error mV}
+    of the failed ones). Raises RuntimeError if the leg refuses (not off) or doesn't finish."""
+    node = LEGS[leg]
+    j_arg = 0xff if joint == 'all' else JOINTS.index(joint)
+    status, _ = bus.request(node, j_arg, 0, 1 if mode == 'limits' else 0, OP_CALIBRATE)
     if status != ST_OK:
-        sys.exit(f'{args.leg}: calibration refused ({STATUS_NAMES[status]}), is the leg off?')
-    print(f'{args.leg}: calibrating {args.joint}, {args.mode} range, takes about 10 s per joint')
-
-    results, failed = {}, []
-    for j, key, value, _, st in bus.replies(node, timeout=12 * (3 if joint == 0xff else 1) + 5):
+        raise RuntimeError(f'{leg}: calibration refused ({STATUS_NAMES[status]}), is the leg off?')
+    results, failed = {}, {}
+    for j, key, value, _, st in bus.replies(node, timeout=12 * (3 if j_arg == 0xff else 1) + 5):
         if st == ST_CAL_RESULT:
             results.setdefault(j, {})[KEYS[key][0]] = value / KEYS[key][1]
         elif st == ST_CAL_FAILED:
-            failed.append(j)
-            print(f'{args.leg}_{JOINTS[j]}: FAILED, fit error {value / 10:.0f} mV (wiper not following?)')
+            failed[j] = value / 10
         elif st == ST_CAL_DONE:
-            break
-    else:
-        sys.exit('timed out waiting for the calibration to finish')
+            return results, failed
+    raise RuntimeError(f'{leg}: timed out waiting for the calibration to finish')
+
+
+def cmd_calibrate(bus, args):
+    print(f'{args.leg}: calibrating {args.joint}, {args.mode} range, takes about 10 s per joint')
+    try:
+        results, failed = calibrate(bus, args.leg, args.joint, args.mode)
+    except RuntimeError as e:
+        sys.exit(str(e))
+    for j, err in failed.items():
+        print(f'{args.leg}_{JOINTS[j]}: FAILED, fit error {err:.0f} mV (wiper not following?)')
+    node = LEGS[args.leg]
 
     today = datetime.date.today().isoformat()
     print('| Joint | Label | Date | mid (mV @ 1500 µs) | slope (mV/µs) | @ 500 µs | @ 2500 µs | fit error (mV) | noise p-p (mV) | Notes |')

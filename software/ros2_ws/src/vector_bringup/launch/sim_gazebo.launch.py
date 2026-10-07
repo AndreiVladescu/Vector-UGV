@@ -47,13 +47,17 @@ def gazebo(context):
 
     world = os.path.join(get_package_share_directory('vector_bringup'), 'worlds',
                          LaunchConfiguration('world').perform(context) + '.sdf')
-    args = ['-r', '-v', '1'] + ([] if LaunchConfiguration('gui').perform(context) == 'true' else ['-s'])
+    # the lidar and ToF rays render even without a window
+    args = ['-r', '-v', '1'] + ([] if LaunchConfiguration('gui').perform(context) == 'true' else ['-s', '--headless-rendering'])
     gz = ExecuteProcess(cmd=['bash', '-c', GZ_WRAPPER, 'gz'] + args + [world],
                         name='gazebo', output='screen')
     actions.append(gz)
     # closing the Gazebo window ends the whole launch
     actions.append(RegisterEventHandler(OnProcessExit(target_action=gz, on_exit=[EmitEvent(event=Shutdown())])))
     return actions
+
+
+LEGS = ('L1', 'L2', 'L3', 'R1', 'R2', 'R3')
 
 
 def bridge(context):
@@ -67,7 +71,8 @@ def bridge(context):
             '/model/vector/pose@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
             '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
             '/gnss/fix@sensor_msgs/msg/NavSatFix[gz.msgs.NavSat',
-        ],
+            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
+        ] + [f'/legs/{leg}/tof_scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan' for leg in LEGS],
         remappings=[('/model/vector/pose', '/ground_truth_tf' if nav else '/tf'),
                     ('/model/vector/odometry', '/ground_truth')])]
 
@@ -108,6 +113,8 @@ def generate_launch_description():
                        '-z', str(legs['body_height'] + 0.01)]),
 
         OpaqueFunction(function=bridge),
+        # the leg ToF rays as the Range messages leg_monitor publishes on the robot
+        Node(package='vector_bringup', executable='sim_tof.py', parameters=[sim_time]),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(bringup, 'launch', 'nav.launch.py')),

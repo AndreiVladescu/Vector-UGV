@@ -11,6 +11,7 @@
   links:=true [elrs_port:=/dev/ttyAMA2] [lte_at_port:=/dev/ttyUSB2]
       the link manager owns cmd_vel (radio > cmd_vel/teleop > cmd_vel/nav) and sits the robot
       down when every link is gone; teleop then goes to cmd_vel/teleop
+  blackbox_dir:=~/.ros/blackbox                 where the black box saves (always running)
 
 Drive it with: ros2 run teleop_twist_keyboard teleop_twist_keyboard
 """
@@ -52,6 +53,7 @@ def generate_launch_description():
         DeclareLaunchArgument('imu', default_value='false'),
         DeclareLaunchArgument('imu_bus', default_value='/dev/i2c-1'),
         DeclareLaunchArgument('links', default_value='false'),
+        DeclareLaunchArgument('blackbox_dir', default_value='~/.ros/blackbox'),
         DeclareLaunchArgument('elrs_port', default_value='', description='UART of the ExpressLRS receiver'),
         DeclareLaunchArgument('lte_at_port', default_value='', description='AT port of the LTE modem'),
         DeclareLaunchArgument('page_key', default_value='', description='?key= the operator page asks for'),
@@ -120,6 +122,11 @@ def generate_launch_description():
                 ["'cmd_vel/nav' if '", LaunchConfiguration('links'), "' == 'true' else 'cmd_vel'"])}.items(),
             condition=IfCondition(LaunchConfiguration('nav'))),
 
+        # the last two minutes, saved on an e-stop, a leg fault, a fall or ~/save
+        Node(
+            package='vector_link',
+            executable='blackbox.py',
+            parameters=[{'dir': LaunchConfiguration('blackbox_dir')}]),
         Node(
             package='vector_link',
             executable='link_manager.py',
@@ -138,7 +145,7 @@ def generate_launch_description():
         Node(
             package='vector_link',
             executable='operator_page.py',
-            parameters=[{'token': LaunchConfiguration('page_key')}],
+            parameters=[{'token': LaunchConfiguration('page_key'), 'can_interface': LaunchConfiguration('can_interface')}],
             condition=IfCondition(LaunchConfiguration('links'))),
         Node(
             package='vector_link',

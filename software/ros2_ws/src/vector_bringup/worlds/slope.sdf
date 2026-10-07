@@ -10,6 +10,8 @@
     <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
     <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
     <plugin filename="gz-sim-navsat-system" name="gz::sim::systems::NavSat"/>
+    <!-- the lidar and the leg ToF rays (rendering, headless with --headless-rendering) -->
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors"><render_engine>ogre2</render_engine></plugin>
     <!-- the origin of the world on the globe, for the GNSS sensor: a park in Bucharest -->
     <spherical_coordinates>
       <surface_model>EARTH_WGS84</surface_model>

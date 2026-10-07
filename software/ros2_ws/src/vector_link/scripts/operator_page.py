@@ -15,10 +15,15 @@ JSON API (all POST bodies JSON; with the token parameter set, every request need
   POST /api/cmd {vx, vy, wz}        -1..1 each, scaled by max_v / max_w, to cmd_vel/teleop
   POST /api/heartbeat
   POST /api/mission {points: [[lat, lon], ...]}    POST /api/cancel
+  POST /api/home {lat, lon}         the home point link_manager walks back to on a total link loss
   POST /api/sentinel  /api/wake  /api/estop {on}
   POST /api/gait {name}             tripod, ripple or wave (only while standing)
   POST /api/height {step}           body height up (+1) or down (-1) by 5 mm, gait_node body_z
   POST /api/beep                    two beeps from the carrier's buzzer, to find the robot
+  POST /api/blackbox                save the black box now (blackbox.py); state.blackbox names the last bag
+  POST /api/calibrate {leg, joint, mode}   sweep a leg's servos over CAN (leg_config.py's calibration), only
+                                    with the legs off (sitting); progress and results in state.cal
+  POST /api/calibrate/save          store that leg's new calibration in its flash
   POST /api/lte {on}                the LTE module's supply, through the IO MCU
   GET  /api/snapshot                the latest annotated camera frame, JPEG
 The icons and manifest.webmanifest need no key (the manifest's start_url carries the key it
@@ -37,7 +42,7 @@ import rclpy
 import yaml
 from ament_index_python.packages import get_package_share_directory
 from diagnostic_msgs.msg import DiagnosticArray
-from geographic_msgs.msg import GeoPath, GeoPoseStamped
+from geographic_msgs.msg import GeoPath, GeoPoint, GeoPoseStamped
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from rcl_interfaces.msg import Parameter, ParameterType, ParameterValue
@@ -67,12 +72,16 @@ class Operator(Node):
         p = lambda name, default: self.declare_parameter(name, default).value  # noqa: E731
         self.port = p('port', 8080)
         self.token = p('token', '')
+        self.can_interface = p('can_interface', 'can0')  # for the calibration wizard
+        self.cal_lock = threading.Lock()
         self.max_v, self.max_w = p('max_v', 0.10), p('max_w', 0.5)
         self.video = p('video', ':8889/yolo')  # MediaMTX WebRTC, relative to the page's host
         self.lock = threading.Lock()
         self.s = {'battery': None, 'mode': None, 'active': None, 'mission': None, 'estop': None,
-                  'fix': None, 'heading': None, 'diag': {}, 'io': None, 'lora_rx': None, 'attitude': None}
+                  'fix': None, 'heading': None, 'diag': {}, 'io': None, 'lora_rx': None, 'attitude': None,
+                  'home': None, 'blackbox': None, 'cal': None}
         self.cmd_pub = self.create_publisher(Twist, 'cmd_vel/teleop', 10)
+        self.home_pub = self.create_publisher(GeoPoint, 'home/set', 10)
         self.hb_pub = self.create_publisher(Empty, 'operator/heartbeat', 10)
         self.mission_pub = self.create_publisher(GeoPath, 'mission', 10)
         self.sentinel = self.create_client(Trigger, 'gait_node/sentinel')
@@ -80,6 +89,7 @@ class Operator(Node):
         self.estop = self.create_client(SetBool, 'gait_node/estop')
         self.cancel = self.create_client(Trigger, 'mission/cancel')
         self.beep = self.create_client(Trigger, 'io/beep')
+        self.blackbox = self.create_client(Trigger, 'blackbox/save')
         self.lte = self.create_client(SetBool, 'io/lte_power')
         self.sub(UInt8MultiArray, 'lora/rx', self.on_lora)
         self.sub(Imu, 'imu', self.on_imu, qos_profile_sensor_data)
@@ -87,6 +97,9 @@ class Operator(Node):
         self.sub(String, 'gait_node/mode', lambda m: self.put('mode', m.data), LATCHED)
         self.sub(String, 'links/active', lambda m: self.put('active', m.data), LATCHED)
         self.sub(String, 'mission/status', lambda m: self.put('mission', m.data), LATCHED)
+        # where link_manager walks the robot back to when every link is gone
+        self.sub(GeoPoint, 'home', lambda m: self.put('home', [m.latitude, m.longitude]), LATCHED)
+        self.sub(String, 'blackbox/saved', lambda m: self.put('blackbox', {'name': m.data, 't': time.time()}))
         self.sub(Bool, 'power/estop', lambda m: self.put('estop', m.data), LATCHED)
         self.sub(NavSatFix, 'gnss/fix', self.on_fix)
         self.sub(Odometry, 'odometry/global', self.on_odom)
@@ -136,8 +149,20 @@ class Operator(Node):
             self.s[key] = value
 
     def on_battery(self, m):
+        # time left: the charge in the pack over the discharge current averaged over a minute
+        # or so, so a step or a pause doesn't swing it
+        now, draw = time.monotonic(), max(0.0, -m.current)
+        last = getattr(self, 'draw_t', None)
+        k = 1.0 if last is None else min(1.0, (now - last) / BATTERY_TAU)
+        self.draw = draw if last is None else self.draw + k * (draw - self.draw)
+        self.draw_t = now
+        left = None
+        if (math.isfinite(m.capacity) and m.capacity > 0 and m.percentage >= 0 and self.draw > 0.3
+                and m.power_supply_status == BatteryState.POWER_SUPPLY_STATUS_DISCHARGING):
+            left = round(m.capacity * m.percentage / self.draw * 3600 / 60) * 60
         self.put('battery', {'voltage': round(m.voltage, 2), 'current': round(m.current, 2),
-                             'percent': round(m.percentage * 100), 'status': m.power_supply_status})
+                             'percent': round(m.percentage * 100), 'status': m.power_supply_status,
+                             'remaining_s': left})
 
     def on_fix(self, m):
         known = bool(m.position_covariance_type > 0 and m.position_covariance[0] >= 0)
@@ -311,6 +336,70 @@ class Operator(Node):
             path.poses.append(g)
         self.mission_pub.publish(path)
 
+    # ---- the calibration wizard: leg_config.py's calibration over CAN, in a thread ----
+    @staticmethod
+    def leg_config():
+        import importlib.util
+        from ament_index_python.packages import get_package_prefix
+        path = os.path.join(get_package_prefix('vector_hw'), 'lib', 'vector_hw', 'leg_config.py')
+        spec = importlib.util.spec_from_file_location('leg_config', path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def start_calibration(self, leg, joint, mode):
+        """None if started, else why not."""
+        with self.lock:
+            sitting = self.s['mode'] in ('sentinel', 'halted')
+            running = self.s['cal'] and self.s['cal']['phase'] == 'running'
+        if not sitting:
+            return 'sit the robot down first (Sentinel): the legs have to be off'
+        if running or not self.cal_lock.acquire(blocking=False):
+            return 'a calibration is already running'
+        self.put('cal', {'leg': leg, 'joint': joint, 'mode': mode, 'phase': 'running', 't': time.time(),
+                         'results': {}, 'failed': {}, 'message': '', 'saved': False})
+        threading.Thread(target=self.run_calibration, args=(leg, joint, mode), daemon=True).start()
+        return None
+
+    def run_calibration(self, leg, joint, mode):
+        cal = dict(self.s['cal'])
+        bus = None
+        try:
+            lc = self.leg_config()
+            bus = lc.Bus(self.can_interface)
+            results, failed = lc.calibrate(bus, leg, joint, mode)
+            cal['results'] = {lc.JOINTS[j]: {'mid_mv': round(r['mid_mv'], 1), 'slope': round(r['slope'], 4),
+                                             'fit_err_mv': round(r['fit_err_mv'], 1)} for j, r in results.items()}
+            cal['failed'] = {lc.JOINTS[j]: round(e, 1) for j, e in failed.items()}
+            cal['phase'] = 'failed' if failed else 'done'
+        except Exception as e:  # noqa: BLE001: whatever it is, the page should say it
+            cal['phase'], cal['message'] = 'error', str(e) or type(e).__name__
+        finally:
+            if bus is not None:
+                bus.bus.shutdown()
+            self.put('cal', cal)
+            self.cal_lock.release()
+
+    def save_calibration(self):
+        with self.lock:
+            cal = self.s['cal']
+        if not cal or cal['phase'] != 'done':
+            return 'nothing to save: calibrate first, without failures'
+        bus = None
+        try:
+            lc = self.leg_config()
+            bus = lc.Bus(self.can_interface)
+            status, _ = bus.request(lc.LEGS[cal['leg']], 0, 0, 0, lc.OP_SAVE)
+            if status != lc.ST_OK:
+                return f'the leg refused ({lc.STATUS_NAMES[status]})'
+        except Exception as e:  # noqa: BLE001
+            return str(e) or type(e).__name__
+        finally:
+            if bus is not None:
+                bus.bus.shutdown()
+        self.put('cal', dict(cal, saved=True))
+        return None
+
     def call(self, client, req):
         if not client.service_is_ready():
             return False
@@ -318,6 +407,7 @@ class Operator(Node):
         return True
 
 
+BATTERY_TAU = 60.0  # s, averaging time of the current behind the time-left estimate
 ICONS = {'/icon.svg': 'image/svg+xml', '/icon-192.png': 'image/png', '/icon-512.png': 'image/png',
          '/apple-touch-icon.png': 'image/png'}
 
@@ -400,6 +490,12 @@ def handler(node, page, icons):
                 if not all(len(p) == 2 and -90 <= p[0] <= 90 and -180 <= p[1] <= 180 for p in pts):
                     return self.reply(400, {'error': 'points are [lat, lon]'})
                 node.mission(pts)
+            elif path == '/api/home':
+                lat, lon = body.get('lat'), body.get('lon')
+                if not (isinstance(lat, (int, float)) and isinstance(lon, (int, float)) and -90 <= lat <= 90
+                        and -180 <= lon <= 180):
+                    return self.reply(400, {'error': 'lat, lon'})
+                node.home_pub.publish(GeoPoint(latitude=float(lat), longitude=float(lon)))
             elif path == '/api/cancel':
                 ok = node.call(node.cancel, Trigger.Request())
             elif path == '/api/sentinel':
@@ -408,6 +504,20 @@ def handler(node, page, icons):
                 ok = node.call(node.wake, Trigger.Request())
             elif path == '/api/beep':
                 ok = node.call(node.beep, Trigger.Request())
+            elif path == '/api/blackbox':
+                ok = node.call(node.blackbox, Trigger.Request())
+            elif path == '/api/calibrate':
+                if body.get('leg') not in ('L1', 'L2', 'L3', 'R1', 'R2', 'R3') or \
+                        body.get('joint', 'all') not in ('all', 'coxa', 'femur', 'tibia') or \
+                        body.get('mode', 'full') not in ('full', 'limits'):
+                    return self.reply(400, {'error': 'leg L1..R3, joint all/coxa/femur/tibia, mode full/limits'})
+                why = node.start_calibration(body['leg'], body.get('joint', 'all'), body.get('mode', 'full'))
+                if why:
+                    return self.reply(409, {'error': why})
+            elif path == '/api/calibrate/save':
+                why = node.save_calibration()
+                if why:
+                    return self.reply(409, {'error': why})
             elif path == '/api/lte':
                 ok = node.call(node.lte, SetBool.Request(data=bool(body.get('on', False))))
             elif path == '/api/estop':

@@ -4,6 +4,8 @@
                       ground assumed): where people, bikes, cars... stand
   /nose/tof/points    VL53L8CX zones that stand more than min_height above the ground
   /legs/<leg>/tof     the six leg rays, the same test
+  /scan               the LDS01RR, one plane above the body; returns within lidar_self_m of
+                      the body centre are its own legs and are left out
 Points are kept keep_s seconds in odom, so they stay put while the robot walks, and give
   obstacles/grid       nav_msgs/OccupancyGrid around the robot (odom frame), for Foxglove
   obstacles/clearance  std_msgs/Float32MultiArray [free metres straight ahead (inf = clear),
@@ -20,7 +22,7 @@ from nav_msgs.msg import OccupancyGrid
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from rclpy.time import Time
-from sensor_msgs.msg import Image, PointCloud2, Range
+from sensor_msgs.msg import Image, LaserScan, PointCloud2, Range
 from sensor_msgs_py import point_cloud2
 from std_msgs.msg import Float32MultiArray
 from tf2_ros import Buffer, TransformException, TransformListener
@@ -41,7 +43,8 @@ class Obstacles(Node):
         p = lambda name, default: self.declare_parameter(name, default).value  # noqa: E731
         self.camera_frame = p('camera_frame', 'nose_tof')
         self.fov = (math.radians(p('cam_hfov_deg', 53.5)), math.radians(p('cam_vfov_deg', 41.4)))
-        self.ground_z = p('ground_z', 0.08)       # base_link above the ground, legs.yaml stand height
+        self.ground_z = p('ground_z', 0.10)       # base_link above the ground, legs.yaml stand height
+        self.lidar_self = p('lidar_self_m', 0.30)
         self.min_height = p('min_height', 0.05)   # lower than this is ground (or a step it can take)
         self.max_range = p('max_range', 3.0)
         self.keep_s = p('keep_s', 3.0)
@@ -54,6 +57,7 @@ class Obstacles(Node):
         self.create_subscription(PointCloud2, '/nose/tof/points', self.on_cloud, qos_profile_sensor_data)
         for leg in LEGS:
             self.create_subscription(Range, f'/legs/{leg}/tof', self.on_range, qos_profile_sensor_data)
+        self.create_subscription(LaserScan, '/scan', self.on_scan, qos_profile_sensor_data)
         self.grid_pub = self.create_publisher(OccupancyGrid, 'obstacles/grid', 2)
         self.clear_pub = self.create_publisher(Float32MultiArray, 'obstacles/clearance', 10)
         self.sector_pub = self.create_publisher(Float32MultiArray, 'obstacles/sectors', 10)
@@ -101,6 +105,15 @@ class Obstacles(Node):
         base = self.to_base(msg.header.frame_id, np.array([[msg.range, 0.0, 0.0]]))
         if base is not None:
             self.store(base)
+
+    def on_scan(self, msg):
+        r = np.asarray(msg.ranges, float)
+        a = msg.angle_min + msg.angle_increment * np.arange(len(r))
+        ok = np.isfinite(r) & (r >= max(msg.range_min, 0.01)) & (r <= min(msg.range_max, self.max_range))
+        pts = np.stack([r[ok] * np.cos(a[ok]), r[ok] * np.sin(a[ok]), np.zeros(int(ok.sum()))], axis=1)
+        base = self.to_base(msg.header.frame_id, pts)
+        if base is not None and len(base):
+            self.store(base[np.hypot(base[:, 0], base[:, 1]) > self.lidar_self])
 
     def tick(self):
         now = time.monotonic()

@@ -206,7 +206,8 @@ class SimIo(Node):
         v = max(12.0, self.prm('vbat') - amps * 0.00005)
         self.set_parameters([Parameter('vbat', value=v)])
         b = BatteryState(voltage=v, current=-amps, percentage=max(0.0, min(1.0, (v - 13.2) / 3.6)),
-                         power_supply_status=BatteryState.POWER_SUPPLY_STATUS_DISCHARGING, present=True)
+                         power_supply_status=BatteryState.POWER_SUPPLY_STATUS_DISCHARGING, present=True,
+                         capacity=7.5, design_capacity=7.5)  # 4S3P of 2.5 Ah cells
         b.header.stamp = self.get_clock().now().to_msg()
         self.battery_pub.publish(b)
 
