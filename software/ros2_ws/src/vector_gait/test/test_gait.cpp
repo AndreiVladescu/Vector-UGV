@@ -225,3 +225,14 @@ TEST(Gait, TouchdownStopsOnObstacleAndProbesHoles)
     }
   }
 }
+
+TEST(Gait, EachGaitHasItsOwnPeriod)
+{
+  auto g = make(vector::GaitType::Tripod);
+  EXPECT_DOUBLE_EQ(g.period(), g.params().period);
+  g.set_type(vector::GaitType::Ripple);
+  EXPECT_DOUBLE_EQ(g.period(), g.params().ripple_period);
+  g.set_type(vector::GaitType::Wave);
+  EXPECT_DOUBLE_EQ(g.period(), g.params().wave_period);
+  EXPECT_GT(g.params().wave_period, g.params().period);
+}

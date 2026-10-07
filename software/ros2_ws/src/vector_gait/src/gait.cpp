@@ -72,6 +72,15 @@ void Gait::set_type(GaitType type)
   }
 }
 
+double Gait::period() const
+{
+  switch (params_.type) {
+    case GaitType::Ripple: return params_.ripple_period;
+    case GaitType::Wave: return params_.wave_period;
+    default: return params_.period;
+  }
+}
+
 double Gait::duty() const
 {
   switch (params_.type) {
@@ -84,7 +93,7 @@ double Gait::duty() const
 Twist2D Gait::limit(const Twist2D & cmd) const
 {
   // Largest stride any leg would take for this command.
-  const double stance_time = params_.period * duty();
+  const double stance_time = period() * duty();
   double worst = 0;
   for (const auto & n : neutral_) {
     double vx, vy;
@@ -171,8 +180,8 @@ bool Gait::update(const Twist2D & cmd_in, double dt)
   standing_ = false;
 
   const double d = duty();
-  const double stance_time = params_.period * d;
-  phase_ = frac(phase_ + dt / params_.period);
+  const double stance_time = period() * d;
+  phase_ = frac(phase_ + dt / period());
 
   bool ok = true;
   bool settled = is_idle;

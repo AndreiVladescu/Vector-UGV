@@ -1,6 +1,7 @@
 // Offline check of the gait against the servos, no ROS needed.
 //
-//   gait_report <legs.yaml> [--mass kg] [--period s] [--step m] [--stride m] [--com-x m] [--com-y m]
+//   gait_report <legs.yaml> [--mass kg] [--period s] [--ripple-period s] [--wave-period s] [--step m]
+//               [--stride m] [--com-x m] [--com-y m]
 //
 // Runs each gait for a few cycles and prints joint speeds, how close joints get to their
 // limits, the static stability margin and the static joint torques from carrying the robot.
@@ -140,8 +141,8 @@ Result run(
   vector::Gait g(geo, mounts, params);
   Result r;
 
-  const int warmup = static_cast<int>(params.period / kDt);
-  const int steps = warmup + static_cast<int>(2 * params.period / kDt);
+  const int warmup = static_cast<int>(g.period() / kDt);
+  const int steps = warmup + static_cast<int>(2 * g.period() / kDt);
   auto prev = g.joints();
 
   for (int n = 0; n < std::max(steps, 1); ++n) {
@@ -200,7 +201,8 @@ int main(int argc, char ** argv)
 {
   if (argc < 2) {
     std::fprintf(stderr,
-      "usage: gait_report <legs.yaml> [--mass kg] [--period s] [--step m] [--stride m] [--com-x m] [--com-y m]\n");
+      "usage: gait_report <legs.yaml> [--mass kg] [--period s] [--ripple-period s] [--wave-period s] [--step m] "
+      "[--stride m] [--com-x m] [--com-y m]\n");
     return 2;
   }
 
@@ -223,6 +225,8 @@ int main(int argc, char ** argv)
   p.reach = y["stand"]["reach"].as<double>();
   p.body_height = y["stand"]["height"].as<double>();
   p.period = arg(argc, argv, "--period", p.period);
+  p.ripple_period = arg(argc, argv, "--ripple-period", p.ripple_period);
+  p.wave_period = arg(argc, argv, "--wave-period", p.wave_period);
   p.step_height = arg(argc, argv, "--step", p.step_height);
   p.max_stride = arg(argc, argv, "--stride", p.max_stride);
   const double mass = arg(argc, argv, "--mass", 2.5);
@@ -239,8 +243,9 @@ int main(int argc, char ** argv)
     {"wave fwd", GaitType::Wave, {1, 0, 0}},
   };
 
-  std::printf("mass %.2f kg, CoM (%.0f, %.0f) mm, period %.2f s, step %.0f mm, stride %.0f mm\n",
-    mass, com.x * 1e3, com.y * 1e3, p.period, p.step_height * 1e3, p.max_stride * 1e3);
+  std::printf("mass %.2f kg, CoM (%.0f, %.0f) mm, period %.2f / %.2f / %.2f s (tripod / ripple / wave), "
+    "step %.0f mm, stride %.0f mm\n", mass, com.x * 1e3, com.y * 1e3, p.period, p.ripple_period, p.wave_period,
+    p.step_height * 1e3, p.max_stride * 1e3);
   std::printf("legs: coxa %.0f  femur %.0f  tibia %.0f mm, reach %.0f mm, hip height %.0f mm\n\n",
     geo.coxa * 1e3, geo.femur * 1e3, geo.tibia * 1e3, p.reach * 1e3, p.body_height * 1e3);
   std::printf("%-16s %-18s %-19s %-19s %-9s %-13s %s\n", "", "speed", "joint speed rad/s",

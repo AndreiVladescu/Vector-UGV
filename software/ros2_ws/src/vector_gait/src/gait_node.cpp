@@ -66,6 +66,8 @@ public:
 
     vector::GaitParams p;
     p.period = declare_parameter("period", p.period);
+    p.ripple_period = declare_parameter("ripple_period", p.ripple_period);
+    p.wave_period = declare_parameter("wave_period", p.wave_period);
     p.step_height = declare_parameter("step_height", p.step_height);
     p.body_height = declare_parameter("body_height", p.body_height);
     p.reach = declare_parameter("reach", p.reach);

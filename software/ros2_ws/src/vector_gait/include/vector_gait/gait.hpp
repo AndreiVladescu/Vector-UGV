@@ -39,7 +39,9 @@ struct BodyPose
 struct GaitParams
 {
   GaitType type = GaitType::Tripod;
-  double period = 1.0;        // s, one full cycle
+  double period = 1.0;        // s, one full cycle of the tripod gait
+  double ripple_period = 1.0; // s, the same for ripple
+  double wave_period = 2.0;   // s, and wave: one leg at a time needs longer to stay under the servo speed
   double step_height = 0.035; // m
   double body_height = 0.10;  // m, hip plane above ground
   double reach = 0.13;        // m, neutral foot distance from the hip
@@ -67,6 +69,7 @@ public:
   bool update(const Twist2D & cmd, double dt);
 
   void set_type(GaitType type);
+  double period() const;  // of the current gait type
   // Per-leg foot contact (load) from the hardware, used when params.touchdown is on.
   void set_contact(const std::array<bool, kLegs> & contact) {contact_ = contact;}
   double ground_z(int leg) const {return ground_z_[leg];}

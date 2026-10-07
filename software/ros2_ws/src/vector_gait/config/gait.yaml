@@ -1,7 +1,9 @@
 gait_node:
   ros__parameters:
     gait: tripod        # tripod, ripple or wave (switch only while standing)
-    period: 1.0         # s per full cycle
+    period: 1.0         # s per full cycle, tripod
+    ripple_period: 1.0  # s, ripple
+    wave_period: 2.0    # s, wave: one leg at a time needs the longer cycle to stay under the servo speed
     step_height: 0.035  # m
     max_stride: 0.06    # m
     accel: 0.25         # m/s², ramp for starts, stops and direction changes
