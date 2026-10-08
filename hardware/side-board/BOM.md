@@ -13,7 +13,7 @@ Per board = 3 leg cells + shared parts. Small resistors and capacitors are 0402;
 | 1 | NRST cap | 100 nF | 0402 | 0.01 | |
 | 1 | CAN transceiver | TCAN332DR | SOIC-8 | 2.15 | 3.3 V-only, which is what the board has (TJA1051T/3 needs 5 V) |
 | 1 | Servo buck | TPS56A37RPAR | VQFN-HR 3×3 | 2.70 | 4.5–28 V in, 10 A, 32 V abs max |
-| 1 | Buck inductor | AMRM001010404R7MA1 (Pulse/Yageo): 4.7 µH, Isat 11 A, Irms 9 A, 16 mΩ max | 10×10 mm | 1.00 | WEBENCH in `docs/`: 8.8 A peak at 8 A, 520 kHz |
+| 1 | Buck inductor | SRP7050WA-4R7M (Bourns): 4.7 µH, Isat 13.3 A, Irms 10.5 A, 20.5 mΩ max | 7.9×7.3 mm | 1.20 | WEBENCH in `docs/`: 8.8 A peak at 8 A, 520 kHz. Not the Sunlord MWSA0804S: only ~20 % saturation margin over a three-servo stall |
 | 2 | Buck input caps | 15 µF + 1 µF, 35 V X7R | 1206 / 0805 | 0.25 | after the cell fuse |
 | 2 | Buck output caps | 15 µF 16 V X7R | 1206 | 0.25 | plus 100 pF feed-forward across the top feedback resistor |
 | 1 | Bootstrap cap | 100 nF | 0402 | 0.01 | |
@@ -52,7 +52,7 @@ About **€10 per leg cell**, ICs included.
 | 1 | TVS | SMBJ18A | SMB | 0.30 | clamps ~29 V, under the buck's 32 V abs max |
 | 1 | Bulk cap | 100 µF 35 V low-ESR (polymer or electrolytic) | SMD | 0.60 | at the XT30, before the three cells |
 | 1 | 3.3 V buck | TPS62933DRLR | SOT-583 | 1.00 | 3.8–30 V in, 3 A; stays on in Sentinel |
-| 1 | 3.3 V inductor | AMRM001010404R7MA1, the servo bucks' part | 10×10 mm | 1.00 | far above the ~0.3 A load; one part for every 4.7 µH |
+| 1 | 3.3 V inductor | SRP4020TA-4R7M (Bourns): 4.7 µH, Isat 3.5 A, 105 mΩ | 4.4×4.2 mm | 1.00 | ~0.3 A load; same part as the power board. LCSC equivalents for a tenth of the price in `hardware/BOM_LCSC.csv` |
 | 5 | 3.3 V caps | 10 µF 35 V + 100 nF in, 47 µF out, 100 nF boot, 33 nF SS | 0805/1206 | 0.30 | |
 | 2 | 3.3 V feedback | 30.9k / 10k 1 % | 0402 | 0.02 | |
 | 2 | CAN connectors | JST XH 4-pin S4B-XH-A-1 (in, out) | TH, horizontal | 0.40 | CANH, CANL, GND, ESTOP_N |

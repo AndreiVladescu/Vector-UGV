@@ -7,6 +7,9 @@ One KiCad project per board: `side-board/`, `power-board/`, `carrier-cm5/`. The 
 - Tag each fabbed revision (`side-board-revA`) and put the revision and git hash on the silkscreen. Gerbers, BOM and pick-and-place go in `<board>/production/<rev>/`.
 - Hand assembly: 0402 minimum, one side where possible, test points and 0 Ω links on every rail.
 
+
+`BOM_LCSC.csv` is a second way to buy the main parts for one robot: LCSC part numbers, quantities, prices and stock checked on 2026-10-08, and where each part is cheaper (LCSC, Mouser or TME). It loads straight into LCSC's BOM tool. Passives aren't in it yet.
+
 ## Power rails
 
 Currents and loads are in `docs/power-budget.md`. No 5 V on the side boards: the CAN transceivers are 3.3 V parts (TI TCAN332DR).

@@ -9,7 +9,7 @@ Parts shared with the side boards (the NTC, BAT54J) use the same MPN. Passives h
 | Qty | Part | Value / MPN | Package | ~€ | Notes |
 |---|---|---|---|---|---|
 | 1 | BMS | BQ7694202PFBR | TQFP-48 | 4.50 | the 02 variant boots with REG1 on at 3.3 V, which starts the MCU; I2C with CRC. Cells on VC1, VC2, VC3, VC10, VC4–VC9 shorted to VC3 |
-| 2 | Pack FETs (CHG, DSG) | BSC010N04LSATMA1 | SuperSO8 | 4.00 | high side, back to back; 20 A peak. Any 40 V, ≤ 5 mΩ part would do, these have margin |
+| 2 | Pack FETs (CHG, DSG) | BSC010N04LSATMA1 | SuperSO8 | 4.00 | high side, back to back; 20 A peak. Any 40 V, ≤ 5 mΩ part would do, these have margin; out of stock at LCSC, where BSC022N04LSATMA1 (2.2 mΩ, same footprint) is $0.52 |
 | 1 | Pre-discharge FET + resistor | per the EVM, ~100 Ω 2 W | SOT-23, 2512 | 0.50 | the only inrush limit for the side boards' input caps: size it for them |
 | 1 | Coulomb counter shunt | CSS2H-2512R-1L00F (Bourns, 1 mΩ 1 %) | 2512 | 0.50 | Kelvin to SRP/SRN through 100 Ω each, 100 nF across |
 | 5 | Cell tap filters | 20 Ω + 100 nF | 0603 | 0.10 | |
@@ -21,7 +21,7 @@ Parts shared with the side boards (the NTC, BAT54J) use the same MPN. Passives h
 | Qty | Part | Value / MPN | Package | ~€ | Notes |
 |---|---|---|---|---|---|
 | 1 | Charger | BQ25798RQMR | VQFN-HR 4×4 | 4.50 | single input: VAC1/VAC2 tied to VBUS, ACDRV1/2 to GND (datasheet 7.3.5.2), no input FETs. PROG 17.4k: 1.5 MHz, 4S |
-| 1 | Inductor | XAL5030-102MEC (1 µH) | 5×5 mm | 0.80 | |
+| 1 | Inductor | XAL5030-102MEC (1 µH) | 5×5 mm | 2.50 | Coilcraft is €2–3 at Mouser and $8.40 at LCSC; the LCSC alternative is in `hardware/BOM_LCSC.csv` |
 | 1 | PD sink | CYPD3177-24LQXQ (Infineon) | QFN-24 | 1.90 | asks for 20 V, set by resistors; I2C left open (its address 0x08 is the BMS's) |
 | 1 | J-USBC | S6B-XH-A-1 (JST) | TH, horizontal | 0.25 | pigtail to the panel USB-C: VBUS ×2, CC1, CC2, GND ×2 (`interfaces.md`) |
 | 1 | Panel USB-C | panel-mount USB-C receptacle, power only, with VBUS, GND, CC1 and CC2 brought out | panel | 3.00 | not a two-wire VBUS/GND socket: the CYPD3177 needs CC |

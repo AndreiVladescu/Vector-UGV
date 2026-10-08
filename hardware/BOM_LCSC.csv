@@ -1,0 +1,21 @@
+LCSC Part Number,Manufacture Part Number,Quantity,Manufacturer,Description,Boards,LCSC price USD (1 pc),LCSC stock,Mouser BOM price EUR,Buy at,Notes
+C22392669,TPS56A37RPAR,7,Texas Instruments,"10 A buck, 6 V servo rail / 5 V CM5 rail","side ×6, carrier ×1",2.07,26979,2.7,LCSC,
+C73651,TCAN332DR,7,Texas Instruments,3.3 V CAN transceiver,"side ×6, power ×1",1.8,435,2.15,LCSC,"TME: special order, 0 in stock"
+C2876593,BQ25798RQMR,1,Texas Instruments,USB-C buck-boost charger,power,2.93,5165,4.5,LCSC,
+C3682863,BQ7694202PFBR,1,Texas Instruments,"BMS, the 02 (I2C, REG1 on) variant",power,3.26,34,4.5,LCSC,low stock; not the 04 (SPI) variant
+C404329,MMC5983MA,1,MEMSIC,compass,nose,2.26,15622,3.0,LCSC,
+C3200405,TPS62933DRLR,3,Texas Instruments,3.3 V buck,"side ×2, power ×1",0.6,33117,1.0,LCSC,
+C49206925,BSC022N04LSATMA1,2,Infineon,"40 V 2.2 mΩ pack FET (CHG, DSG)",power,0.52,693,2.0,LCSC,"alternative to the schematic's BSC010N04LSATMA1 (out of stock at LCSC), same SuperSO8 footprint; change the schematic if used"
+C19947706,SRP7050WA-4R7M,6,Bourns,4.7 µH 13.3 A servo-buck inductor,side ×6,1.32,211,1.2,either,+1 if the carrier's 5 V buck uses the same inductor
+C3040385,,3,Changjiang Microelectronics,"3.3 V buck inductor (4.4×4.2 mm, 4.7 µH, 105 mΩ, Isat 3 A)","side ×2, power ×1",0.18,2078,1.0,LCSC,"drop-in for the Bourns SRP4020TA-4R7M (C2041623, $1.19); MWSA0402S-4R7MT C408337 ($0.15) is another"
+C5298161,,1,Changjiang Microelectronics,"charger inductor (1 µH, 5.4×5.2 mm, Isat 10 A, 14 mΩ)",power,0.28,247,2.5,LCSC,alternative to the Coilcraft XAL5030-102MEC ($8.40 at LCSC); check the footprint
+C30170175,XT30PW-M,6,Changzhou Amass,"XT30 PCB plug, right angle","side ×2, power ×3, carrier ×1",0.37,1557,0.5,LCSC,saves the TME order for these
+C14486,NUP2105LT1G,3,onsemi,CAN ESD,"side ×2, power ×1",0.08,272850,0.3,LCSC,+ carrier
+C10212,SMBJ18A,3,various,18 V TVS on VBAT,"side ×2, power ×1",0.08,2029,0.3,LCSC,
+C4175647,CSS2H-2512R-1L00F,1,Bourns,1 mΩ coulomb-counter shunt,power,0.56,1511,0.5,either,
+C2952489,CYPD3177-24LQXQT,1,Infineon,"USB-PD sink, asks for 20 V",power,1.7,1164,1.9,either,"T = tape and reel, same part"
+C45338514,STM32C092KCT6,8,STMicroelectronics,MCU,"side ×6, power ×1, carrier IO ×1",2.81,25,2.1,Mouser,"cheaper at Mouser, and LCSC stock is only 25"
+C7386355,VL53L8CXV0GC/1,1,STMicroelectronics,8×8 front ToF,nose,10.17,2426,7.0,Mouser,
+C2058943,INA181A1IDBVR,6,Texas Instruments,leg current amp,side ×6,0.49,1950,0.4,Mouser,"LCSC clones (LX C52097916, XBLW C45351496) are $0.15–0.20; keep TI for the offset"
+C33196,PCA9306DCUR,1,Texas Instruments,I2C level shifter,nose,0.72,11715,0.6,Mouser,
+,XT60PW-M,1,Changzhou Amass,XT60 PCB plug (pack),power,,,0.7,TME,"LCSC C98732 is pre-order, minimum 16"
