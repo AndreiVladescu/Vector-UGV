@@ -761,17 +761,210 @@ async function start3d() {
     return {L, hip, femur, tibia};
   });
 
+  // ---- the 2D view's indicators as objects on the ground, in the robot's frame (z = 0 is the ground) ----
+  const fx = new THREE.Group();
+  world.add(fx);
+  const glow = (color, opacity, additive) => new THREE.MeshBasicMaterial({color, transparent: true, opacity, depthWrite: false,
+    side: THREE.DoubleSide, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending});
+  const mesh = (pos, idx, mat, colors) => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    if (colors) g.setAttribute('color', new THREE.Float32BufferAttribute(colors, 4));
+    g.setIndex(idx);
+    return new THREE.Mesh(g, mat);
+  };
+  // a wall along an arc of the ground, a0..a1 radians from straight ahead (counter-clockwise), h high
+  const arcWall = (r, a0, a1, mat) => {
+    const pos = [], idx = [], n = 8;
+    for (let k = 0; k <= n; k++) {
+      const a = a0 + (a1 - a0) * k / n;
+      pos.push(r * Math.cos(a), r * Math.sin(a), 0, r * Math.cos(a), r * Math.sin(a), 1);
+      if (k) idx.push(2 * k - 2, 2 * k - 1, 2 * k, 2 * k - 1, 2 * k + 1, 2 * k);
+    }
+    return mesh(pos, idx, mat);
+  };
+
+  // parking-sensor rings: twelve directions, three distances; a lit segment rises and glows
+  const SECTORS = 12, span = 2 * Math.PI / SECTORS, ringR = [0.33, 0.40, 0.47];
+  const rings = [];
+  for (let i = 0; i < SECTORS; i++) {
+    rings.push(ringR.map(r => {
+      const m = arcWall(r, i * span - span / 2 + 0.07, i * span + span / 2 - 0.07, glow(0xffffff, 0.08, true));
+      fx.add(m);
+      return m;
+    }));
+  }
+  const ringCol = RINGS.map(([, c]) => new THREE.Color(c));
+
+  // backup-camera guide lines: two glowing fences along the path, fading out with distance
+  const GUIDE = 24, guideMat = new THREE.MeshBasicMaterial({vertexColors: true, transparent: true, depthWrite: false,
+                                                           side: THREE.DoubleSide, blending: THREE.AdditiveBlending});
+  const fence = () => {
+    const idx = [];
+    for (let k = 0; k < GUIDE; k++) idx.push(2 * k, 2 * k + 1, 2 * k + 2, 2 * k + 1, 2 * k + 3, 2 * k + 2);
+    const m = mesh(new Array((GUIDE + 1) * 6).fill(0), idx, guideMat, new Array((GUIDE + 1) * 8).fill(0));
+    m.frustumCulled = false;
+    fx.add(m);
+    return m;
+  };
+  const fences = [fence(), fence()];
+  const ticks = [0, 1, 2].map(() => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 0.006), glow(0xffffff, 0.5, true));
+    fx.add(m);
+    return m;
+  });
+  const green = new THREE.Color(COL.ok), amber = new THREE.Color(COL.warn);
+
+  // turning on the spot: chevrons orbiting the body
+  const chevShape = new THREE.Shape([[0.012, 0], [-0.006, 0.016], [-0.012, 0.012], [0.002, 0], [-0.012, -0.012], [-0.006, -0.016]]
+    .map(([x, y]) => new THREE.Vector2(x, y)));
+  const chevGeo = new THREE.ExtrudeGeometry(chevShape, {depth: 0.006, bevelEnabled: false});
+  const chevrons = [...Array(8)].map(() => {
+    const m = new THREE.Mesh(chevGeo, glow(COL.ok, 0.8));
+    fx.add(m);
+    return m;
+  });
+
+  // feet: a glowing pad under a planted foot, a ring on the ground under a lifted one; prints left behind
+  const pads = LEGS.map(() => {
+    const pad = new THREE.Mesh(new THREE.CircleGeometry(0.014, 24), glow(COL.accent, 0.85, true));
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.011, 0.016, 24), glow(COL.accent, 0.9, true));
+    pad.position.z = 0.002; ring.position.z = 0.002;
+    fx.add(pad, ring);
+    return {pad, ring};
+  });
+  const printPool = [...Array(40)].map(() => {
+    const m = new THREE.Mesh(new THREE.CircleGeometry(1, 20), glow(COL.accent, 0, true));
+    m.scale.set(0.026, 0.019, 1); m.position.z = 0.001; m.visible = false;
+    fx.add(m);
+    return m;
+  });
+
+  // the nose: camera and ToF field of view, a translucent beam from the nose onto the ground ahead
+  let front = 0, noseZ = 0;
+  data.body.forEach(p => { for (let k = 0; k < p.v.length; k += 3) { front = Math.max(front, p.v[k] * u); noseZ = Math.max(noseZ, p.v[k + 2] * u); } });
+  noseZ *= 0.5;
+  const nose = new THREE.Group();
+  fx.add(nose);
+  {
+    // the far edge lies on the ground; rebuilt as the body height changes would cost more than it shows
+    const d = 0.3, w = d * Math.tan(0.47);
+    const pos = [front, 0, 0, front + d, w, 0.03, front + d, -w, 0.03, front + d, -w, 0.001, front + d, w, 0.001];
+    const a0 = 0.22, col = new THREE.Color(COL.accent);
+    const colors = [col.r, col.g, col.b, a0, ...[1, 2, 3, 4].flatMap(() => [col.r, col.g, col.b, 0])];
+    nose.add(mesh(pos, [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1], new THREE.MeshBasicMaterial({vertexColors: true, transparent: true,
+      depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending}), colors));
+  }
+  const hemi = scene.children.find(c => c.isHemisphereLight);
+
   return {
-    render(q) {
+    render(q, t) {
       // joints as vector.urdf.xacro: coxa about z, femur and tibia about -y (positive lifts)
       let low = 0;
-      legs.forEach((l, i) => {
+      const feet = legs.map((l, i) => {
         l.hip.rotation.z = l.L.yaw + q[i][0];
         l.femur.rotation.y = -q[i][1];
         l.tibia.rotation.y = -q[i][2];
-        low = Math.min(low, l.L.femur * Math.sin(q[i][1]) + l.L.tibia * Math.sin(q[i][1] + q[i][2]));
+        const a = l.L.yaw + q[i][0], r = l.L.coxa + l.L.femur * Math.cos(q[i][1]) + l.L.tibia * Math.cos(q[i][1] + q[i][2]);
+        const z = l.L.femur * Math.sin(q[i][1]) + l.L.tibia * Math.sin(q[i][1] + q[i][2]);
+        low = Math.min(low, z);
+        return {x: l.L.x + r * Math.cos(a), y: l.L.y + r * Math.sin(a), z};
       });
       body.position.z = -low;  // the lowest foot on the ground
+      {
+        const P = nose.children[0].geometry.attributes.position;
+        P.setZ(0, noseZ - low);
+        P.needsUpdate = true;
+      }
+      const [vx, vy, wz] = pose ? pose.motion : [0, 0, 0], v = Math.hypot(vx, vy);
+      const moving = v > 0.003 || Math.abs(wz) > 0.02;
+      const powered = pose && !['sentinel', 'lowering', 'powering'].includes(pose.mode);
+      hemi.intensity = powered ? 2.1 : 1.1;
+      sun.intensity = powered ? 1.6 : 0.7;
+      shadow.material.opacity = Math.min(0.6, 0.2 + (-low) * 2.5);  // darker as the body rises
+
+      // feet, and the prints they leave when they touch down
+      feet.forEach((f, i) => {
+        const lifted = f.z - low > 0.01;
+        if (!lifted && planted[i] === false && moving) prints.push({w: toWorld([f.x, f.y]), t});
+        planted[i] = !lifted;
+        const {pad, ring} = pads[i];
+        pad.position.x = ring.position.x = f.x; pad.position.y = ring.position.y = f.y;
+        pad.visible = !lifted; ring.visible = lifted;
+        pad.material.color.set(powered ? COL.accent : '#4b5462');
+      });
+      prints = prints.filter(p => t - p.t < 2.5);
+      printPool.forEach((m, k) => {
+        const p = prints[prints.length - 1 - k];
+        m.visible = !!p;
+        if (!p) return;
+        const [x, y] = toRobot(p.w);
+        m.position.x = x; m.position.y = y;
+        m.rotation.z = 0;
+        m.material.opacity = 0.45 * (1 - (t - p.t) / 2.5);
+      });
+
+      // guide lines along the path ahead, as in the 2D view
+      fences.forEach(m => { m.visible = v > 0.003; });
+      ticks.forEach(m => { m.visible = false; });
+      if (v > 0.003) {
+        const heading = Math.atan2(vy, vx), curve = wz / v;
+        const half = 0.2, len = Math.min(0.45, 0.8 / Math.max(Math.abs(curve), 1e-6));
+        const d0 = (front + 0.02) * Math.max(Math.abs(Math.cos(heading)), 0.6);
+        const at = (d, side) => {
+          const h = heading + curve * d;
+          const x = Math.abs(curve) < 1e-3 ? d * Math.cos(heading) : (Math.sin(h) - Math.sin(heading)) / curve;
+          const y = Math.abs(curve) < 1e-3 ? d * Math.sin(heading) : (Math.cos(heading) - Math.cos(h)) / curve;
+          return [x - side * Math.sin(h), y + side * Math.cos(h), h];
+        };
+        [-half, half].forEach((side, j) => {
+          const g = fences[j].geometry, P = g.attributes.position, Cl = g.attributes.color;
+          const out = Math.sign(side) * 0.014;  // leaning outwards, so it reads from above as well as from behind
+          for (let k = 0; k <= GUIDE; k++) {
+            const f = k / GUIDE, [x, y, h] = at(d0 + f * len, side), c = f < 0.55 ? green : amber, a = 0.95 - f * 0.8;
+            P.setXYZ(2 * k, x, y, 0.002); P.setXYZ(2 * k + 1, x - out * Math.sin(h), y + out * Math.cos(h), 0.025);
+            Cl.setXYZW(2 * k, c.r, c.g, c.b, a); Cl.setXYZW(2 * k + 1, c.r, c.g, c.b, 0);
+          }
+          P.needsUpdate = Cl.needsUpdate = true;
+        });
+        ticks.forEach((m, k) => {
+          const d = 0.15 * (k + 1);
+          if (d > len + 1e-6) return;
+          const [ax, ay, h] = at(d0 + d, 0);
+          m.visible = true;
+          m.position.set(ax, ay, 0.003);
+          m.rotation.z = h + Math.PI / 2;
+          m.scale.x = 2 * half;
+          m.material.opacity = Math.max(0, 0.55 - d * 0.7);
+        });
+      }
+
+      // parking-sensor rings: the nearest obstacle per direction, lit in its colour; the close one pulses
+      const sec = pose && pose.sectors;
+      rings.forEach((walls, i) => walls.forEach((m, k) => {
+        const d = sec ? sec[i % sec.length] : null;
+        const lit = d != null && d <= RINGS[k][0] && (k === 0 || d > RINGS[k - 1][0]);
+        if (lit) {
+          m.material.color.copy(ringCol[k]);
+          m.material.opacity = k === 0 ? 0.6 + 0.35 * Math.sin(t * 12) : 0.75;
+          m.scale.z = 0.05;
+        } else {
+          m.material.color.set(0xffffff);
+          m.material.opacity = 0.08;
+          m.scale.z = 0.008;
+        }
+      }));
+
+      // turning on the spot: chevrons going round the way it turns
+      const spinning = Math.abs(wz) > 0.02 && v <= 0.003, sgn = Math.sign(wz);
+      chevrons.forEach((m, k) => {
+        m.visible = spinning;
+        if (!spinning) return;
+        const a = sgn * (t * 1.5 + k * Math.PI / 4);
+        m.position.set(0.29 * Math.cos(a), 0.29 * Math.sin(a), 0.003);
+        m.rotation.z = a + sgn * Math.PI / 2;
+        m.material.opacity = 0.35 + 0.5 * ((k % 4) / 3);
+      });
       // the floor slides and turns under the robot, like the 2D grid
       const c = Math.cos(odo.yaw), s = Math.sin(odo.yaw), ox = -(odo.x % 0.1), oy = -(odo.y % 0.1);
       floor.rotation.z = -odo.yaw;
@@ -799,7 +992,7 @@ function frame(now) {
   odo.x += (vx * Math.cos(odo.yaw) - vy * Math.sin(odo.yaw)) * dt;
   odo.y += (vx * Math.sin(odo.yaw) + vy * Math.cos(odo.yaw)) * dt;
   odo.yaw += wz * dt;
-  if (use3d && view3d) view3d.render(LEGS.map(l => ['coxa', 'femur', 'tibia'].map(j => (pose && pose.joints[`${l}_${j}`]) || 0)));
+  if (use3d && view3d) view3d.render(LEGS.map(l => ['coxa', 'femur', 'tibia'].map(j => (pose && pose.joints[`${l}_${j}`]) || 0)), now / 1000);
   else draw(now / 1000);
   requestAnimationFrame(frame);
 }

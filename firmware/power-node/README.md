@@ -29,7 +29,7 @@ Cell temperature: with a thermistor on J-NTC (DIY pack) set key 37 to 1 and save
 - Thermistors (10k, 18k pull-up model): TS1 to J-NTC, TS3 at the FETs. TS2 is for the wake button and the USB-C wake FET only. HDQ unused.
 - BQ25798, single input: VAC1 and VAC2 tied to VBUS, ACDRV1/2 to GND. No NTC: TS gets a divider from REGN that reads as 25 °C, and the firmware sets TS_IGNORE. VAC_OVP stays at 26 V: the other steps are 18, 12 and 7 V.
 - The carrier's 5 V buck EN is pulled up there; the 2N7002 on PB0 (100k gate pull-down) pulls it low.
-- HALTED (J-SYSCTL pin 3) needs a 100k pull-down: the CM5 pin floats until Linux halts.
+- HALTED (J-SYSCTL pin 6) needs a 100k pull-down: the CM5 pin floats until Linux halts.
 
 ## Pins (LQFP32)
 
@@ -37,12 +37,12 @@ Cell temperature: with a thermistor on J-NTC (DIY pack) set key 37 to 1 and save
 |---|---|---|
 | PA11, PA12 | FDCAN1 | TCAN332 |
 | PB6, PB7 | I2C1 | BQ7694202 (0x08) and BQ25798 (0x6B), 400 kHz, 2.2k pull-ups to 3V3 |
-| PB0 | CM5_OFF | 2N7002 on the carrier's 5V_EN (J-SYSCTL pin 5) |
-| PA8 | ESTOP_N, open drain | through 100 Ω to J-CAN pin 4 and J-SYSCTL pin 4; read back on the same pin |
-| PA9 | SHUTDOWN_REQ_N, open drain | J-SYSCTL pin 2 |
+| PB0 | CM5_OFF | 2N7002 on the carrier's 5V_EN (J-SYSCTL pin 7) |
+| PA8 | ESTOP_N, open drain | through 100 Ω to J-SYSCTL pin 4 (the carrier passes it on to both J-CAN); read back on the same pin |
+| PA9 | SHUTDOWN_REQ_N, open drain | J-SYSCTL pin 5 |
 | PA0 | BUTTON, pull-up | on the button; the button wakes TS2 through a BAT54J, so the USB-C wake FET never reads as a press |
-| PA1 | HALTED | J-SYSCTL pin 3 |
-| PA6 | 5V_PG | J-SYSCTL pin 6, the carrier buck's PG |
+| PA1 | HALTED | J-SYSCTL pin 6 |
+| PA6 | 5V_PG | J-SYSCTL pin 8, the carrier buck's PG |
 | PB1 | BMS_ALERT | wired, not used yet |
 | PB2 | CHG_INT | wired, not used yet |
 | PA15 | LED | |

@@ -11,6 +11,6 @@
 
 ## Hardware
 
-- Decide whether J-SYSCTL and the power board's J-CAN merge into one 10-pin JST-XH to the carrier.
+- Schematics for the 10-pin J-SYSCTL (power board J101 + J102, carrier J502) and the J-USBC pigtail header (power board J301), per `interfaces.md`.
 - Carrier: layout (CM5 placement and the 90/100 Ω pairs from the CM5 IO board).
 - XT60 / XT30 aren't on Mouser: order from TME.

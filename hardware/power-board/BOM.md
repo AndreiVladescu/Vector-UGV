@@ -23,7 +23,8 @@ Parts shared with the side boards (the NTC, BAT54J) use the same MPN. Passives h
 | 1 | Charger | BQ25798RQMR | VQFN-HR 4×4 | 4.50 | single input: VAC1/VAC2 tied to VBUS, ACDRV1/2 to GND (datasheet 7.3.5.2), no input FETs. PROG 17.4k: 1.5 MHz, 4S |
 | 1 | Inductor | XAL5030-102MEC (1 µH) | 5×5 mm | 0.80 | |
 | 1 | PD sink | CYPD3177-24LQXQ (Infineon) | QFN-24 | 1.90 | asks for 20 V, set by resistors; I2C left open (its address 0x08 is the BMS's) |
-| 1 | USB-C receptacle | USB4125-GF-A (GCT) | SMD | 0.50 | power only |
+| 1 | J-USBC | S6B-XH-A-1 (JST) | TH, horizontal | 0.25 | pigtail to the panel USB-C: VBUS ×2, CC1, CC2, GND ×2 (`interfaces.md`) |
+| 1 | Panel USB-C | panel-mount USB-C receptacle, power only, with VBUS, GND, CC1 and CC2 brought out | panel | 3.00 | not a two-wire VBUS/GND socket: the CYPD3177 needs CC |
 | 1 | VBUS TVS | SMBJ20A | SMB | 0.30 | |
 | 1 | Charger wake | BSS138-7-F | SOT-23 | 0.10 | VBUS present pulls TS2 low |
 | – | Caps | per the EVM; VBUS and PMID 10 µF 50 V (20 V PD input) | 0805 / 1206 | 1.00 | |
@@ -65,7 +66,6 @@ Parts shared with the side boards (the NTC, BAT54J) use the same MPN. Passives h
 | 1 | Cell NTC | B2B-PH-K-S (JST) | TH | 0.10 | DIY pack only; drone packs have none |
 | 1 | Power button | B2B-PH-K-S (JST) | TH | 0.10 | |
 | 3 | Sides, carrier | XT30PW-M (Amass) | TH | 1.50 | VBAT to both side boards and the carrier; TME |
-| 1 | CAN | S4B-XH-A-1 (JST) | TH, horizontal | 0.20 | |
-| 1 | J-SYSCTL | S6B-XH-A-1 (JST) | TH, horizontal | 0.25 | could merge with CAN into one 10-pin XH, undecided |
+| 1 | J-SYSCTL | S10B-XH-A-1 (JST) | TH, horizontal | 0.35 | CAN stub, ESTOP_N and the CM5 control lines to the carrier in one cable (`interfaces.md`) |
 
 About **€35** in parts, plus the PCB (4 layers, 2 oz).

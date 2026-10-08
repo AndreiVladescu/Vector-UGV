@@ -10,13 +10,13 @@ Both ends of a cable use the same footprint and pin order.
 | J-BAT | Pack → Power board | XT60 | VBAT (≈20 A peak) |
 | J-BAL | Pack → Power board | JST-XH 5-pin | Cell taps C0–C4 |
 | J-NTC | Pack → Power board | JST-PH 2-pin | cell NTC (DIY pack only) |
-| J-USBC | Panel → Power board | USB-C receptacle (on board or panel pigtail *TBD*) | PD charge input, 20 V, the only charge input |
+| J-USBC | Panel → Power board | panel-mount USB-C receptacle with a pigtail to a JST-XH 6-pin on the board | PD charge input, 20 V, the only charge input; see below |
 | J-PWRBTN | Panel → Power board | JST-PH 2-pin | momentary power button |
 | J-LEGPWR-L / -R | Power board → Side board | XT30 (PCB: XT30PW-M) | VBAT (~13 A peak each) |
 | J-SYSPWR | Power board → Carrier | XT30 (PCB: XT30PW-M) | VBAT; the carrier makes 5 V itself |
 | J-USBDEV | Carrier → laptop | USB-C receptacle | CM5 USB 2.0 for rpiboot, data only |
-| J-SYSCTL | Power board ↔ Carrier | JST-XH 6-pin | see below |
-| J-CAN (×n) | Bus hops | JST-XH 4-pin | CANH, CANL, GND, ESTOP_N / spare |
+| J-SYSCTL | Power board ↔ Carrier | JST-XH 10-pin | the power board's CAN stub and its control lines in one cable; see below |
+| J-CAN (×2) | Carrier ↔ side boards | JST-XH 4-pin | CANH, CANL, GND, ESTOP_N |
 | J-SERVO (×9 per side) | Side board → servo | 2.54 mm header 1×04, three per leg as a 3×4 block | GND, V+ (6 V), PWM, POT |
 | J-TOF (×3 per side) | Side board → ToF | 2.54 mm header 1×04 | 3V3, GND, SDA, SCL |
 | J-SWD (per MCU) | Debug | side board: 1 mm pads for PCBite probes (SWDIO, SWCLK, NRST) plus one shared 2.54 mm 1×02 (3V3, GND) per board; carrier and power board: TC2050 | SWDIO, SWCLK, NRST, 3V3, GND |
@@ -35,7 +35,7 @@ Board-to-board cables are JST-XH (2.5 mm, horizontal headers). JST-GH stays only
 
 ```
 [120Ω] L3 ─ L2 ─ L1 ── J-CAN ── CARRIER (pass-through) ── J-CAN ── R1 ─ R2 ─ R3 [120Ω]
-                                     │ stub < 30 cm
+                                     │ J-SYSCTL pins 1–4, stub < 30 cm
                                 POWER BOARD
 ```
 
@@ -50,16 +50,35 @@ J-CAN pinout (JST-XH 4-pin):
 
 ## J-SYSCTL pinout
 
-| Pin | Signal | Direction | CM5 side |
-|---|---|---|---|
-| 1 | GND | | |
-| 2 | SHUTDOWN_REQ_N | power → CM5 | `gpio-shutdown` overlay: low = shut down |
-| 3 | HALTED | CM5 → power | `gpio-poweroff` overlay: high once halted |
-| 4 | ESTOP_N | power → CM5 | input, so ROS sees the hardware stop |
-| 5 | 5V_EN | power → carrier | the carrier's 5 V buck EN: pulled up on the carrier, pulled low by the power board to keep the CM5 off |
-| 6 | 5V_PG | carrier → power | the 5 V buck's PG |
+JST-XH 10-pin (board: S10B-XH-A-1, horizontal) on the power board and the carrier, straight 1:1 cable. Pins 1–4 are J-CAN's, in the same order: the power board's stub off the CAN bus, plus the e-stop line. Twist CANH with CANL.
 
-J-SYSCTL and the power board's J-CAN may merge into one 10-pin JST-XH (one cable to the carrier); not decided.
+| Pin | Signal | Direction | Notes |
+|---|---|---|---|
+| 1 | CANH | bus | |
+| 2 | CANL | bus | |
+| 3 | GND | | |
+| 4 | ESTOP_N | power → all | open drain from the power MCU, pulled up on every leg cell; the carrier passes it to both J-CAN pin 4 and to CM5 GPIO24, so ROS sees the hardware stop |
+| 5 | SHUTDOWN_REQ_N | power → CM5 | `gpio-shutdown` overlay: low = shut down |
+| 6 | HALTED | CM5 → power | `gpio-poweroff` overlay: high once halted; 100k pull-down on the power board |
+| 7 | 5V_EN | power → carrier | the carrier's 5 V buck EN: pulled up on the carrier, pulled low by the power board to keep the CM5 off |
+| 8 | 5V_PG | carrier → power | the 5 V buck's PG |
+| 9 | GND | | |
+| 10 | spare | | not connected on either board |
+
+## J-USBC pinout
+
+A panel-mount USB-C receptacle (power only) with a short pigtail to a JST-XH 6-pin on the power board (S6B-XH-A-1). The CYPD3177 on the board needs both CC lines, so the panel part has to bring out VBUS, GND, CC1 and CC2; a two-wire (VBUS/GND only) USB-C socket can't negotiate 20 V. VBUS and GND get two pins each (3 A, the XH limit per pin).
+
+| Pin | Signal |
+|---|---|
+| 1 | VBUS |
+| 2 | VBUS |
+| 3 | CC1 |
+| 4 | CC2 |
+| 5 | GND |
+| 6 | GND |
+
+Keep the pigtail short (≤ 15 cm). The VBUS TVS sits on the board at the connector.
 
 ## J-NOSE pinout
 
@@ -100,19 +119,23 @@ Keep the cable under ~30 cm for 1 MHz I2C.
 | 3 | SDA | 2.2k pull-up to 3V3, DNP if the breakout has its own |
 | 4 | SCL | 2.2k pull-up to 3V3, DNP if the breakout has its own |
 
-## Leg ID resistor divider
+## Leg ID jumpers
 
-One ADC pin per leg cell reads a divider (3V3 → R_top → ADC → R_bot → GND). Values *TBD* (E24, ≥ 150 mV spacing):
+Each leg cell reads three solder jumpers to 3V3 as GPIOs with the internal pull-downs (bridged = 1), so the node ID comes from the board, not the firmware:
 
-| Node | ID | CAN node id |
-|---|---|---|
-| L1 | 1 | 0x1 |
-| L2 | 2 | 0x2 |
-| L3 | 3 | 0x3 |
-| R1 | 4 | 0x4 |
-| R2 | 5 | 0x5 |
-| R3 | 6 | 0x6 |
-| Power board | 7 | 0x7 (fixed in firmware) |
+| Bit | MCU pin | Jumpers | Meaning |
+|---|---|---|---|
+| POS0, POS1 | PB3, PB8 | two per cell, set once on the root sheet | the cell's position: 01 = cell A (next to the CAN-in connector), 10 = B, 11 = C (outer end); 00 = not set |
+| SIDE | PB9 | JP107, one per board, shared by its three cells | open = left board, bridged = right board |
+
+The right board is the same PCB turned 180°, so its cell A sits at the other end of the body and the order runs backwards (`leg_node_from_straps()` in `firmware/leg-node/src/leg_id.h`):
+
+| Board | Cell A | Cell B | Cell C |
+|---|---|---|---|
+| Left (JP107 open) | L1, node 0x1 | L2, node 0x2 | L3, node 0x3 |
+| Right (JP107 bridged) | R3, node 0x6 | R2, node 0x5 | R1, node 0x4 |
+
+The power board is node 0x7, fixed in its firmware. Position 00 keeps a leg off with a config fault; `leg_config.py read` shows the raw jumpers.
 
 ## CM5 GPIO allocation
 

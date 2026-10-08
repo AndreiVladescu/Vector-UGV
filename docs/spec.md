@@ -40,7 +40,7 @@ Both sides use the same PCB, rotated 180°, at most 100 mm long. Each side board
 - **PWM:** the outputs are tri-stated before power-off, otherwise the servo gets back-powered through the signal pin.
 - **ToF:** a VL53L1X on its own I2C bus, so there's no address clash (2.54 mm header 1×04: 3V3, GND, SDA, SCL). The sensor sits on a breakout on the tibia, facing out in front of the leg; pinout in `interfaces.md`.
 - **Protection:** a fuse or PTC per cell, an NTC at the buck, VBAT and 6 V rail sensing.
-- **Leg ID:** a resistor divider on one ADC pin.
+- **Leg ID:** three solder jumpers to 3V3 per cell, read as GPIOs with pull-downs: two give the cell's position on the board, one (shared by the board) the side. Details in `interfaces.md`.
 - **SWD:** pads for debugging and recovery.
 
 Shared on the board: an XT30 input, a low-Iq 3.3 V buck (stays on in Sentinel), CAN in/out on JST-XH, and a termination jumper at the outer end.
