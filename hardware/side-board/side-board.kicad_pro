@@ -50,17 +50,17 @@
         "silk_text_thickness": 0.1,
         "silk_text_upright": false,
         "zones": {
-          "border_display_style": 0,
+          "border_display_style": 2,
           "border_hatch_pitch": 0.5,
-          "corner_radius": 0.0,
-          "corner_smoothing": 0,
+          "corner_radius": 0.5,
+          "corner_smoothing": 2,
           "fill_mode": 0,
           "hatch_gap": 1.5,
           "hatch_orientation": 0.0,
           "hatch_smoothing_level": 0,
           "hatch_smoothing_value": 0.1,
           "hatch_thickness": 1.0,
-          "min_clearance": 0.0,
+          "min_clearance": 0.3,
           "min_island_area": 10.0,
           "min_thickness": 0.25,
           "pad_connection": 2,
@@ -178,6 +178,7 @@
         {
           "td_allow_use_two_tracks": true,
           "td_curve_segcount": 0,
+          "td_enabled": false,
           "td_height_ratio": 1.0,
           "td_length_ratio": 0.5,
           "td_maxheight": 2.0,
@@ -189,6 +190,7 @@
         {
           "td_allow_use_two_tracks": true,
           "td_curve_segcount": 0,
+          "td_enabled": false,
           "td_height_ratio": 1.0,
           "td_length_ratio": 0.5,
           "td_maxheight": 2.0,
@@ -200,6 +202,7 @@
         {
           "td_allow_use_two_tracks": true,
           "td_curve_segcount": 0,
+          "td_enabled": false,
           "td_height_ratio": 1.0,
           "td_length_ratio": 0.5,
           "td_maxheight": 2.0,
@@ -503,6 +506,7 @@
       "pin_to_pin": "warning",
       "power_pin_not_driven": "error",
       "same_local_global_label": "warning",
+      "same_local_global_power": "warning",
       "similar_label_and_power": "warning",
       "similar_labels": "warning",
       "similar_power": "warning",
@@ -550,8 +554,8 @@
     "meta": {
       "version": 5
     },
-    "net_colors": null,
-    "netclass_assignments": null,
+    "net_colors": {},
+    "netclass_assignments": {},
     "netclass_patterns": []
   },
   "pcbnew": {
@@ -695,7 +699,7 @@
         "uuid": "f4a3e594-e59c-4d07-8b29-d9b2c0e13b64"
       }
     ],
-    "used_designators": "L101,L201,L301,L401,J101,J201-205,J301-305,J401-405,D101-102,D201-203,D301-303,D401-403,C1-4,C101-105,C201-221,C301-321,C401-421,TP101-102,TP201-216,TP301-316,TP401-416,JP101-108,R1-4,R101-104,R201-232,R301-332,R401-432,Y201,Y301,Y401,#PWR1-12,#PWR101-117,#PWR201-263,#PWR301-363,#PWR401-463,RT1-12,RT101,RT201,RT301,RT401,U1-3,IC1-16,IC101-103,IC201-204,IC301-304,IC401-404",
+    "used_designators": "#PWR1-12,#PWR101-117,#PWR201-263,#PWR301-363,#PWR401-463,C1-4,C101-105,C201-221,C301-321,C401-421,D101-102,D201-203,D301-303,D401-403,IC1-16,IC101-103,IC201-204,IC301-304,IC401-404,J101,J201-205,J301-305,J401-405,JP101-108,L101,L201,L301,L401,R1-4,R101-104,R201-232,R301-332,R401-432,RT1-12,RT101,RT201,RT301,RT401,TP101-102,TP201-216,TP301-316,TP401-416,U1-3,Y201,Y301,Y401",
     "variants": []
   },
   "sheets": [
