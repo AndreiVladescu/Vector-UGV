@@ -218,9 +218,10 @@ static void hal_adc(void *ctx, int ch, uint16_t *out, int n)
             out[i] = v;
         return;
     }
-    /* more than the buffer holds repeats it, which leaves the median where it was */
+    /* more than the buffer holds repeats it, which leaves the median where it was.
+       raw * 3300 / 4095 without a division (the M0+ has none): equal for every 12-bit code */
     for (int i = 0; i < n; i++)
-        out[i] = (uint16_t)(adc_buf[(i % ADC_ROUNDS) * ADC_CH + slot] * 3300u / 4095u);
+        out[i] = (uint16_t)((adc_buf[(i % ADC_ROUNDS) * ADC_CH + slot] * 845007u) >> 20);
 }
 
 static void hal_buck(void *ctx, bool on)
