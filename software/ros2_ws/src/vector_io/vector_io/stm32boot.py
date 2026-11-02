@@ -93,10 +93,16 @@ class Bootloader:
         self._addr(addr)
 
 
-def flash(bl, image, base=FLASH_BASE, log=print):
-    """Erase the pages the image covers, write and read back in 256-byte blocks, start it."""
+def flash(bl, image, base=FLASH_BASE, log=print, synced=False):
+    """Erase the pages the image covers, write and read back in 256-byte blocks, start it.
+
+    The first block (stack pointer, reset vector) goes in last: until then the first flash word
+    is erased, so after a power loss the chip's empty check starts the ROM bootloader again
+    instead of half an image.
+    """
     image = bytes(image) + b'\xff' * (-len(image) % 4)
-    bl.sync()
+    if not synced:
+        bl.sync()
     cid = bl.chip_id()
     if cid != C092_ID:
         raise BootError(f'chip ID {cid:#05x}, expected {C092_ID:#05x} (STM32C092)')
@@ -104,10 +110,13 @@ def flash(bl, image, base=FLASH_BASE, log=print):
     bl.erase((base - FLASH_BASE) // PAGE, pages)
     log(f'erased {pages} pages')
     t0 = time.monotonic()
-    for off in range(0, len(image), CHUNK):
+    blocks = list(range(CHUNK, len(image), CHUNK))
+    for off in blocks:
         bl.write(base + off, image[off:off + CHUNK])
-    for off in range(0, len(image), CHUNK):
+    for off in blocks + [0]:
         chunk = image[off:off + CHUNK]
+        if off == 0:
+            bl.write(base, chunk)
         if bl.read(base + off, len(chunk)) != chunk:
             raise BootError(f'verify failed at {base + off:#010x}')
     log(f'wrote and verified {len(image)} bytes in {time.monotonic() - t0:.1f} s')

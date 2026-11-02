@@ -106,3 +106,21 @@ def test_verify_catches_a_bad_write():
     bl.erase = lambda first, count: None
     with pytest.raises(sb.BootError, match='verify failed at 0x08000000'):
         sb.flash(bl, b'\xff' * 16, log=lambda s: None)
+
+
+@pytest.mark.parametrize('cut_after', [0, 1, 5, 19])
+def test_cut_short_leaves_the_first_word_erased(cut_after):
+    # until the last write the ROM's empty check still sees blank flash and starts the bootloader
+    rom = FakeRom()
+    bl = sb.Bootloader(rom)
+    real, n = bl.write, [0]
+
+    def write(addr, data):
+        if n[0] == cut_after:
+            raise KeyboardInterrupt
+        n[0] += 1
+        real(addr, data)
+    bl.write = write
+    with pytest.raises(KeyboardInterrupt):
+        sb.flash(bl, bytes(range(256)) * 20, log=lambda s: None)
+    assert rom.flash[:4] == b'\xff' * 4 and rom.started is None

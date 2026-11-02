@@ -53,15 +53,29 @@ def main():
     ap.add_argument('--port', default='/dev/ttyAMA2')
     ap.add_argument('--baud', type=int, default=115200, help='bootloader baud rate (autobaud, up to 115200)')
     a = ap.parse_args()
-    if not via_bridge():
-        print(f'no io_bridge, sending the bootloader request on {a.port}')
-        direct(a.port)
-    time.sleep(0.3)
     with open(a.image, 'rb') as f:
         image = f.read()
-    with serial.Serial(a.port, a.baud, parity=serial.PARITY_EVEN, timeout=0.5) as s:
+
+    def rom():
+        return serial.Serial(a.port, a.baud, parity=serial.PARITY_EVEN, timeout=0.5)
+
+    # an earlier update cut short leaves the ROM bootloader running (or starting at power-on):
+    # ask it first, since a 1 Mbaud message would make a fresh one lock onto the wrong baud rate
+    with rom() as s:
         try:
-            stm32boot.flash(stm32boot.Bootloader(s), image)
+            stm32boot.Bootloader(s).sync(tries=1)
+            synced = True
+            print('ROM bootloader already running')
+        except stm32boot.BootError:
+            synced = False
+    if not synced:
+        if not via_bridge():
+            print(f'no io_bridge, sending the bootloader request on {a.port}')
+            direct(a.port)
+        time.sleep(0.3)
+    with rom() as s:
+        try:
+            stm32boot.flash(stm32boot.Bootloader(s), image, synced=synced)
         except stm32boot.BootError as e:
             sys.exit(f'io_flash: {e}')
     print('started')
