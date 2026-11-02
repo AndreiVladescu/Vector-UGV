@@ -6,6 +6,7 @@
  *   sim_legs vcan0 --calibrated    legs already know their servos
  *   --limits c0,c1,f0,f1,t0,t1     joint limits in degrees (from legs.yaml); each joint's
  *                                  centre is set so the middle of its range is at 1500 us
+ *   --skip 1,4                     leave these nodes to real boards on the same bus
  *
  * Each leg also answers the bootloader protocol with a RAM flash, so leg_config.py flash
  * can be tried out. After RUN the leg restarts with its saved config.
@@ -73,16 +74,22 @@ int main(int argc, char **argv)
     const char *ifname = "vcan0";
     bool calibrated = false;
     float lim[6] = {-80, 80, -80, 80, -80, 80};
+    bool skip[LEGS] = {0};
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--calibrated"))
             calibrated = true;
         else if (!strcmp(argv[i], "--limits") && i + 1 < argc &&
                  sscanf(argv[++i], "%f,%f,%f,%f,%f,%f", &lim[0], &lim[1], &lim[2], &lim[3], &lim[4], &lim[5]) == 6)
             ;
+        else if (!strcmp(argv[i], "--skip") && i + 1 < argc)
+            for (char *p = argv[++i]; *p; p++) {
+                if (*p >= '1' && *p <= '0' + LEGS)
+                    skip[*p - '1'] = true;
+            }
         else if (argv[i][0] != '-')
             ifname = argv[i];
         else {
-            fprintf(stderr, "usage: %s [ifname] [--calibrated] [--limits c0,c1,f0,f1,t0,t1]\n", argv[0]);
+            fprintf(stderr, "usage: %s [ifname] [--calibrated] [--limits c0,c1,f0,f1,t0,t1] [--skip 1,4]\n", argv[0]);
             return 2;
         }
     }
@@ -121,7 +128,10 @@ int main(int argc, char **argv)
         memcpy(legs[n].servo, servo, sizeof(servo));
         legs[n].tx = tx;
     }
-    printf("sim_legs on %s, 6 legs, %s\n", ifname, calibrated ? "calibrated" : "uncalibrated");
+    int simulated = 0;
+    for (int n = 0; n < LEGS; n++)
+        simulated += !skip[n];
+    printf("sim_legs on %s, %d legs, %s\n", ifname, simulated, calibrated ? "calibrated" : "uncalibrated");
     fflush(stdout);
 
     struct timespec next;
@@ -137,6 +147,8 @@ int main(int argc, char **argv)
             rx_count++;
             for (int n = 0; n < LEGS; n++) {
                 struct leg_sim *l = &legs[n];
+                if (skip[n])
+                    continue;
                 if (in_boot[n]) {
                     if (boot_frame(&boot[n], &f)) {
                         struct servo_sim servo[JOINTS];
@@ -166,7 +178,9 @@ int main(int argc, char **argv)
             }
         }
         for (int n = 0; n < LEGS; n++) {
-            if (in_boot[n]) {
+            if (skip[n]) {
+                continue;
+            } else if (in_boot[n]) {
                 legs[n].t_ms++;
                 for (int j = 0; j < JOINTS; j++)
                     servo_sim_step(&legs[n].servo[j], 0.001f);
@@ -178,7 +192,9 @@ int main(int argc, char **argv)
         if (++ticks % 2000 == 0) {
             printf("rx %4lu/s tx %4lu/s  states", rx_count / 2, tx_count / 2);
             for (int n = 0; n < LEGS; n++)
-                if (in_boot[n])
+                if (skip[n])
+                    continue;
+                else if (in_boot[n])
                     printf(" %d:boot", n + 1);
                 else
                     printf(" %d:%d/%02x", n + 1, legs[n].leg.state, legs[n].leg.faults);
