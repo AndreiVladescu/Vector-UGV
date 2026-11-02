@@ -6,7 +6,7 @@ The main idea is "Sentinel Stance". The robot walks to a spot, lowers its body t
 
 Constraints: low budget. PCBs and stencils come from PCBWay and I assemble them myself. All mechanical parts are printed (PETG, TPU feet) and designed in Fusion 360. ICs come from Mouser.
 
-Already on hand: CM5 (Wi-Fi, 8 GB eMMC), Pi 5 + AI HAT+ 2, 18× MG996R, AD9363 SDR (2T2R), HackRF, Pi CSI camera, a USB camera, 18650 cells from e-scooter packs, a spot welder, GX-12 connectors, a CANable, MCP2515 modules, 2 CH32V003 dev boards.
+Already on hand: CM5 (Wi-Fi, 8 GB eMMC), Pi 5 + AI HAT+ 2, 18× MG996R, AD9363 SDR (2T2R), HackRF, Pi AI Camera (IMX500), a USB camera, 18650 cells from e-scooter packs, a spot welder, GX-12 connectors, a CANable, MCP2515 modules, 2 CH32V003 dev boards.
 
 ## Boards
 

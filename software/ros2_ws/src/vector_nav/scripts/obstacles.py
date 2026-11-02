@@ -42,7 +42,7 @@ class Obstacles(Node):
         super().__init__('obstacles')
         p = lambda name, default: self.declare_parameter(name, default).value  # noqa: E731
         self.camera_frame = p('camera_frame', 'nose_tof')
-        self.fov = (math.radians(p('cam_hfov_deg', 53.5)), math.radians(p('cam_vfov_deg', 41.4)))
+        self.fov = (math.radians(p('cam_hfov_deg', 66.0)), math.radians(p('cam_vfov_deg', 52.3)))
         self.ground_z = p('ground_z', 0.10)       # base_link above the ground, legs.yaml stand height
         self.lidar_self = p('lidar_self_m', 0.30)
         self.min_height = p('min_height', 0.05)   # lower than this is ground (or a step it can take)

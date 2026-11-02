@@ -58,8 +58,8 @@ waypoint_follower:
 obstacles:
   ros__parameters:
     camera_frame: nose_tof   # the camera sits beside the ToF on the nose board
-    cam_hfov_deg: 53.5       # OV5647 at 4:3
-    cam_vfov_deg: 41.4
+    cam_hfov_deg: 66.0       # Pi AI Camera (IMX500) at 4:3, full sensor
+    cam_vfov_deg: 52.3
     ground_z: 0.10           # base_link above the ground (legs.yaml stand height)
     lidar_self_m: 0.30       # lidar returns nearer the body centre are its own legs
     min_height: 0.05

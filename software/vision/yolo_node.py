@@ -88,9 +88,9 @@ class YoloNode(Node):
         self.rate = rate
         w = self.declare_parameter('width', 640).value
         h = self.declare_parameter('height', 480).value
-        # OV5647 (Pi camera v1) at 4:3; the VL53L8CX sees 45 x 45 deg
-        self.cam_fov = (math.radians(self.declare_parameter('cam_hfov_deg', 53.5).value),
-                        math.radians(self.declare_parameter('cam_vfov_deg', 41.4).value))
+        # Pi AI Camera (IMX500, 4.74 mm) at 4:3, full sensor; the VL53L8CX sees 45 x 45 deg
+        self.cam_fov = (math.radians(self.declare_parameter('cam_hfov_deg', 66.0).value),
+                        math.radians(self.declare_parameter('cam_vfov_deg', 52.3).value))
         self.tof_fov = math.radians(self.declare_parameter('tof_fov_deg', 45.0).value)
         self.depth, self.depth_t = None, 0.0
         self.mask_scale = self.declare_parameter('mask_scale', 0.25).value
