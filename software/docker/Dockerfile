@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ros-jazzy-controller-manager ros-jazzy-forward-command-controller ros-jazzy-gpio-controllers \
       ros-jazzy-joint-state-broadcaster ros-jazzy-robot-state-publisher ros-jazzy-xacro \
       ros-jazzy-foxglove-bridge ros-jazzy-robot-localization ros-jazzy-nmea-navsat-driver ros-jazzy-vision-msgs \
-      python3-can python3-yaml python3-serial can-utils stm32flash \
+      python3-can python3-yaml python3-serial can-utils \
     && rm -rf /var/lib/apt/lists/*
 
 FROM base AS build

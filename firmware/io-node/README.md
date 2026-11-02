@@ -60,10 +60,10 @@ The LDS01RR's motor is the host's to drive: the IO MCU starts it at 60 % duty, t
 
 ## Flashing
 
-First time over the TC2050 (J601) with `stm32c0/flash_swd.sh`, or from the CM5 over SWD by closing JP601–JP603. After that from the CM5 over the link: `vector_io` sends BOOTLOADER, the MCU resets into the ROM bootloader on USART1, and `stm32flash` writes the image:
+First time over the TC2050 (J601) with `stm32c0/flash_swd.sh`, or from the CM5 over SWD by closing JP601–JP603. After that from the CM5 over the link: `vector_io` sends BOOTLOADER, the MCU resets into the ROM bootloader on USART1, and `io_flash.py` erases, writes, verifies and starts the image (its own AN3155 client: stm32flash 0.7 doesn't know the C092):
 
 ```sh
 ros2 run vector_io io_flash.py build/io-stm32/io-node.bin
 ```
 
-The ROM bootloader also listens on USART2, where the ELRS receiver sends CRSF; stm32flash's 0x7F on USART1 normally wins, but if it doesn't, unpower the receiver for the flash (open JP604, or JP605 if it runs on 3.3 V).
+The ROM bootloader also listens on USART2, where the ELRS receiver sends CRSF; the 0x7F on USART1 normally wins, but if it doesn't, unpower the receiver for the flash (open JP604, or JP605 if it runs on 3.3 V).

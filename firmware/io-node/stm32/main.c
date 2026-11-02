@@ -284,7 +284,7 @@ static void hal_bootloader(void *ctx)
 
 /* Straight after a reset asked for by MSG_BOOTLOADER, nothing set up yet: map the system
    memory at 0 and jump into it. It listens on USART1 (and USART2, where the receiver
-   sends CRSF; stm32flash's 0x7F still wins on USART1). */
+   sends CRSF; io_flash.py's 0x7F still wins on USART1). */
 static void rom_bootloader(void)
 {
     BOOT_FLAG = 0;
