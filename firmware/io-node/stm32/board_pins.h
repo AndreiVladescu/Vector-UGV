@@ -3,14 +3,37 @@
 
 /* IO MCU on the CM5 carrier (U601, STM32C092KCT6, LQFP32), sheet io_mcu.kicad_sch */
 
+#if defined(BOARD_NUCLEO)
+/* NUCLEO-C092RC: the link to the CM5 swaps with the receiver's UART, so it runs on the
+   ST-LINK VCP (USART2, PA2/PA3) and a PC stands in for the CM5. LED on PA5 (LD1). */
+#define HOST_USART USART2
+#define HOST_IRQn USART2_IRQn
+#define HOST_IRQHandler USART2_IRQHandler
+#define HOST_PORT GPIOA
+#define HOST_PINS (GPIO_PIN_2 | GPIO_PIN_3)
+#define HOST_AF GPIO_AF1_USART2
+#define ELRS_USART USART1
+#define ELRS_IRQn USART1_IRQn
+#define ELRS_IRQHandler USART1_IRQHandler
+#define ELRS_PORT GPIOA
+#define ELRS_PINS (GPIO_PIN_9 | GPIO_PIN_10)
+#define ELRS_AF GPIO_AF1_USART1
+#else
 /* USART1 to the CM5 (GPIO5 / GPIO4), also ST's ROM bootloader */
+#define HOST_USART USART1
+#define HOST_IRQn USART1_IRQn
+#define HOST_IRQHandler USART1_IRQHandler
 #define HOST_PORT GPIOA
 #define HOST_PINS (GPIO_PIN_9 | GPIO_PIN_10)
 #define HOST_AF GPIO_AF1_USART1
 /* USART2 to the ELRS receiver */
+#define ELRS_USART USART2
+#define ELRS_IRQn USART2_IRQn
+#define ELRS_IRQHandler USART2_IRQHandler
 #define ELRS_PORT GPIOA
 #define ELRS_PINS (GPIO_PIN_2 | GPIO_PIN_3)
 #define ELRS_AF GPIO_AF1_USART2
+#endif
 /* USART4 RX from the LDS01RR, 115200 (its RX unused) */
 #define LIDAR_PORT GPIOA
 #define LIDAR_PIN GPIO_PIN_1
@@ -58,7 +81,12 @@
 #define LTE_STATUS_PORT GPIOB
 #define LTE_STATUS_PIN GPIO_PIN_2
 
+#if defined(BOARD_NUCLEO)
+#define LED_PORT GPIOA
+#define LED_PIN GPIO_PIN_5
+#else
 #define LED_PORT GPIOC
 #define LED_PIN GPIO_PIN_15
+#endif
 
 #endif

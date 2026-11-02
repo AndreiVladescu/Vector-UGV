@@ -9,6 +9,8 @@ cmake -S firmware/io-node -B build/io && cmake --build build/io && ctest --test-
 cmake -S firmware/io-node/stm32 -B build/io-stm32 && cmake --build build/io-stm32
 ```
 
+On a NUCLEO-C092RC, `-DBOARD=nucleo` swaps USART1 and USART2, so the link to the CM5 runs on the ST-LINK VCP and a PC stands in for the CM5 (`--port /dev/ttyACM0` for `io_flash.py`). The receiver moves to PA9/PA10, the LED to PA5.
+
 ## Pins
 
 | Pin | Port | Use |

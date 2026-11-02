@@ -23,8 +23,8 @@ struct uart {
 
 static uint8_t host_rx[512], host_tx[4096], elrs_rx[256], elrs_tx[128], lidar_rx[512], gnss_rx[512];
 static struct uart uarts[PORTS] = {
-    [PORT_HOST] = {USART1, host_rx, host_tx, sizeof(host_rx), sizeof(host_tx)},
-    [PORT_ELRS] = {USART2, elrs_rx, elrs_tx, sizeof(elrs_rx), sizeof(elrs_tx)},
+    [PORT_HOST] = {HOST_USART, host_rx, host_tx, sizeof(host_rx), sizeof(host_tx)},
+    [PORT_ELRS] = {ELRS_USART, elrs_rx, elrs_tx, sizeof(elrs_rx), sizeof(elrs_tx)},
     [PORT_LIDAR] = {USART4, lidar_rx, NULL, sizeof(lidar_rx), 0},
     [PORT_GNSS] = {USART3, gnss_rx, NULL, sizeof(gnss_rx), 0},
 };
@@ -66,8 +66,8 @@ static void uart_irq(struct uart *p)
     }
 }
 
-void USART1_IRQHandler(void) { uart_irq(&uarts[PORT_HOST]); }
-void USART2_IRQHandler(void) { uart_irq(&uarts[PORT_ELRS]); }
+void HOST_IRQHandler(void) { uart_irq(&uarts[PORT_HOST]); }
+void ELRS_IRQHandler(void) { uart_irq(&uarts[PORT_ELRS]); }
 void USART3_4_IRQHandler(void)
 {
     uart_irq(&uarts[PORT_GNSS]);
@@ -111,8 +111,8 @@ static void uarts_init(void)
     uart_init(&uarts[PORT_ELRS], 420000, true);
     uart_init(&uarts[PORT_LIDAR], 115200, false); /* LDS01RR, XV-11 protocol */
     uart_init(&uarts[PORT_GNSS], 9600, true); /* the MAX-M10S default */
-    HAL_NVIC_SetPriority(USART1_IRQn, 1, 0);
-    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0); /* 420 kbaud, the shortest byte time */
+    HAL_NVIC_SetPriority(HOST_IRQn, 1, 0);
+    HAL_NVIC_SetPriority(ELRS_IRQn, 0, 0); /* 420 kbaud, the shortest byte time */
     HAL_NVIC_SetPriority(USART3_4_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
     HAL_NVIC_EnableIRQ(USART2_IRQn);
