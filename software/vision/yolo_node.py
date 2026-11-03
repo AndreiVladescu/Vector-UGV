@@ -123,9 +123,9 @@ class YoloNode(Node):
         self.rate = rate
         w = self.declare_parameter('width', 640).value
         h = self.declare_parameter('height', 480).value
-        # Pi AI Camera (IMX500, 4.74 mm) at 4:3, full sensor; the VL53L8CX sees 45 x 45 deg
-        self.cam_fov = (math.radians(self.declare_parameter('cam_hfov_deg', 66.0).value),
-                        math.radians(self.declare_parameter('cam_vfov_deg', 52.3).value))
+        # Pi AI Camera (IMX500, 4.74 mm) across the sensor's full width; the frame is a centred band of
+        # it, so the vertical angle follows from the frame's shape. The VL53L8CX sees 45 x 45 deg.
+        self.cam_hfov = math.radians(self.declare_parameter('cam_hfov_deg', 66.0).value)
         self.tof_fov = math.radians(self.declare_parameter('tof_fov_deg', 45.0).value)
         self.depth, self.depth_t = None, 0.0
         self.mask_scale = self.declare_parameter('mask_scale', 0.25).value
@@ -153,6 +153,10 @@ class YoloNode(Node):
         self.create_timer(1.0 / rate, self.tick)
         self.get_logger().info(f'{model} ({self.model.task}) at {self.model.size} px, up to {rate} Hz')
 
+    def fov(self, w, h):
+        """(horizontal, vertical) view of a w x h frame, square pixels."""
+        return self.cam_hfov, 2 * math.atan(math.tan(self.cam_hfov / 2) * h / w)
+
     def on_depth(self, msg):
         if msg.encoding == '32FC1' and msg.height == msg.width:
             self.depth = np.frombuffer(bytes(msg.data), np.float32).reshape(msg.height, msg.width)
@@ -162,7 +166,7 @@ class YoloNode(Node):
         if self.depth is None or time.monotonic() - self.depth_t > 0.3:
             return [None] * len(boxes)
         h, w = img.shape[:2]
-        return [box_distance(b, w, h, self.depth, *self.cam_fov, self.tof_fov) for b in boxes.tolist()]
+        return [box_distance(b, w, h, self.depth, *self.fov(w, h), self.tof_fov) for b in boxes.tolist()]
 
     def tick(self):
         img, stamp = self.cam.latest()
@@ -202,7 +206,7 @@ class YoloNode(Node):
                 continue
             d3 = Detection3D(header=arr3.header, results=d2.results)
             p = d3.bbox.center.position
-            p.x, p.y, p.z = box_point(box, img.shape[1], img.shape[0], *self.cam_fov, dist)
+            p.x, p.y, p.z = box_point(box, img.shape[1], img.shape[0], *self.fov(img.shape[1], img.shape[0]), dist)
             arr3.detections.append(d3)
         if arr3.detections:
             self.det3_pub.publish(arr3)

@@ -42,7 +42,7 @@ class Obstacles(Node):
         super().__init__('obstacles')
         p = lambda name, default: self.declare_parameter(name, default).value  # noqa: E731
         self.camera_frame = p('camera_frame', 'nose_tof')
-        self.fov = (math.radians(p('cam_hfov_deg', 66.0)), math.radians(p('cam_vfov_deg', 52.3)))
+        self.hfov = math.radians(p('cam_hfov_deg', 66.0))  # the mask's shape gives the vertical angle
         self.ground_z = p('ground_z', 0.10)       # base_link above the ground, legs.yaml stand height
         self.lidar_self = p('lidar_self_m', 0.30)
         self.min_height = p('min_height', 0.05)   # lower than this is ground (or a step it can take)
@@ -84,7 +84,8 @@ class Obstacles(Node):
         mask = np.frombuffer(bytes(msg.data), np.uint8).reshape(msg.height, msg.step)[:, :msg.width]
         uv = mask_contacts(mask)
         if len(uv):
-            rays = pixel_rays(uv, msg.width, msg.height, *self.fov)
+            vfov = 2 * math.atan(math.tan(self.hfov / 2) * msg.height / msg.width)
+            rays = pixel_rays(uv, msg.width, msg.height, self.hfov, vfov)
             self.store(ground_hits(rays, cam[0], cam[1], self.ground_z, self.max_range))
 
     def to_base(self, frame, pts):
