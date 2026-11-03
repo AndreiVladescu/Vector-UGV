@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # YOLO for the AI camera's IMX500, built on an x86 Linux PC (Python 3.12, Java 17+), packaged on the Pi.
-#   software/vision/export_imx.sh                         # yolo11n-seg, 640x480 input, prototypes pooled 2x
+#   software/vision/export_imx.sh                         # yolo11n-seg, 640x320 input, prototypes pooled 2x
 #   MODEL=yolo11n IMGSZ=320 software/vision/export_imx.sh # detection only, 320x320
 #   PI=pi@vector.local software/vision/export_imx.sh      # also package and install it on that Pi
-# IMGSZ is "size" or "height,width" (4:3 like the camera keeps the whole view undistorted).
+# IMGSZ is "size" or "height,width", with the camera frame's shape (2:1: the band the camera service crops).
 # PROTO_POOL shrinks the mask prototypes inside the network: the Pi reads every value of the
 # output through Python, about 30 ms per 216k values, so 480x640 with full prototypes (626k)
 # gives 6 results/s and with them pooled 2x (165k) the sensor's own rate.
@@ -17,7 +17,7 @@
 set -euo pipefail
 
 model=${MODEL:-yolo11n-seg}
-size=${IMGSZ:-480,640}
+size=${IMGSZ:-320,640}
 pool=${PROTO_POOL:-2}
 calib=${CALIB_IMAGES:-200}
 venv=${VENV:-$HOME/.cache/vector-imx-venv}

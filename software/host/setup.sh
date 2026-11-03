@@ -18,8 +18,9 @@ set -euo pipefail
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
 CAN=${CAN:-can0}
 PROFILES=${PROFILES:-vision}
-# capture size, also the stream's: the AI camera's network sees the whole sensor whatever this is
-CAMERA_WIDTH=${CAMERA_WIDTH:-1280}
+# capture size, also the stream's. Its shape picks a centred band of the sensor at full width, which
+# the AI camera's network sees too: 2:1 fills a wide browser or a phone on its side (66 x 36 deg)
+CAMERA_WIDTH=${CAMERA_WIDTH:-1920}
 CAMERA_HEIGHT=${CAMERA_HEIGHT:-960}
 USER_NAME=${SUDO_USER:-pi}
 GNSS=${GNSS-/dev/ttyAMA0}
@@ -30,7 +31,7 @@ LTE_AT=${LTE_AT:-}
 IO=${IO:-}
 IMU=${IMU:-false}
 DEMO=${DEMO:-false}
-YOLO_RPK=/usr/local/share/imx500-models/yolo11n-seg-480x640-p2.rpk  # from software/vision/export_imx.sh
+YOLO_RPK=/usr/local/share/imx500-models/yolo11n-seg-320x640-p2.rpk  # from software/vision/export_imx.sh
 CAMERA_NET=${CAMERA_NET-$([[ -f $YOLO_RPK ]] && echo $YOLO_RPK || echo ssd_mobilenetv2_fpnlite_320x320_pp)}
 
 command -v docker >/dev/null || apt-get install -y docker.io docker-compose

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The Pi AI Camera with a network running on the IMX500, in place of rpicam-vid.
 
-  imx500_camera.py NETWORK [--width 1280] [--height 960] [--fps 15] [--port 9000] [--dets 127.0.0.1:9001]
+  imx500_camera.py NETWORK [--width 1920] [--height 960] [--fps 15] [--port 9000] [--dets 127.0.0.1:9001]
 
 NETWORK is an .rpk, or a name from /usr/share/imx500-models (ssd_mobilenetv2_fpnlite_320x320_pp).
 Two kinds work: SSD-style detectors with post-processing (_pp), and Ultralytics YOLO exports
@@ -17,8 +17,13 @@ in frame pixels. "masks" (segmentation only) holds each object's soft mask (prob
 uint8) on the network's prototype grid (mh x mw over rect in the frame), cropped to the cells
 around its box, in the order of dets: the reader scales it up and thresholds it at full size, so
 the outline stays smooth. Masks stop where the datagram would pass MAX_MASK_BYTES; those objects
-keep their boxes. The Pi's CPU only copies frames and works out the masks. Loading a network onto the sensor takes
-about 35 s the first time, a few seconds after that.
+keep their boxes. The Pi's CPU only copies frames and works out the masks. Loading a network onto the sensor
+takes 1-2 minutes the first time, a few seconds after that.
+
+The frame's shape picks a band of the sensor, centred, as wide as it can be (all 4056 columns for
+anything wider than 4:3): the stream shows that band and the network sees the same band, so a 2:1
+frame with a 2:1 network (640x320) gives the full horizontal view without distortion and the
+vertical view the band allows (36 deg of 52 at 2:1).
 """
 import argparse
 import base64
@@ -32,6 +37,7 @@ from picamera2 import Picamera2
 from picamera2.devices import IMX500
 
 MODELS = '/usr/share/imx500-models'
+SENSOR = (4056, 3040)  # full resolution, the inference ROI's coordinates
 MAX_MASK_BYTES = 48000  # base64 of all masks: a UDP datagram holds 65507 bytes
 
 
@@ -91,10 +97,32 @@ def yolo_masks(boxes, mc, proto, size, budget=MAX_MASK_BYTES):
     return objs
 
 
+def band(width, height):
+    """The centred band of the sensor with the frame's aspect: (x, y, w, h) in full-resolution pixels."""
+    w, h = SENSOR
+    if width / height >= w / h:
+        h = round(w * height / width) // 2 * 2
+    else:
+        w = round(h * width / height) // 2 * 2
+    return (SENSOR[0] - w) // 2, (SENSOR[1] - h) // 2, w, h
+
+
+def i420(buf, width, height, stride):
+    """The frame as tight I420: rows padded to the stride lose their padding."""
+    if stride == width:
+        return buf
+    a = np.frombuffer(buf, np.uint8)
+    ys, cs = stride * height, stride // 2 * height // 2
+    y = a[:ys].reshape(height, stride)[:, :width]
+    u = a[ys:ys + cs].reshape(height // 2, stride // 2)[:, :width // 2]
+    v = a[ys + cs:ys + 2 * cs].reshape(height // 2, stride // 2)[:, :width // 2]
+    return b''.join(p.tobytes() for p in (y, u, v))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('network')
-    ap.add_argument('--width', type=int, default=1280)
+    ap.add_argument('--width', type=int, default=1920)
     ap.add_argument('--height', type=int, default=960)
     ap.add_argument('--fps', type=float, default=15)
     ap.add_argument('--port', type=int, default=9000)
@@ -109,23 +137,33 @@ def main():
     if not labels and os.path.exists(txt):
         labels = [ln.strip() for ln in open(txt) if ln.strip()]
     size = np.array(imx.get_input_size(), float)  # (width, height)
+    roi = band(a.width, a.height)
+    imx.set_inference_roi_abs(roi)  # the network sees the band the stream shows
     cam = Picamera2(imx.camera_num)
+    ox, oy = cam.camera_properties['ScalerCropMaximum'][:2]  # ScalerCrop counts from the active area's corner
+    crop = (ox + roi[0], oy + roi[1], roi[2], roi[3])
     cam.configure(cam.create_video_configuration(main={'size': (a.width, a.height), 'format': 'YUV420'},
-                                                 controls={'FrameRate': a.fps}, buffer_count=6))
-    if cam.camera_configuration()['main']['stride'] != a.width:
-        raise SystemExit(f'width {a.width}: rows are padded, use a multiple of 64')
+                                                 controls={'FrameRate': a.fps, 'ScalerCrop': crop}, buffer_count=6))
+    stride = cam.camera_configuration()['main']['stride']
     cam.start()
+
+    def to_frame(nx, ny, sc):
+        """Network coordinates (0..1 over the band) to frame pixels, through the crop the ISP really used."""
+        sx, sy = ox + roi[0] + np.asarray(nx) * roi[2], oy + roi[1] + np.asarray(ny) * roi[3]
+        return (sx - sc[0]) * a.width / sc[2], (sy - sc[1]) * a.height / sc[3]
     host, port = a.dets.split(':')
     udp, dest = socket.socket(socket.AF_INET, socket.SOCK_DGRAM), (host, int(port))
     server = Server(a.port)
     server.start()
-    print(f'{rpk}: {a.width}x{a.height} at {a.fps} fps on :{a.port}, detections to {a.dets}', flush=True)
+    print(f'{rpk}: {a.width}x{a.height} at {a.fps} fps on :{a.port}, sensor band {roi}, detections to {a.dets}',
+          flush=True)
 
     seq, dets, mask = 0, [], None
     while True:
         req = cam.capture_request()
         try:
             md = req.get_metadata()
+            sc = md['ScalerCrop']
             out = imx.get_outputs(md, add_batch=True)
             if out is not None:  # no new result for this frame: the last one still stands
                 dets, mask = [], None
@@ -135,8 +173,9 @@ def main():
                     order = np.argsort(-scores)
                     boxes, scores, classes = boxes[order], scores[order], classes[order]
                     proto = out[4][0]
-                    x, y, w, h = imx.convert_inference_coords((0, 0, 1, 1), md, cam)
-                    mask = {'rect': [x, y, w, h], 'shape': list(proto.shape[1:]),
+                    (x1, x2), (y1, y2) = to_frame([0, 1], [0, 1], sc)
+                    x, y = round(float(x1)), round(float(y1))
+                    mask = {'rect': [x, y, round(float(x2)) - x, round(float(y2)) - y], 'shape': list(proto.shape[1:]),
                             'objs': yolo_masks(boxes, out[3][0][keep][order], proto, size)}
                     norm = boxes[:, [1, 0, 3, 2]] / size[[1, 0, 1, 0]]  # to (y0, x0, y1, x1) relative
                 elif out[0].shape[-1] == 4 and out[0][0].max() > 1.5:  # YOLO detect: xyxy in input pixels
@@ -146,15 +185,16 @@ def main():
                 else:  # SSD-style: (y0, x0, y1, x1) relative
                     keep = out[1][0] >= a.conf
                     norm, scores, classes = out[0][0][keep], out[1][0][keep], out[2][0][keep]
-                for box, s, c in zip(norm, scores, classes):
-                    x, y, w, h = imx.convert_inference_coords(box, md, cam)
+                fx, fy = to_frame(np.clip(norm[:, [1, 3]], 0, 1), np.clip(norm[:, [0, 2]], 0, 1), sc)
+                for (x1, x2), (y1, y2), s, c in zip(fx, fy, scores, classes):
                     c = int(c)
-                    dets.append([x, y, x + w, y + h, round(float(s), 3), labels[c] if c < len(labels) else str(c)])
+                    dets.append([round(float(x1), 1), round(float(y1), 1), round(float(x2), 1), round(float(y2), 1),
+                                 round(float(s), 3), labels[c] if c < len(labels) else str(c)])
             msg = {'seq': seq, 'w': a.width, 'h': a.height, 'dets': dets, 'new': out is not None}
             if mask:
                 msg['masks'] = mask
             udp.sendto(json.dumps(msg).encode(), dest)
-            frame = req.make_buffer('main')
+            frame = i420(req.make_buffer('main'), a.width, a.height, stride)
         finally:
             req.release()
         server.send(frame)
