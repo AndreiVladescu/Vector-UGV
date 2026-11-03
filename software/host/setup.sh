@@ -7,6 +7,9 @@
 #   "" = none); LTE_AT=/dev/ttyUSB2 for the modem's signal ("" = default, don't ask it)
 #   On the carrier: IO=/dev/ttyAMA2 (the IO MCU on UART2) with ELRS=io and GNSS="", IMU=true
 #   DEMO=true: the operator page demo instead of the robot (no hardware needed)
+#   CAMERA_NET: the network the AI camera runs itself, an .rpk or a name from /usr/share/imx500-models
+#   (default YOLO11n-seg from export_imx.sh when installed, else ssd_mobilenetv2_fpnlite_320x320_pp);
+#   YOLO on the CPU only stands in. "" = YOLO on the CPU for every frame
 # Installs: Docker (with a sane open-files limit), CAN bring-up, the camera service, the
 # stack as a systemd service, and the hardware watchdog. Images are built separately.
 set -euo pipefail
@@ -15,9 +18,9 @@ set -euo pipefail
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
 CAN=${CAN:-can0}
 PROFILES=${PROFILES:-vision}
-# capture size: YOLO runs on a 320 px copy, masks and the stream use the full frame
-CAMERA_WIDTH=${CAMERA_WIDTH:-1280}
-CAMERA_HEIGHT=${CAMERA_HEIGHT:-960}
+# capture size, also the stream's: the AI camera's network sees the whole sensor whatever this is
+CAMERA_WIDTH=${CAMERA_WIDTH:-640}
+CAMERA_HEIGHT=${CAMERA_HEIGHT:-480}
 USER_NAME=${SUDO_USER:-pi}
 GNSS=${GNSS-/dev/ttyAMA0}
 NAV=${NAV:-false}
@@ -27,8 +30,11 @@ LTE_AT=${LTE_AT:-}
 IO=${IO:-}
 IMU=${IMU:-false}
 DEMO=${DEMO:-false}
+YOLO_RPK=/usr/local/share/imx500-models/yolo11n-seg-480x640-p2.rpk  # from software/vision/export_imx.sh
+CAMERA_NET=${CAMERA_NET-$([[ -f $YOLO_RPK ]] && echo $YOLO_RPK || echo ssd_mobilenetv2_fpnlite_320x320_pp)}
 
 command -v docker >/dev/null || apt-get install -y docker.io docker-compose
+[[ -z $CAMERA_NET ]] || dpkg -s imx500-all imx500-tools python3-picamera2 >/dev/null 2>&1 || apt-get install -y imx500-all imx500-tools python3-picamera2
 usermod -aG docker "$USER_NAME"
 
 # Docker's default open-files limit (~2^30) makes LTTng, loaded by every ROS 2 process,
@@ -49,6 +55,7 @@ CAN_INTERFACE=$CAN
 COMPOSE_PROFILES=$PROFILES
 CAMERA_WIDTH=$CAMERA_WIDTH
 CAMERA_HEIGHT=$CAMERA_HEIGHT
+CAMERA_NET=$CAMERA_NET
 GNSS_PORT=$GNSS
 NAV=$NAV
 LINKS=$LINKS
@@ -133,14 +140,16 @@ WantedBy=multi-user.target
 U
 
 # The camera stays on the host (native libcamera) and serves raw frames to the vision
-# container; rpicam-vid exits when its reader goes, so systemd restarts it.
+# container; rpicam-vid exits when its reader goes, so systemd restarts it. With CAMERA_NET
+# imx500_camera.py serves the same frames and sends the sensor's detections on UDP 9001.
 cat > /etc/systemd/system/vector-camera.service <<U
 [Unit]
 Description=Camera raw frames on tcp://127.0.0.1:9000
+StartLimitIntervalSec=0
 [Service]
 User=$USER_NAME
 EnvironmentFile=/etc/vector.env
-ExecStart=/usr/bin/rpicam-vid -t 0 -n --width \${CAMERA_WIDTH} --height \${CAMERA_HEIGHT} --framerate 15 --codec yuv420 --listen -o tcp://127.0.0.1:9000
+ExecStart=/bin/sh -c 'if [ -n "\$\$CAMERA_NET" ]; then exec /usr/bin/python3 $REPO/software/host/imx500_camera.py \$\$CAMERA_NET --width \$\$CAMERA_WIDTH --height \$\$CAMERA_HEIGHT; else exec /usr/bin/rpicam-vid -t 0 -n --width \$\$CAMERA_WIDTH --height \$\$CAMERA_HEIGHT --framerate 15 --codec yuv420 --listen -o tcp://127.0.0.1:9000; fi'
 Restart=always
 RestartSec=1
 [Install]
