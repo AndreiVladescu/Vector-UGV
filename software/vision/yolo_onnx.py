@@ -84,7 +84,8 @@ def draw(img, boxes, scores, classes, masks, names, dists=None):
     colors = rng.integers(60, 255, (len(names), 3))
     if masks is not None and len(masks):  # blended inside each box only: a whole-frame blend is 17 ms on the Pi
         for m, c, (x1, y1, x2, y2) in zip(masks, classes, boxes.astype(int)):
-            x1, y1 = max(x1, 0), max(y1, 0)
+            mx, my = (x2 - x1) // 8, (y2 - y1) // 8  # margin: a smoothed box can sit inside its mask
+            x1, y1, x2, y2 = max(x1 - mx, 0), max(y1 - my, 0), x2 + mx, y2 + my
             region, sel = out[y1:y2, x1:x2], m[y1:y2, x1:x2]
             tint = cv2.addWeighted(region, 0.6, np.full_like(region, colors[c].astype(np.uint8)), 0.4, 0)
             np.copyto(region, tint, where=sel[..., None])

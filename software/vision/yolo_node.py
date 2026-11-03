@@ -38,6 +38,7 @@ from sensor_msgs.msg import CompressedImage, Image
 from vision_msgs.msg import Detection2D, Detection2DArray, Detection3D, Detection3DArray, ObjectHypothesisWithPose
 
 from fusion import box_distance, box_point
+from track import Tracker
 from yolo_onnx import Yolo, draw
 
 
@@ -139,6 +140,7 @@ class YoloNode(Node):
             self.sensor = SensorDetections(shost, int(sport))
             self.sensor.start()
         self.on_sensor = False
+        self.tracker = Tracker()  # steady boxes, no one-frame flukes, short dropouts bridged
         self.cam = Camera(host, int(port), w, h)
         self.cam.start()
         self.det_pub = self.create_publisher(Detection2DArray, '~/detections', 10)
@@ -174,15 +176,17 @@ class YoloNode(Node):
             boxes, scores, classes, masks = self.model(img)
         if (dets is not None) != self.on_sensor:
             self.on_sensor = dets is not None
+            self.tracker = Tracker()
             self.get_logger().info("detections from the camera's network" if self.on_sensor else
                                    f'detections from {self.model.task} model on the CPU')
+        boxes, scores, classes, masks, ids = self.tracker.update(boxes, scores, classes, masks)
         done = time.monotonic()
         header = self.get_clock().now().to_msg()
         header = type(Detection2DArray().header)(stamp=header, frame_id='camera')
 
         arr = Detection2DArray(header=header)
-        for (x1, y1, x2, y2), c, conf in zip(boxes.tolist(), classes.tolist(), scores.tolist()):
-            d = Detection2D(header=header)
+        for (x1, y1, x2, y2), c, conf, tid in zip(boxes.tolist(), classes.tolist(), scores.tolist(), ids):
+            d = Detection2D(header=header, id=str(tid))
             d.bbox.center.position.x, d.bbox.center.position.y = (x1 + x2) / 2, (y1 + y2) / 2
             d.bbox.size_x, d.bbox.size_y = x2 - x1, y2 - y1
             hyp = ObjectHypothesisWithPose()
