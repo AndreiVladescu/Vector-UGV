@@ -261,23 +261,25 @@ docker compose -f software/docker/compose.yaml --profile vision up -d           
 YOLO_MODEL=yolo26n-480.onnx docker compose -f software/docker/compose.yaml --profile vision up -d
 ```
 
-The Pi AI Camera runs the network itself. With `CAMERA_NET` in `/etc/vector.env` (an `.rpk`, or a name from `/usr/share/imx500-models`), the camera service runs `software/host/imx500_camera.py` instead of `rpicam-vid`: the same raw frames on port 9000, plus the sensor's detections per frame on UDP 9001, with an instance map for segmentation networks. `yolo_node.py` uses those while they keep coming, and the ONNX model only when they stop.
+The Pi AI Camera runs the network itself. With `CAMERA_NET` in `/etc/vector.env` (an `.rpk`, or a name from `/usr/share/imx500-models`), the camera service runs `software/host/imx500_camera.py` instead of `rpicam-vid`: the same raw frames on port 9000, plus the sensor's detections per frame on UDP 9001, with each object's soft mask for segmentation networks. `yolo_node.py` uses those while they keep coming, and the ONNX model only when they stop.
 
-The network is YOLO11n-seg at 640×480, the newest YOLO the IMX500 takes (YOLO26 doesn't export to it yet), built on an x86 PC by `software/vision/export_imx.sh` (with `PI=pi@<host>` it also packages and installs it). The Pi reads every output value through Python, about 30 ms per 216k values, so the export pools the mask prototypes 2× inside the network (32×60×80 instead of 32×120×160): with full prototypes 640×480 manages 6 results/s, pooled it keeps up with the camera. The camera service sends each object's soft mask and `yolo_node` scales it up before thresholding, so outlines stay smooth. INT8 calibration uses 200 COCO val2017 images. On 500 others it scores box mAP50-95 0.308 and mask 0.239, against 0.395 and 0.327 for the float model at 640; calibrating on Ultralytics' coco128 instead gives box 0.304, so more images buy little. Measured on the Pi 5 with the demo stack running:
+The frame is a 2:1 band across the sensor's full width, 1920×960 (`CAMERA_WIDTH`/`CAMERA_HEIGHT`; the shape picks the band, centred): it fills a wide browser window or a phone on its side, at 66×36 degrees instead of 66×52. The network sees the same band. It is YOLO11n-seg at 640×320, the newest YOLO the IMX500 takes (YOLO26 doesn't export to it yet): 640 pixels across the full width, the same detail as 640×480 over the whole sensor, with a third less to compute. `software/vision/export_imx.sh` builds it on an x86 PC (with `PI=pi@<host>` it also packages and installs it). The Pi reads every output value through Python, about 30 ms per 216k values, so the export pools the mask prototypes 2× inside the network (32×40×80 instead of 32×80×160): with full prototypes the camera service needs a whole core and drops to 12 fps. INT8 calibration uses 200 COCO val2017 images; for the 640×480 version that scored box mAP50-95 0.308 and mask 0.239 on 500 others, against 0.395 and 0.327 for the float model, and calibrating on Ultralytics' coco128 gave box 0.304, so more images buy little.
 
-| Network, frames | Results/s | Frame to result | CPU (camera, node, stream) |
+The Pi doesn't draw on the video: `yolo_node` streams the camera's own frames to MediaMTX and publishes `~/overlay` (boxes, labels, ToF distances, masks as small PNGs), which the operator page gets as server-sent events and draws over its WebRTC video, held back `overlay_delay` ms (page parameter, default 150) to line up with it. Drawing on the Pi as well (`stream_overlay`, for VLC) costs a third of the frame rate at this size. Measured on the Pi 5 with the demo stack running:
+
+| Network, frames, overlay | Results/s | Frame to result | CPU (camera, node, encoder) |
 |---|---|---|---|
-| YOLO11n-seg 640×480 on the sensor, 1280×960 frames | 14 | 50 ms | 1.2 cores |
-| YOLO11n-seg 640×480 on the sensor, 640×480 frames | 15 | 52 ms | 0.7 core |
-| YOLO11n-seg 320×320 on the sensor, 1280×960 frames | 15 | 45 ms | |
-| YOLO26n-seg 320 on the CPU (ONNX), 1280×960 frames | 3.7 | 256 ms | over 2 cores |
+| YOLO11n-seg 640×320 on the sensor, 1920×960, in the browser | 15 | 12 ms | 1.0 core |
+| YOLO11n-seg 640×480 on the sensor, 1920×960, drawn on the Pi | 9.5 | 45 ms | |
+| YOLO11n-seg 640×480 on the sensor, 1280×960, drawn on the Pi | 14 | 50 ms | 1.2 cores |
+| YOLO26n-seg 320 on the CPU (ONNX), 1280×960, drawn on the Pi | 3.7 | 256 ms | over 2 cores |
 
-The sensor itself takes 53 ms per frame for the 640×480 network, so the camera runs at 15 fps; at 30 it only keeps every fourth result. A network takes 1–2 minutes to load onto the sensor the first time, a few seconds after that. Whatever the source, `track.py` keeps the detections steady: a new object shows after two frames in a row (at once from 0.5), a missed one stays for three, boxes are smoothed and each track keeps its id (`Detection2D.id`).
+The sensor takes 53 ms per frame for a 640×480 network, so the camera runs at 15 fps. A network takes 1–2 minutes to load onto the sensor the first time (several on a busy Pi), a few seconds after that. Whatever the source, `track.py` keeps the detections steady: a new object shows after two frames in a row (at once from 0.5), a missed one stays for three, boxes are smoothed and each track keeps its id (`Detection2D.id`).
 
-`yolo_node.py` publishes `/yolo/detections` (vision_msgs), `/yolo/mask` (class id + 1 per pixel) and `/yolo/debug/compressed`, and streams the annotated video through MediaMTX:
+`yolo_node.py` publishes `/yolo/detections` (vision_msgs), `/yolo/mask` (class id + 1 per pixel), `/yolo/overlay` and `/yolo/debug/compressed` (annotated, 2 Hz), and streams the video through MediaMTX:
 
 - VLC: `rtsp://<robot>:8554/yolo`
-- Firefox / any browser: `http://<robot>:8889/yolo` (WebRTC)
+- any browser: `http://<robot>:8889/yolo` (WebRTC), or the operator page with the overlay
 
 On the Pi 5 2 GB, CPU only, with the control stack running alongside (SYNC never gaps more than 8 ms):
 
@@ -288,7 +290,7 @@ On the Pi 5 2 GB, CPU only, with the control stack running alongside (SYNC never
 | yolo26n, 320 px | 14.4 (camera-limited) | 86 ms | 136 MB |
 | yolo26n, 480 px | 7.2 | 167 ms | 162 MB |
 
-The camera captures at 1280×960 (`CAMERA_WIDTH`/`CAMERA_HEIGHT` in `/etc/vector.env`), which is also the stream's size, H.264 at `stream_kbps` (default 2500); 640×480 saves half a core. The AI camera's network sees the whole sensor whatever the capture size; the CPU fallback gets a 320 px copy. Either way the masks and boxes are drawn on the full frame.
+The stream is the camera's frame size, H.264 at `stream_kbps` (default 2500). The vertical angle the ToF fusion and the obstacle projection use comes from the frame's shape (66 degrees across, square pixels). The CPU fallback gets a 320 px copy of the frame.
 
 With the nose board fitted, `tof_front` (`vector_tof`, started with `hardware:=can`) runs the VL53L8CX through ST's ULD on `/dev/i2c-1`: `nose/tof/points` (a point per zone) and `nose/tof/depth` (8x8 metres, NaN = nothing). `yolo_node` takes the zones behind each box, uses a low percentile so the object wins over the background, prints the distance on the stream and publishes `~/detections_3d`. The ULD sources, with the sensor's firmware, are downloaded at build time from ST's X-CUBE-TOF1 (BSD-3-Clause), pinned by hash. The zone grid's orientation (`flip_x`, `flip_y`) needs a check on the bench: a hand in the top left corner should show in row 0, column 0 of the depth image.
 
