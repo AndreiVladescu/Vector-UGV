@@ -15,7 +15,7 @@ from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 from geographic_msgs.msg import GeoPath, GeoPoint
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import BatteryState, CompressedImage, Imu, NavSatFix
-from std_msgs.msg import Empty, UInt8MultiArray
+from std_msgs.msg import Empty, String, UInt8MultiArray
 from std_srvs.srv import SetBool, Trigger
 
 PORT = 18080
@@ -82,6 +82,7 @@ class TestOperatorPage(unittest.TestCase):
         cls.fix = cls.node.create_publisher(NavSatFix, '/gnss/fix', 10)
         cls.battery = cls.node.create_publisher(BatteryState, '/battery', 10)
         cls.camera = cls.node.create_publisher(CompressedImage, '/yolo/debug/compressed', 10)
+        cls.overlay = cls.node.create_publisher(String, '/yolo/overlay', 2)
         # stands in for gait_node's parameters
         cls.gait = rclpy.create_node('gait_node')
         cls.gait.declare_parameter('gait', 'tripod')
@@ -252,6 +253,20 @@ class TestOperatorPage(unittest.TestCase):
         status, body = request('/api/snapshot')
         self.assertEqual(status, 200)
         self.assertEqual(body, b'\xff\xd8fake')
+
+    def test_overlay_events(self):
+        # the page's EventSource: each overlay yolo_node publishes arrives as one 'data:' event
+        r = urllib.request.urlopen(f'{BASE}/api/overlay?key=k', timeout=10)
+        self.assertEqual(r.headers['Content-Type'], 'text/event-stream')
+        sent = {'w': 1920, 'h': 960, 't': 1.0, 'objs': [{'id': 3, 'cls': 'person', 'box': [1, 2, 3, 4]}]}
+        for _ in range(10):
+            self.overlay.publish(String(data=json.dumps(sent)))
+            self.spin(0.1)
+        line = r.readline()
+        self.assertTrue(line.startswith(b'data: '), line)
+        self.assertEqual(json.loads(line[6:]), sent)
+        r.close()
+        self.assertEqual(request('/api/overlay', key='wrong')[0], 403)
 
     def test_io_panel(self):
         self.assertIsNone(json.loads(request('/api/state')[1])['io'])

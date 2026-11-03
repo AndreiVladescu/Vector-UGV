@@ -26,6 +26,8 @@ JSON API (all POST bodies JSON; with the token parameter set, every request need
   POST /api/calibrate/save          store that leg's new calibration in its flash
   POST /api/lte {on}                the LTE module's supply, through the IO MCU
   GET  /api/snapshot                the latest annotated camera frame, JPEG
+  GET  /api/overlay                 server-sent events: yolo_node's overlay (boxes, masks) as it comes,
+                                    for the page to draw over the video
 The icons and manifest.webmanifest need no key (the manifest's start_url carries the key it
 was asked with, when that key is right, so the home screen shortcut opens the page).
 """
@@ -133,6 +135,8 @@ class Operator(Node):
         self.get_params = self.create_client(GetParameters, 'gait_node/get_parameters')
         self.jpeg = None
         self.sub(CompressedImage, 'yolo/debug/compressed', lambda m: setattr(self, 'jpeg', bytes(m.data)))
+        self.overlay, self.overlay_seq, self.overlay_cv = None, 0, threading.Condition()
+        self.sub(String, 'yolo/overlay', self.on_overlay, 2)
         self.s['objects'] = []
         self.dists = {}
         if Detection2DArray is not None:
@@ -183,6 +187,20 @@ class Operator(Node):
         q = m.pose.pose.orientation
         yaw = math.atan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y * q.y + q.z * q.z))
         self.put('heading', round((90 - math.degrees(yaw)) % 360))  # ENU yaw -> compass
+
+    def on_overlay(self, m):
+        with self.overlay_cv:
+            self.overlay, self.overlay_seq = m.data, self.overlay_seq + 1
+            self.overlay_cv.notify_all()
+
+    def overlay_events(self, write, keepalive=5.0):
+        """Each new overlay as an event until the browser goes; a comment now and then finds out when."""
+        seq = self.overlay_seq
+        while True:
+            with self.overlay_cv:
+                fresh = self.overlay_cv.wait_for(lambda: self.overlay_seq != seq, timeout=keepalive)
+                seq, data = self.overlay_seq, self.overlay
+            write(f'data: {data}\n\n'.encode() if fresh and data else b': idle\n\n')
 
     def on_detections(self, m):
         now = time.time()
@@ -465,6 +483,20 @@ def handler(node, page, icons):
                 if 'gzip' in self.headers.get('Accept-Encoding', ''):
                     return self.reply(200, node.robot3d_gz, encoding='gzip', cache='max-age=3600')
                 return self.reply(200, gzip.decompress(node.robot3d_gz), cache='max-age=3600')
+            if path == '/api/overlay':
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/event-stream')
+                self.send_header('Cache-Control', 'no-store')
+                self.end_headers()
+
+                def write(data):
+                    self.wfile.write(data)
+                    self.wfile.flush()
+                try:
+                    node.overlay_events(write)
+                except OSError:  # the page went away
+                    pass
+                return
             if path == '/api/snapshot':
                 if node.jpeg is None:
                     return self.reply(404, {'error': 'no camera frame yet'})

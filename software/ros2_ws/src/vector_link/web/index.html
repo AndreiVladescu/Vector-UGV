@@ -35,7 +35,8 @@
 
   /* the video is the canvas everything floats on */
   #stage { position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 40%, #1a2230 0%, #0a0d12 70%); }
-  #video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; }
+  #video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+  #overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
   #novideo { position: absolute; inset: 0; display: grid; place-items: center; color: var(--faint); letter-spacing: .08em; }
   .vignette { position: absolute; inset: 0; pointer-events: none;
               background: linear-gradient(to bottom, rgba(0,0,0,.55), transparent 22%, transparent 62%, rgba(0,0,0,.7)); }
@@ -273,9 +274,10 @@
 </head>
 <body>
 <div id="stage">
-  <iframe id="video" allow="autoplay; fullscreen"></iframe>
+  <video id="video" autoplay muted playsinline></video>
   <div id="novideo">NO VIDEO</div>
   <div class="vignette"></div>
+  <canvas id="overlay"></canvas>
   <header class="glass">
     <div class="brand">V<span>.</span>E<span>.</span>C<span>.</span>T<span>.</span>O<span>.</span>R</div>
     <div class="pill"><span class="dot" id="modeDot"></span><small>mode</small><b id="mode">-</b></div>
@@ -1448,7 +1450,107 @@ function render(s) {
   renderTiles();
   updateMini(s);
 }
-let videoRetry = 0;
+// ---- video: WebRTC from MediaMTX (WHEP), the camera's own frames; boxes and masks drawn here on top ----
+let videoRetry = 0, videoUp = false, pc = null;
+async function connectVideo(url) {
+  if (pc) pc.close();
+  pc = new RTCPeerConnection();
+  pc.addTransceiver('video', {direction: 'recvonly'});
+  pc.ontrack = e => { $('video').srcObject = e.streams[0] || new MediaStream([e.track]); };
+  pc.onconnectionstatechange = () => {
+    if (['failed', 'disconnected', 'closed'].includes(pc.connectionState)) {
+      videoUp = false;
+      $('novideo').style.display = '';
+      videoRetry = Date.now() + 3000;
+    }
+  };
+  await pc.setLocalDescription(await pc.createOffer());
+  await new Promise(done => {  // the whole offer at once: on a LAN gathering takes a few ms
+    if (pc.iceGatheringState === 'complete') return done();
+    pc.onicegatheringstatechange = () => pc.iceGatheringState === 'complete' && done();
+    setTimeout(done, 1500);
+  });
+  const r = await fetch(url + '/whep', {method: 'POST', headers: {'Content-Type': 'application/sdp'}, body: pc.localDescription.sdp});
+  if (!r.ok) throw new Error('whep ' + r.status);
+  await pc.setRemoteDescription({type: 'answer', sdp: await r.text()});
+  videoUp = true;
+}
+$('video').onplaying = () => { $('novideo').style.display = 'none'; };
+
+// the overlay arrives ahead of the video (encoding, jitter buffer): held back by overlay_delay ms
+const overlays = [], overlayDelay = +(params.get('overlay_delay') ?? 150);
+const hue = s => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
+function prepareMasks(o) {  // each mask PNG (white, mask as alpha) tinted in its class colour
+  for (const b of o.objs) {
+    if (!b.mask) continue;
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      const g = c.getContext('2d');
+      g.fillStyle = `hsl(${hue(b.cls)} 85% 55%)`;
+      g.fillRect(0, 0, c.width, c.height);
+      g.globalCompositeOperation = 'destination-in';
+      g.drawImage(img, 0, 0);
+      b.tinted = c;
+    };
+    img.src = 'data:image/png;base64,' + b.mask[4];
+  }
+}
+const overlayEvents = new EventSource(api('overlay'));
+overlayEvents.onmessage = e => {
+  try {
+    const o = JSON.parse(e.data);
+    o.at = performance.now();
+    prepareMasks(o);
+    overlays.push(o);
+    if (overlays.length > 40) overlays.shift();
+  } catch (err) { /* a broken message: wait for the next */ }
+};
+function drawOverlay() {
+  requestAnimationFrame(drawOverlay);
+  const cv = $('overlay'), v = $('video'), dpr = devicePixelRatio || 1;
+  const W = cv.clientWidth, H = cv.clientHeight;
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) {
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  }
+  const g = cv.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, H);
+  if (!videoUp || !v.videoWidth) return;
+  const now = performance.now();
+  let o = null;
+  for (const x of overlays) if (now - x.at >= overlayDelay) o = x;
+  if (!o || now - o.at > overlayDelay + 1000) return;  // nothing recent: draw nothing rather than old boxes
+  const k = Math.min(W / v.videoWidth, H / v.videoHeight);  // where object-fit: contain put the picture
+  const ox = (W - v.videoWidth * k) / 2, oy = (H - v.videoHeight * k) / 2;
+  const sx = v.videoWidth * k / o.w, sy = v.videoHeight * k / o.h;
+  g.imageSmoothingEnabled = true;
+  g.font = '600 13px Inter, system-ui, sans-serif';
+  for (const b of o.objs) {
+    const col = `hsl(${hue(b.cls)} 85% 60%)`;
+    if (b.tinted) {
+      const [mx, my, mw, mh] = b.mask;
+      g.globalAlpha = 0.45;
+      g.drawImage(b.tinted, ox + mx * sx, oy + my * sy, mw * sx, mh * sy);
+      g.globalAlpha = 1;
+    }
+    const [x1, y1, x2, y2] = b.box;
+    const x = ox + x1 * sx, y = oy + y1 * sy, w = (x2 - x1) * sx, h = (y2 - y1) * sy;
+    g.strokeStyle = 'rgba(0, 0, 0, 0.6)'; g.lineWidth = 5;  // a dark edge keeps the box visible on any background
+    g.strokeRect(x, y, w, h);
+    g.strokeStyle = col; g.lineWidth = 2.5;
+    g.strokeRect(x, y, w, h);
+    const label = `${b.cls} ${b.score.toFixed(2)}` + (b.dist != null ? ` ${b.dist.toFixed(1)} m` : '');
+    const tw = g.measureText(label).width;
+    const ly = y - 20 >= oy ? y - 20 : y + 2;  // above the box, inside it when the box starts at the top
+    const lx = Math.min(Math.max(x, ox), ox + v.videoWidth * k - tw - 10);
+    g.fillStyle = col; g.fillRect(lx, ly, tw + 10, 19);
+    g.fillStyle = '#000'; g.fillText(label, lx + 5, ly + 14);
+  }
+}
+requestAnimationFrame(drawOverlay);
+
 async function poll() {
   try {
     const t0 = performance.now();
@@ -1459,14 +1561,9 @@ async function poll() {
     $('ping').style.color = ms < 150 ? '' : ms < 400 ? COL.warn : COL.err;
     if (r.ok) {
       const s = await r.json();
-      if (!$('video').src && s.video && Date.now() > videoRetry) {
-        // only load the stream once it answers: a refused connection would put the browser's error page there
-        const url = location.protocol + '//' + videoHost + s.video;
+      if (!videoUp && s.video && Date.now() > videoRetry) {
         videoRetry = Date.now() + 10000;
-        fetch(url, {mode: 'no-cors'}).then(() => {
-          $('video').src = url;
-          $('video').onload = () => { $('novideo').style.display = 'none'; };
-        }).catch(() => { /* no video server yet: try again in 10 s */ });
+        connectVideo(location.protocol + '//' + videoHost + s.video).catch(() => { /* no video server yet: again in 10 s */ });
       }
       render(s);
     }
