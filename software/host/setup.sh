@@ -19,8 +19,8 @@ REPO=$(cd "$(dirname "$0")/../.." && pwd)
 CAN=${CAN:-can0}
 PROFILES=${PROFILES:-vision}
 # capture size, also the stream's: the AI camera's network sees the whole sensor whatever this is
-CAMERA_WIDTH=${CAMERA_WIDTH:-640}
-CAMERA_HEIGHT=${CAMERA_HEIGHT:-480}
+CAMERA_WIDTH=${CAMERA_WIDTH:-1280}
+CAMERA_HEIGHT=${CAMERA_HEIGHT:-960}
 USER_NAME=${SUDO_USER:-pi}
 GNSS=${GNSS-/dev/ttyAMA0}
 NAV=${NAV:-false}
