@@ -82,11 +82,12 @@ def draw(img, boxes, scores, classes, masks, names, dists=None):
     out = img.copy()
     rng = np.random.default_rng(7)
     colors = rng.integers(60, 255, (len(names), 3))
-    if masks is not None and len(masks):
-        overlay = out.copy()
-        for m, c in zip(masks, classes):
-            overlay[m] = colors[c]
-        out = cv2.addWeighted(overlay, 0.4, out, 0.6, 0)
+    if masks is not None and len(masks):  # blended inside each box only: a whole-frame blend is 17 ms on the Pi
+        for m, c, (x1, y1, x2, y2) in zip(masks, classes, boxes.astype(int)):
+            x1, y1 = max(x1, 0), max(y1, 0)
+            region, sel = out[y1:y2, x1:x2], m[y1:y2, x1:x2]
+            tint = cv2.addWeighted(region, 0.6, np.full_like(region, colors[c].astype(np.uint8)), 0.4, 0)
+            np.copyto(region, tint, where=sel[..., None])
     dists = dists or [None] * len(boxes)
     for (x1, y1, x2, y2), s, c, d in zip(boxes.astype(int), scores, classes, dists):
         color = tuple(int(v) for v in colors[c])

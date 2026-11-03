@@ -6,16 +6,23 @@ The camera stays on the host (libcamera is native there):
 This node reads those raw I420 frames, keeps only the newest, and publishes
   ~/detections   vision_msgs/Detection2DArray
   ~/mask         sensor_msgs/Image mono8, class id + 1 per pixel, 0 = nothing (segmentation models),
-                 at mask_scale of the frame (0.25: 320x240 from 1280x960, 77 KB instead of 1.2 MB)
+                 at mask_scale of the frame (0.25: 160x120 from 640x480)
   ~/detections_3d  vision_msgs/Detection3DArray, the boxes the nose ToF (tof_front) has a distance
                  for: centre in frame nose_tof (x forward, y left, z up); the distance also goes
                  on the stream's labels
   ~/debug/compressed  annotated JPEG at debug_rate, for Foxglove
 With stream set (e.g. rtsp://127.0.0.1:8554/yolo) every annotated frame also goes out as H.264 to
 MediaMTX, which serves it as RTSP (VLC) and WebRTC (a browser, port 8889).
-Parameters: model (an Ultralytics ONNX export, see yolo_onnx.py), rate, source, stream.
+With the AI camera running a network on the sensor (software/host/imx500_camera.py), its detections
+arrive on UDP (sensor, 127.0.0.1:9001) and stand in for the model while they keep coming, with the
+object masks (soft, scaled up here) when the sensor runs a segmentation network, else the mask is
+the boxes filled in.
+Without them the ONNX model runs on the CPU.
+Parameters: model (an Ultralytics ONNX export, see yolo_onnx.py), rate, source, sensor, stream, stream_kbps.
 No PyTorch here: ONNX Runtime and NumPy only.
 """
+import base64
+import json
 import math
 import socket
 import subprocess
@@ -53,7 +60,10 @@ class Camera(threading.Thread):
                 continue
             buf = bytearray()
             while True:
-                chunk = s.recv(1 << 20)
+                try:
+                    chunk = s.recv(1 << 20)
+                except OSError:  # 5 s without a frame: the camera service restarted, connect again
+                    break
                 if not chunk:
                     break
                 buf += chunk
@@ -75,15 +85,39 @@ class Camera(threading.Thread):
         return cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR_I420), stamp
 
 
+class SensorDetections(threading.Thread):
+    """Detections the camera's own network sends per frame; the newest wins."""
+
+    def __init__(self, host, port):
+        super().__init__(daemon=True)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind((host, port))
+        self.lock = threading.Lock()
+        self.msg, self.stamp = None, 0.0
+
+    def run(self):
+        while True:
+            msg = json.loads(self.sock.recv(65536))
+            with self.lock:
+                self.msg, self.stamp = msg, time.monotonic()
+
+    def latest(self, max_age=0.5):
+        """The newest message (dets, maybe mask), or None when the camera hasn't sent any lately."""
+        with self.lock:
+            return self.msg if time.monotonic() - self.stamp < max_age else None
+
+
 class YoloNode(Node):
     def __init__(self):
         super().__init__('yolo')
         model = self.declare_parameter('model', 'yolo26n-seg-320.onnx').value
+        sensor = self.declare_parameter('sensor', '127.0.0.1:9001').value
         conf = self.declare_parameter('conf', 0.35).value
-        rate = self.declare_parameter('rate', 10.0).value
+        rate = self.declare_parameter('rate', 15.0).value
         self.debug_rate = self.declare_parameter('debug_rate', 2.0).value
         host, port = self.declare_parameter('source', '127.0.0.1:9000').value.split(':')
         self.stream = self.declare_parameter('stream', '').value
+        self.stream_kbps = self.declare_parameter('stream_kbps', 2500).value
         self.encoder = None
         self.rate = rate
         w = self.declare_parameter('width', 640).value
@@ -97,6 +131,14 @@ class YoloNode(Node):
 
         self.model = Yolo(model, conf=conf)
         self.seg = self.model.task == 'segment'
+        self.names = dict(self.model.names)  # sensor labels the model doesn't know get new ids
+        self.ids = {n: i for i, n in self.names.items()}
+        self.sensor = None
+        if sensor:
+            shost, sport = sensor.split(':')
+            self.sensor = SensorDetections(shost, int(sport))
+            self.sensor.start()
+        self.on_sensor = False
         self.cam = Camera(host, int(port), w, h)
         self.cam.start()
         self.det_pub = self.create_publisher(Detection2DArray, '~/detections', 10)
@@ -125,7 +167,15 @@ class YoloNode(Node):
         if img is None:
             return
         t = time.monotonic()
-        boxes, scores, classes, masks = self.model(img)
+        dets = self.sensor.latest() if self.sensor else None
+        if dets is not None:
+            boxes, scores, classes, masks = self.from_sensor(dets, img.shape)
+        else:
+            boxes, scores, classes, masks = self.model(img)
+        if (dets is not None) != self.on_sensor:
+            self.on_sensor = dets is not None
+            self.get_logger().info("detections from the camera's network" if self.on_sensor else
+                                   f'detections from {self.model.task} model on the CPU')
         done = time.monotonic()
         header = self.get_clock().now().to_msg()
         header = type(Detection2DArray().header)(stamp=header, frame_id='camera')
@@ -136,7 +186,7 @@ class YoloNode(Node):
             d.bbox.center.position.x, d.bbox.center.position.y = (x1 + x2) / 2, (y1 + y2) / 2
             d.bbox.size_x, d.bbox.size_y = x2 - x1, y2 - y1
             hyp = ObjectHypothesisWithPose()
-            hyp.hypothesis.class_id, hyp.hypothesis.score = self.model.names[int(c)], float(conf)
+            hyp.hypothesis.class_id, hyp.hypothesis.score = self.names[int(c)], float(conf)
             d.results.append(hyp)
             arr.detections.append(d)
         self.det_pub.publish(arr)
@@ -153,10 +203,14 @@ class YoloNode(Node):
         if arr3.detections:
             self.det3_pub.publish(arr3)
 
-        if self.seg:
+        if masks is not None or self.on_sensor:
             mask = np.zeros(img.shape[:2], np.uint8)
-            for m, c in zip(masks, classes.tolist()):
-                mask[m] = int(c) + 1
+            if masks is not None:
+                for m, c in zip(masks, classes.tolist()):
+                    mask[m] = int(c) + 1
+            else:  # boxes filled in: their bottom edge is where the object meets the ground
+                for (x1, y1, x2, y2), c in zip(boxes.astype(int).tolist(), classes.tolist()):
+                    mask[max(y1, 0):y2, max(x1, 0):x2] = int(c) + 1
             if self.mask_scale != 1.0:
                 mask = cv2.resize(mask, None, fx=self.mask_scale, fy=self.mask_scale, interpolation=cv2.INTER_NEAREST)
             self.mask_pub.publish(Image(header=header, height=mask.shape[0], width=mask.shape[1],
@@ -164,13 +218,13 @@ class YoloNode(Node):
 
         annotated = None
         if self.stream:
-            annotated = draw(img, boxes, scores, classes, masks, self.model.names, dists)
+            annotated = draw(img, boxes, scores, classes, masks, self.names, dists)
             self.send(annotated)
 
         if done - self.last_dbg > 1.0 / self.debug_rate:
             self.last_dbg = done
             if annotated is None:
-                annotated = draw(img, boxes, scores, classes, masks, self.model.names, dists)
+                annotated = draw(img, boxes, scores, classes, masks, self.names, dists)
             ok, jpg = cv2.imencode('.jpg', annotated, [cv2.IMWRITE_JPEG_QUALITY, 70])
             if ok:
                 self.dbg_pub.publish(CompressedImage(header=header, format='jpeg', data=jpg.tobytes()))
@@ -186,6 +240,39 @@ class YoloNode(Node):
                 f'frame to result {1000 * s["lat"] / s["n"]:.0f} ms, camera {cam_fps:.1f} fps, {len(arr.detections)} objects')
             self.stats = {'n': 0, 'infer': 0.0, 'lat': 0.0, 't0': done, 'cam0': self.cam.count}
 
+    def from_sensor(self, msg, shape):
+        dets = msg['dets']
+        for d in dets:
+            if d[5] not in self.ids:
+                self.ids[d[5]] = len(self.names)
+                self.names[len(self.names)] = d[5]
+        boxes = np.array([d[:4] for d in dets], float).reshape(-1, 4)
+        scores = np.array([d[4] for d in dets], float)
+        classes = np.array([self.ids[d[5]] for d in dets], int)
+        masks = None
+        if 'masks' in msg:
+            masks = self.sensor_masks(msg['masks'], boxes, shape[:2])
+        return boxes, scores, classes, masks
+
+    @staticmethod
+    def sensor_masks(m, boxes, shape):
+        """Per-object frame masks from the camera's soft masks: scaled up around each box, then thresholded."""
+        x, y, w, h = m['rect']
+        mh, mw = m['shape']
+        sx, sy = mw / w, mh / h  # grid cells per frame pixel
+        masks = np.zeros((len(boxes), *shape), bool)
+        for i, ((x1, y1, x2, y2), (cx1, cy1, cx2, cy2, data)) in enumerate(zip(boxes, m['objs'])):
+            soft = np.frombuffer(base64.b64decode(data), np.uint8).reshape(cy2 - cy1, cx2 - cx1)
+            ox, oy = x + round(cx1 / sx), y + round(cy1 / sy)
+            pw, ph = round((cx2 - cx1) / sx), round((cy2 - cy1) / sy)
+            if pw <= 0 or ph <= 0:
+                continue
+            up = cv2.resize(soft, (pw, ph), interpolation=cv2.INTER_LINEAR) > 127
+            fx1, fy1 = max(int(x1), ox, 0), max(int(y1), oy, 0)
+            fx2, fy2 = min(int(np.ceil(x2)), ox + pw, shape[1]), min(int(np.ceil(y2)), oy + ph, shape[0])
+            if fx2 > fx1 and fy2 > fy1:
+                masks[i, fy1:fy2, fx1:fx2] = up[fy1 - oy:fy2 - oy, fx1 - ox:fx2 - ox]
+        return masks
 
     def send(self, frame):
         """Annotated frames to ffmpeg -> H.264 baseline (what browsers' WebRTC takes) -> RTSP."""
@@ -194,7 +281,8 @@ class YoloNode(Node):
             self.encoder = subprocess.Popen(
                 ['ffmpeg', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'bgr24', '-s', f'{w}x{h}',
                  '-r', str(int(self.rate)), '-i', '-', '-c:v', 'libx264', '-preset', 'ultrafast', '-tune', 'zerolatency',
-                 '-profile:v', 'baseline', '-pix_fmt', 'yuv420p', '-g', str(int(self.rate)), '-b:v', '800k',
+                 '-profile:v', 'baseline', '-pix_fmt', 'yuv420p', '-g', str(int(self.rate)),
+                 '-b:v', f'{self.stream_kbps}k', '-maxrate', f'{self.stream_kbps}k', '-bufsize', f'{self.stream_kbps}k',
                  '-f', 'rtsp', '-rtsp_transport', 'tcp', self.stream], stdin=subprocess.PIPE)
         try:
             self.encoder.stdin.write(frame.tobytes())
